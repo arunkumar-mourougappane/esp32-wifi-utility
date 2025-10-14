@@ -175,16 +175,7 @@ void executeCommand(String command) {
   else if (command == "disconnect" && currentMode == MODE_STATION) {
     disconnectFromNetwork();
   }
-  else if (command.startsWith("ping ")) {
-    String target = command.substring(5);
-    target.trim();
-    if (target.length() > 0) {
-      performPingTest(target);
-    } else {
-      Serial.println("✗ Error: Usage: ping <ip_address_or_hostname>");
-      Serial.println("  Examples: ping 8.8.8.8, ping google.com");
-    }
-  }
+
   else if (command.length() > 0) {
     Serial.println("✗ Unknown command. Type 'help' for available commands.");
   }
@@ -260,7 +251,6 @@ void printHelp() {
   Serial.println("│ scan off        │ Stop WiFi scanning                   │");
   Serial.println("│ connect <s> <p> │ Connect to network (station mode)    │");
   Serial.println("│ disconnect      │ Disconnect from network (station)    │");
-  Serial.println("│ ping <target>   │ Ping test to IP or hostname          │");
   Serial.println("│ status          │ Show current status                  │");
   Serial.println("│ ap info         │ Show AP details (when in AP mode)    │");
   Serial.println("│ ap clients      │ List connected clients (AP mode)     │");

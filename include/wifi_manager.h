@@ -63,13 +63,4 @@ void connectToNetwork(String ssid, String password);
  */
 void disconnectFromNetwork();
 
-// ==========================================
-// CONNECTIVITY TEST FUNCTIONALITY
-// ==========================================
 
-/**
- * @brief Performs a connectivity test to a specified IP address or hostname
- * @param target IP address or hostname to test connectivity
- * @see wifi_manager.cpp for detailed implementation documentation
- */
-void performPingTest(String target);
