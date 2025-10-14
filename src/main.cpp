@@ -6,6 +6,7 @@
 #include "ap_manager.h"
 #include "led_controller.h"
 #include "command_interface.h"
+#include "iperf_manager.h"
 
 // Global variables are defined in their respective modules
 
@@ -18,11 +19,17 @@ void setup() {
   
   // Initialize WiFi (will be configured by user commands)
   initializeWiFi();
+  
+  // Initialize iPerf manager
+  initializeIperf();
 }
 
 void loop() {
   // Handle serial commands
   handleSerialCommands();
+  
+  // Handle iPerf background tasks
+  handleIperfTasks();
   
   // WiFi scanning logic (only in station mode)
   if (scanningEnabled && currentMode == MODE_STATION && (millis() - lastScan >= SCAN_INTERVAL)) {

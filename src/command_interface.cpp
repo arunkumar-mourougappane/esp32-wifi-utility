@@ -1,6 +1,7 @@
 #include "command_interface.h"
 #include "wifi_manager.h"
 #include "ap_manager.h"
+#include "iperf_manager.h"
 #include "config.h"
 
 // ==========================================
@@ -86,6 +87,14 @@ void executeCommand(String command) {
   else if (command == "scan off") {
     scanningEnabled = false;
     Serial.println("✓ WiFi scanning DISABLED");
+  }
+  else if (command == "scan now" && currentMode == MODE_STATION) {
+    performWiFiScan(); // Immediate detailed scan
+  }
+  else if (command.startsWith("scan info ") && currentMode == MODE_STATION) {
+    String networkId = command.substring(10);
+    networkId.trim();
+    showNetworkDetails(networkId.toInt());
   }
   else if (command == "mode station") {
     startStationMode();
@@ -175,7 +184,12 @@ void executeCommand(String command) {
   else if (command == "disconnect" && currentMode == MODE_STATION) {
     disconnectFromNetwork();
   }
-
+  else if (command.startsWith("iperf ")) {
+    executeIperfCommand(command);
+  }
+  else if (command == "iperf") {
+    printIperfHelp();
+  }
   else if (command.length() > 0) {
     Serial.println("✗ Unknown command. Type 'help' for available commands.");
   }
@@ -249,6 +263,8 @@ void printHelp() {
   Serial.println("│ mode off        │ Disable WiFi completely              │");
   Serial.println("│ scan on         │ Start WiFi scanning (station mode)   │");
   Serial.println("│ scan off        │ Stop WiFi scanning                   │");
+  Serial.println("│ scan now        │ Perform detailed scan immediately    │");
+  Serial.println("│ scan info <id>  │ Show detailed info for network ID    │");
   Serial.println("│ connect <s> <p> │ Connect to network (station mode)    │");
   Serial.println("│ disconnect      │ Disconnect from network (station)    │");
   Serial.println("│ status          │ Show current status                  │");
@@ -257,6 +273,8 @@ void printHelp() {
   Serial.println("│ qr              │ Show AP connection QR code (AP mode) │");
   Serial.println("│ deauth <id/mac> │ Disconnect by ID or MAC (AP mode)    │");
   Serial.println("│ deauth all      │ Disconnect all clients (AP mode)     │");
+  Serial.println("│ iperf           │ Show iPerf performance test help     │");
+  Serial.println("│ iperf status    │ Show current iPerf test status       │");
   Serial.println("│ clear           │ Clear console screen                 │");
   Serial.println("│ help            │ Show this help                       │");
   Serial.println("└─────────────────┴──────────────────────────────────────┘");

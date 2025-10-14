@@ -45,6 +45,12 @@ void generateAPQRCode(const String& ssid, const String& password, const String& 
 // ==========================================
 void performWiFiScan();
 
+/**
+ * @brief Shows detailed information about a specific network from the last scan
+ * @param networkId Network ID (1-based index) from the scan results
+ */
+void showNetworkDetails(int networkId);
+
 // ==========================================
 // NETWORK CONNECTION
 // ==========================================

@@ -161,74 +161,370 @@ void setIdleMode() {
 // WIFI SCANNING
 // ==========================================
 void performWiFiScan() {
-  Serial.println("\n--- Scanning for WiFi networks ---");
+  Serial.println("\n🔍 === WiFi Network Scanner === 🔍");
+  Serial.println("Scanning for available networks...");
   
-  // Start scan
-  int networkCount = WiFi.scanNetworks();
+  // Start comprehensive scan
+  int networkCount = WiFi.scanNetworks(false, true); // async=false, show_hidden=true
   
   if (networkCount == 0) {
-    Serial.println("No networks found");
+    Serial.println("❌ No networks found");
+    Serial.println("Try moving closer to WiFi access points or check antenna connection");
   } else {
-    Serial.print("Found ");
-    Serial.print(networkCount);
-    Serial.println(" networks:");
-    Serial.println();
+    Serial.printf("✅ Discovered %d networks:\n\n", networkCount);
     
-    // Print network details
-    Serial.println("ID | SSID                     | RSSI | CH | Encryption");
-    Serial.println("---|--------------------------|------|----|-----------");
+    // Print detailed header
+    Serial.println("╔════╤═══════════════════════════╤══════╤════╤══════════════════╤═════════╤═══════════════════╗");
+    Serial.println("║ ID │         SSID              │ RSSI │ CH │    Encryption    │ Quality │      BSSID        ║");
+    Serial.println("╠════╪═══════════════════════════╪══════╪════╪══════════════════╪═════════╪═══════════════════╣");
     
     for (int i = 0; i < networkCount; ++i) {
-      // Print network number (1-indexed for user friendliness)
-      Serial.printf("%2d | ", i + 1);
-      
-      // Print SSID (truncate if too long)
+      // Get network details
       String ssid = WiFi.SSID(i);
-      if (ssid.length() > 24) {
-        ssid = ssid.substring(0, 21) + "...";
-      }
-      Serial.printf("%-24s | ", ssid.c_str());
-      
-      // Print RSSI (signal strength)
-      Serial.printf("%4d | ", WiFi.RSSI(i));
-      
-      // Print channel
-      Serial.printf("%2d | ", WiFi.channel(i));
-      
-      // Print encryption type
+      int32_t rssi = WiFi.RSSI(i);
+      uint8_t channel = WiFi.channel(i);
       wifi_auth_mode_t encryptionType = WiFi.encryptionType(i);
+      uint8_t* bssid = WiFi.BSSID(i);
+      
+      // Handle empty/hidden SSIDs
+      if (ssid.length() == 0) {
+        ssid = "<Hidden Network>";
+      }
+      
+      // Truncate long SSIDs
+      if (ssid.length() > 25) {
+        ssid = ssid.substring(0, 22) + "...";
+      }
+      
+      // Calculate signal quality percentage
+      int quality = 0;
+      if (rssi >= -50) quality = 100;
+      else if (rssi >= -60) quality = 80;
+      else if (rssi >= -70) quality = 60;
+      else if (rssi >= -80) quality = 40;
+      else if (rssi >= -90) quality = 20;
+      else quality = 0;
+      
+      // Print network row
+      Serial.printf("║%3d │ %-25s │%5d │%3d │", i + 1, ssid.c_str(), rssi, channel);
+      
+      // Print encryption type with icon
+      String encStr = "";
       switch (encryptionType) {
         case WIFI_AUTH_OPEN:
-          Serial.println("Open");
+          encStr = "🔓 Open         ";
           break;
         case WIFI_AUTH_WEP:
-          Serial.println("WEP");
+          encStr = "🔒 WEP          ";
           break;
         case WIFI_AUTH_WPA_PSK:
-          Serial.println("WPA");
+          encStr = "🔒 WPA          ";
           break;
         case WIFI_AUTH_WPA2_PSK:
-          Serial.println("WPA2");
+          encStr = "🔒 WPA2         ";
           break;
         case WIFI_AUTH_WPA_WPA2_PSK:
-          Serial.println("WPA/WPA2");
+          encStr = "🔒 WPA/WPA2     ";
           break;
         case WIFI_AUTH_WPA2_ENTERPRISE:
-          Serial.println("WPA2-Enterprise");
+          encStr = "🏢 WPA2-Ent     ";
           break;
         case WIFI_AUTH_WPA3_PSK:
-          Serial.println("WPA3");
+          encStr = "🔐 WPA3         ";
+          break;
+        case WIFI_AUTH_WPA2_WPA3_PSK:
+          encStr = "🔐 WPA2/WPA3    ";
+          break;
+        case WIFI_AUTH_WAPI_PSK:
+          encStr = "🔒 WAPI         ";
           break;
         default:
-          Serial.println("Unknown");
+          encStr = "❓ Unknown      ";
+      }
+      Serial.printf(" %-18s │", encStr.c_str());
+      
+      // Print signal quality with visual indicator
+      String qualityStr = "";
+      if (quality >= 80) qualityStr = "🟢";
+      else if (quality >= 60) qualityStr = "🟡";
+      else if (quality >= 40) qualityStr = "🟠";
+      else qualityStr = "🔴";
+      
+      Serial.printf(" %s %3d%% │", qualityStr.c_str(), quality);
+      
+      // Print BSSID (MAC address)
+      if (bssid) {
+        Serial.printf(" %02X:%02X:%02X:%02X:%02X:%02X ║\n", 
+                     bssid[0], bssid[1], bssid[2], bssid[3], bssid[4], bssid[5]);
+      } else {
+        Serial.printf(" ??:??:??:??:??:?? ║\n");
       }
     }
-    Serial.println("--- End of scan ---\n");
+    
+    Serial.println("╚════╧═══════════════════════════╧══════╧════╧══════════════════╧═════════╧═══════════════════╝");
+    
+    // Print summary statistics
+    Serial.println("\n📈 Network Summary:");
+    
+    // Count networks by encryption type
+    int openNetworks = 0, wepNetworks = 0, wpaNetworks = 0, wpa2Networks = 0, wpa3Networks = 0;
+    int strongSignals = 0, weakSignals = 0;
+    
+    for (int i = 0; i < networkCount; ++i) {
+      wifi_auth_mode_t encType = WiFi.encryptionType(i);
+      int32_t rssi = WiFi.RSSI(i);
+      
+      switch (encType) {
+        case WIFI_AUTH_OPEN: openNetworks++; break;
+        case WIFI_AUTH_WEP: wepNetworks++; break;
+        case WIFI_AUTH_WPA_PSK: wpaNetworks++; break;
+        case WIFI_AUTH_WPA2_PSK:
+        case WIFI_AUTH_WPA_WPA2_PSK:
+        case WIFI_AUTH_WPA2_ENTERPRISE: wpa2Networks++; break;
+        case WIFI_AUTH_WPA3_PSK:
+        case WIFI_AUTH_WPA2_WPA3_PSK: wpa3Networks++; break;
+      }
+      
+      if (rssi > -60) strongSignals++;
+      else if (rssi < -80) weakSignals++;
+    }
+    
+    Serial.printf("├─ 🔓 Open: %d  🔒 WEP: %d  🔒 WPA2: %d  🔐 WPA3: %d\n", 
+                  openNetworks, wepNetworks, wpa2Networks, wpa3Networks);
+    Serial.printf("├─ 📶 Strong signals (>-60dBm): %d\n", strongSignals);
+    Serial.printf("├─ 📱 Weak signals (<-80dBm): %d\n", weakSignals);
+    
+    // Channel usage analysis
+    uint8_t channelCount[14] = {0}; // Channels 1-13 (14 is special)
+    for (int i = 0; i < networkCount; ++i) {
+      uint8_t ch = WiFi.channel(i);
+      if (ch >= 1 && ch <= 13) {
+        channelCount[ch]++;
+      }
+    }
+    
+    // Find most congested channels
+    uint8_t maxChannel = 1, maxCount = channelCount[1];
+    for (int ch = 1; ch <= 13; ch++) {
+      if (channelCount[ch] > maxCount) {
+        maxChannel = ch;
+        maxCount = channelCount[ch];
+      }
+    }
+    
+    Serial.printf("├─ 📡 Most congested channel: %d (%d networks)\n", maxChannel, maxCount);
+    Serial.printf("└─ 💡 Recommended channels for AP: 1, 6, 11 (least interference)\n");
+    
+    Serial.println("\n🔗 To connect: use 'connect <SSID> <password>'");
+    Serial.println("=== End of WiFi Scan ===\n");
   }
   
   // Clean up
   WiFi.scanDelete();
   promptShown = false; // Show prompt after scan results
+}
+
+void showNetworkDetails(int networkId) {
+  Serial.println("\n📡 === Detailed Network Information === 📡");
+  
+  // Perform a fresh scan to get current data
+  int networkCount = WiFi.scanNetworks(false, true);
+  
+  if (networkCount == 0) {
+    Serial.println("❌ No networks found. Run 'scan now' first.");
+    return;
+  }
+  
+  // Convert to 0-based index
+  int index = networkId - 1;
+  
+  if (index < 0 || index >= networkCount) {
+    Serial.printf("❌ Invalid network ID. Valid range: 1-%d\n", networkCount);
+    Serial.println("💡 Use 'scan now' to see available networks");
+    return;
+  }
+  
+  // Get detailed network information
+  String ssid = WiFi.SSID(index);
+  int32_t rssi = WiFi.RSSI(index);
+  uint8_t channel = WiFi.channel(index);
+  wifi_auth_mode_t encryptionType = WiFi.encryptionType(index);
+  uint8_t* bssid = WiFi.BSSID(index);
+  
+  // Handle hidden networks
+  if (ssid.length() == 0) {
+    ssid = "<Hidden Network>";
+  }
+  
+  Serial.println("┌─────────────────────────────────────────────────────────┐");
+  Serial.printf("│ 🏷️  Network Name: %-38s │\n", ssid.c_str());
+  Serial.println("├─────────────────────────────────────────────────────────┤");
+  
+  // BSSID (MAC Address)
+  if (bssid) {
+    char bssidStr[18]; // XX:XX:XX:XX:XX:XX format
+    sprintf(bssidStr, "%02X:%02X:%02X:%02X:%02X:%02X", 
+            bssid[0], bssid[1], bssid[2], bssid[3], bssid[4], bssid[5]);
+    Serial.printf("│ 🔗 BSSID (MAC):  %-38s │\n", bssidStr);
+  } else {
+    Serial.printf("│ 🔗 BSSID (MAC):  %-38s │\n", "Unknown");
+  }
+  
+  // Signal Information
+  Serial.printf("│ 📶 Signal (RSSI): %-37s │\n", String(rssi) + " dBm");
+  
+  // Signal quality calculation and description
+  int quality = 0;
+  String qualityDesc = "";
+  String signalIcon = "";
+  
+  if (rssi >= -30) {
+    quality = 100; qualityDesc = "Excellent (Very Close)"; signalIcon = "🟢🟢🟢🟢";
+  } else if (rssi >= -50) {
+    quality = 90; qualityDesc = "Excellent"; signalIcon = "🟢🟢🟢🟢";
+  } else if (rssi >= -60) {
+    quality = 80; qualityDesc = "Very Good"; signalIcon = "🟢🟢🟢⚪";
+  } else if (rssi >= -67) {
+    quality = 70; qualityDesc = "Good"; signalIcon = "🟢🟢🟡⚪";
+  } else if (rssi >= -70) {
+    quality = 60; qualityDesc = "Fair"; signalIcon = "🟢🟡🟡⚪";
+  } else if (rssi >= -80) {
+    quality = 50; qualityDesc = "Weak"; signalIcon = "🟡🟡🔴⚪";
+  } else if (rssi >= -90) {
+    quality = 30; qualityDesc = "Very Weak"; signalIcon = "🟡🔴🔴⚪";
+  } else {
+    quality = 10; qualityDesc = "Extremely Weak"; signalIcon = "🔴🔴🔴⚪";
+  }
+  
+  // Create quality string with proper formatting
+  String qualityString = String(quality) + "% (" + qualityDesc + ") " + signalIcon;
+  Serial.printf("│ 📊 Signal Quality: %-42s │\n", qualityString.c_str());
+  
+  // Channel Information
+  String bandInfo = "";
+  if (channel >= 1 && channel <= 13) {
+    bandInfo = "2.4GHz";
+  } else if (channel >= 36 && channel <= 165) {
+    bandInfo = "5GHz";
+  } else {
+    bandInfo = "Unknown";
+  }
+  
+  String channelString = String(channel) + " (" + bandInfo + ")";
+  Serial.printf("│ 📻 Channel:      %-38s │\n", channelString.c_str());
+  
+  // Channel congestion analysis
+  int channelUsage = 0;
+  for (int i = 0; i < networkCount; i++) {
+    if (WiFi.channel(i) == channel) {
+      channelUsage++;
+    }
+  }
+  
+  String congestionLevel = "";
+  if (channelUsage == 1) congestionLevel = "Clear";
+  else if (channelUsage <= 3) congestionLevel = "Light";
+  else if (channelUsage <= 6) congestionLevel = "Moderate";
+  else if (channelUsage <= 10) congestionLevel = "Heavy";
+  else congestionLevel = "Severe";
+  
+  String congestionString = congestionLevel + " (" + String(channelUsage) + " networks on this channel)";
+  Serial.printf("│ 🚦 Congestion:   %-42s │\n", congestionString.c_str());
+  
+  // Security Information
+  String encIcon = "";
+  String encDescription = "";
+  String securityLevel = "";
+  
+  switch (encryptionType) {
+    case WIFI_AUTH_OPEN:
+      encIcon = "🔓"; encDescription = "Open (No Security)"; securityLevel = "❌ None";
+      break;
+    case WIFI_AUTH_WEP:
+      encIcon = "🔒"; encDescription = "WEP (Deprecated)"; securityLevel = "🟡 Weak";
+      break;
+    case WIFI_AUTH_WPA_PSK:
+      encIcon = "🔒"; encDescription = "WPA Personal"; securityLevel = "🟠 Moderate";
+      break;
+    case WIFI_AUTH_WPA2_PSK:
+      encIcon = "🔒"; encDescription = "WPA2 Personal"; securityLevel = "🟢 Good";
+      break;
+    case WIFI_AUTH_WPA_WPA2_PSK:
+      encIcon = "🔒"; encDescription = "WPA/WPA2 Mixed"; securityLevel = "🟢 Good";
+      break;
+    case WIFI_AUTH_WPA2_ENTERPRISE:
+      encIcon = "🏢"; encDescription = "WPA2 Enterprise"; securityLevel = "🟢 Excellent";
+      break;
+    case WIFI_AUTH_WPA3_PSK:
+      encIcon = "🔐"; encDescription = "WPA3 Personal"; securityLevel = "🟢 Excellent";
+      break;
+    case WIFI_AUTH_WPA2_WPA3_PSK:
+      encIcon = "🔐"; encDescription = "WPA2/WPA3 Mixed"; securityLevel = "🟢 Excellent";
+      break;
+    case WIFI_AUTH_WAPI_PSK:
+      encIcon = "🔒"; encDescription = "WAPI"; securityLevel = "🟢 Good";
+      break;
+    default:
+      encIcon = "❓"; encDescription = "Unknown"; securityLevel = "❓ Unknown";
+  }
+  
+  String securityString = encIcon + " " + encDescription;
+  Serial.printf("│ 🔐 Security:     %-40s │\n", securityString.c_str());
+  Serial.printf("│ 🛡️  Security Level: %-37s │\n", securityLevel.c_str());
+  
+  // Connection recommendations
+  Serial.println("├─────────────────────────────────────────────────────────┤");
+  Serial.println("│ 💡 Connection Analysis:                              │");
+  
+  if (encryptionType == WIFI_AUTH_OPEN) {
+    Serial.println("│ ⚠️  WARNING: Open network - no encryption!           │");
+    Serial.println("│    Your data will be transmitted unencrypted.        │");
+  } else if (encryptionType == WIFI_AUTH_WEP) {
+    Serial.println("│ ⚠️  WARNING: WEP is severely outdated and insecure!  │");
+    Serial.println("│    Avoid connecting to this network if possible.     │");
+  }
+  
+  if (rssi < -80) {
+    Serial.println("│ 📶 Signal is weak - connection may be unstable       │");
+    Serial.println("│    Consider moving closer to the access point.       │");
+  } else if (rssi > -50) {
+    Serial.println("│ 📶 Excellent signal strength for stable connection   │");
+  }
+  
+  if (channelUsage > 6) {
+    Serial.println("│ 🚦 Channel is congested - may affect performance     │");
+  }
+  
+  // Estimated data rates based on signal strength and channel
+  String estimatedSpeed = "";
+  if (rssi > -50 && bandInfo == "5GHz") {
+    estimatedSpeed = "100-300 Mbps (802.11ac)";
+  } else if (rssi > -60 && bandInfo == "5GHz") {
+    estimatedSpeed = "50-100 Mbps (802.11n/ac)";
+  } else if (rssi > -50 && bandInfo == "2.4GHz") {
+    estimatedSpeed = "50-150 Mbps (802.11n)";
+  } else if (rssi > -70) {
+    estimatedSpeed = "10-50 Mbps";
+  } else {
+    estimatedSpeed = "1-10 Mbps (Basic connectivity)";
+  }
+  
+  Serial.printf("│ 🚀 Est. Speed:   %-40s │\n", estimatedSpeed.c_str());
+  
+  Serial.println("└─────────────────────────────────────────────────────────┘");
+  
+  // Connection command suggestion
+  if (encryptionType != WIFI_AUTH_OPEN) {
+    Serial.printf("💡 To connect: connect \"%s\" <password>\n", ssid.c_str());
+  } else {
+    Serial.printf("💡 To connect: connect \"%s\" \"\"\n", ssid.c_str());
+  }
+  
+  Serial.println();
+  
+  // Cleanup
+  WiFi.scanDelete();
+  promptShown = false;
 }
 
 // ==========================================
