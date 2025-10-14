@@ -1,5 +1,11 @@
 # ESP32 WiFi Scanner & Access Point
 
+![Build Status](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/actions/workflows/build.yml/badge.svg)
+![Platform](https://img.shields.io/badge/platform-ESP32-blue.svg)
+![Framework](https://img.shields.io/badge/framework-Arduino-green.svg)
+![PlatformIO](https://img.shields.io/badge/build-PlatformIO-orange.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+
 A comprehensive ESP32 project that can function as both a WiFi network scanner and a WiFi Access Point, with full serial command control and LED status indication.
 
 ## 🚀 Features
@@ -107,6 +113,7 @@ This project includes comprehensive documentation for all features and capabilit
 | **[Enhanced WiFi Scanning](ENHANCED_SCANNING.md)** | Complete guide to advanced network scanning features | Visual indicators, security analysis, channel optimization |
 | **[iPerf Network Testing](IPERF_GUIDE.md)** | Network performance measurement and analysis | TCP/UDP testing, bandwidth measurement, connectivity diagnostics |
 | **[Unit Testing Guide](TEST_DOCUMENTATION.md)** | Comprehensive testing framework and validation | Test suite structure, hardware-in-loop testing, quality assurance |
+| **[GitHub Actions CI/CD](GITHUB_ACTIONS.md)** | Continuous integration and deployment pipeline | Build automation, testing, releases, security scanning |
 
 ### 🎯 Quick Links
 

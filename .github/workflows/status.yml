@@ -1,0 +1,103 @@
+name: Project Status
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday at midnight UTC
+
+jobs:
+  update-readme-stats:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install PlatformIO
+      run: |
+        python -m pip install --upgrade pip
+        pip install --upgrade platformio
+    
+    - name: Get project statistics
+      run: |
+        echo "Collecting project statistics..."
+        
+        # Count source files
+        SRC_FILES=$(find src/ -name "*.cpp" -o -name "*.h" | wc -l)
+        INCLUDE_FILES=$(find include/ -name "*.h" | wc -l)
+        TEST_FILES=$(find test/ -name "*.cpp" | wc -l)
+        DOC_FILES=$(find . -maxdepth 1 -name "*.md" | wc -l)
+        
+        # Count lines of code
+        TOTAL_LINES=$(find src/ include/ -name "*.cpp" -o -name "*.h" | xargs wc -l | tail -1 | awk '{print $1}')
+        
+        echo "SRC_FILES=${SRC_FILES}" >> $GITHUB_ENV
+        echo "INCLUDE_FILES=${INCLUDE_FILES}" >> $GITHUB_ENV
+        echo "TEST_FILES=${TEST_FILES}" >> $GITHUB_ENV
+        echo "DOC_FILES=${DOC_FILES}" >> $GITHUB_ENV
+        echo "TOTAL_LINES=${TOTAL_LINES}" >> $GITHUB_ENV
+    
+    - name: Build and get memory usage
+      run: |
+        pio run --environment esp32dev
+        
+        # Extract memory usage
+        BUILD_OUTPUT=$(pio run --environment esp32dev 2>&1)
+        FLASH_USAGE=$(echo "$BUILD_OUTPUT" | grep -o "Flash: \[[^]]*\] [0-9.]*%" | grep -o "[0-9.]*%" | tail -1)
+        RAM_USAGE=$(echo "$BUILD_OUTPUT" | grep -o "RAM: \[[^]]*\] [0-9.]*%" | grep -o "[0-9.]*%" | tail -1)
+        FLASH_BYTES=$(echo "$BUILD_OUTPUT" | grep -o "used [0-9]* bytes" | grep -o "[0-9]*" | tail -1)
+        
+        echo "FLASH_USAGE=${FLASH_USAGE:-N/A}" >> $GITHUB_ENV
+        echo "RAM_USAGE=${RAM_USAGE:-N/A}" >> $GITHUB_ENV
+        echo "FLASH_BYTES=${FLASH_BYTES:-0}" >> $GITHUB_ENV
+    
+    - name: Create project stats badge
+      run: |
+        echo "## 📊 Project Statistics" > project-stats.md
+        echo "" >> project-stats.md
+        echo "![Build Status](https://github.com/${{ github.repository }}/actions/workflows/build.yml/badge.svg)" >> project-stats.md
+        echo "![Platform](https://img.shields.io/badge/platform-ESP32-blue.svg)" >> project-stats.md
+        echo "![Framework](https://img.shields.io/badge/framework-Arduino-green.svg)" >> project-stats.md
+        echo "![PlatformIO](https://img.shields.io/badge/build-PlatformIO-orange.svg)" >> project-stats.md
+        echo "" >> project-stats.md
+        echo "| Metric | Value |" >> project-stats.md
+        echo "|--------|-------|" >> project-stats.md
+        echo "| Source Files | ${{ env.SRC_FILES }} |" >> project-stats.md
+        echo "| Header Files | ${{ env.INCLUDE_FILES }} |" >> project-stats.md
+        echo "| Test Files | ${{ env.TEST_FILES }} |" >> project-stats.md
+        echo "| Documentation | ${{ env.DOC_FILES }} |" >> project-stats.md
+        echo "| Lines of Code | ${{ env.TOTAL_LINES }} |" >> project-stats.md
+        echo "| Flash Usage | ${{ env.FLASH_USAGE }} |" >> project-stats.md
+        echo "| RAM Usage | ${{ env.RAM_USAGE }} |" >> project-stats.md
+        echo "| Flash Size | ${{ env.FLASH_BYTES }} bytes |" >> project-stats.md
+        echo "" >> project-stats.md
+        echo "*Last updated: $(date -u)*" >> project-stats.md
+
+  check-dependencies:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Check for dependency updates
+      run: |
+        echo "## 📦 Dependencies Status" >> $GITHUB_STEP_SUMMARY
+        echo "### PlatformIO Libraries:" >> $GITHUB_STEP_SUMMARY
+        
+        if [ -f "platformio.ini" ]; then
+          echo "\`\`\`ini" >> $GITHUB_STEP_SUMMARY
+          grep -A 10 "lib_deps" platformio.ini || echo "No external dependencies found" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "### Framework Dependencies:" >> $GITHUB_STEP_SUMMARY
+        echo "- ESP32 Arduino Framework: Latest compatible" >> $GITHUB_STEP_SUMMARY
+        echo "- WiFi Library: Built-in" >> $GITHUB_STEP_SUMMARY
+        echo "- QRCode Library: ricmoo/QRCode@^0.0.1" >> $GITHUB_STEP_SUMMARY
