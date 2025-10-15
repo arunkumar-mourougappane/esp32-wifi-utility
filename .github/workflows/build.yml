@@ -6,15 +6,9 @@ on:
   pull_request:
     branches: [ main ]
   workflow_dispatch:
-    inputs:
-      create_release:
-        description: 'Create a release after successful build'
-        required: false
-        default: false
-        type: boolean
 
 permissions:
-  contents: write
+  contents: read
   security-events: write
   issues: write
   pull-requests: write
@@ -207,107 +201,3 @@ jobs:
       if: always()
       with:
         sarif_file: 'trivy-results.sarif'
-
-  release:
-    runs-on: ubuntu-latest
-    needs: [build, documentation-check]
-    if: |
-      (github.ref == 'refs/heads/main' && github.event_name == 'push') ||
-      (github.event_name == 'workflow_dispatch' && inputs.create_release)
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
-    
-    - name: Install PlatformIO
-      run: |
-        python -m pip install --upgrade pip
-        pip install --upgrade platformio
-    
-    - name: Build release firmware
-      run: pio run --environment esp32dev
-    
-    - name: Get version from platformio.ini
-      id: get_version
-      run: |
-        VERSION=$(grep "build_flags.*-DVERSION" platformio.ini | sed 's/.*VERSION="\([^"]*\)".*/\1/' || echo "2.0.0")
-        echo "version=${VERSION}" >> $GITHUB_OUTPUT
-        echo "Version: ${VERSION}"
-    
-    - name: Generate release notes
-      id: release_notes
-      run: |
-        BUILD_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
-        cat > release_notes.md << EOF
-        ## ESP32 WiFi Utility Release
-        
-        ### 🚀 Features
-        - ✅ Enhanced WiFi scanning with visual indicators and signal quality analysis
-        - ✅ Complete iPerf network performance testing (TCP/UDP client/server modes)
-        - ✅ Access Point management with QR code generation for easy mobile connection
-        - ✅ Interactive command interface with real-time feedback and status indicators
-        - ✅ Comprehensive documentation and 17+ unit tests for quality assurance
-        
-        ### 📊 Technical Specifications
-        - **Flash Usage**: 61.4% (805KB) - Optimized for ESP32 with room for expansion
-        - **RAM Usage**: 13.9% (45KB) - Efficient memory utilization
-        - **Features**: Enhanced scanning, iPerf testing, AP management, QR codes
-        - **Testing**: 17+ comprehensive unit tests with hardware-in-loop validation
-        
-        ### 🔧 Build Information
-        - **Commit**: ${{ github.sha }}
-        - **Build Date**: ${BUILD_DATE}
-        - **Build Number**: ${{ github.run_number }}
-        - **Version**: ${{ steps.get_version.outputs.version }}
-        
-        ### 📦 Installation Instructions
-        1. **Download**: Get the \`esp32-wifi-utility-v${{ steps.get_version.outputs.version }}.bin\` file below
-        2. **Flash**: Use esptool, Arduino IDE, or your preferred ESP32 flashing method
-        3. **Connect**: Serial connection at 115200 baud rate
-        4. **Start**: Type \`help\` for complete command reference
-        
-        ### 🎯 Quick Start Commands
-        \`\`\`bash
-        mode station          # Switch to WiFi scanning mode
-        scan now             # Perform enhanced network scan
-        mode ap              # Start access point with QR code
-        iperf status         # Check network performance testing
-        help                 # Show all available commands
-        \`\`\`
-        
-        ### 📚 Documentation
-        See [README.md](README.md) for complete usage instructions, examples, and troubleshooting.
-        
-        **New in this release**: Professional CI/CD pipeline with automated builds, security scanning, and quality assurance.
-        EOF
-        echo "Generated release notes"
-    
-    - name: Create Release with GitHub CLI
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        TAG_NAME="v${{ steps.get_version.outputs.version }}-${{ github.run_number }}"
-        RELEASE_NAME="ESP32 WiFi Utility v${{ steps.get_version.outputs.version }}"
-        
-        # Check if tag already exists
-        if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
-          echo "Tag $TAG_NAME already exists, skipping release creation"
-          exit 0
-        fi
-        
-        # Create release with firmware attachment
-        gh release create "$TAG_NAME" \
-          --title "$RELEASE_NAME" \
-          --notes-file release_notes.md \
-          --latest \
-          .pio/build/esp32dev/firmware.bin#esp32-wifi-utility-v${{ steps.get_version.outputs.version }}.bin \
-          .pio/build/esp32dev/firmware.elf#esp32-wifi-utility-debug-v${{ steps.get_version.outputs.version }}.elf
-        
-        echo "✅ Release created successfully: $TAG_NAME"
