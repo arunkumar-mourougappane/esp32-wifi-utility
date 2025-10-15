@@ -97,8 +97,49 @@ jobs:
     - name: Build release firmware
       run: |
         echo "🔨 Building firmware for version ${{ needs.check-version-bump.outputs.new-version }}"
+        
+        # Build ESP32dev environment
+        echo "Building ESP32dev environment..."
         pio run --environment esp32dev
+        
+        # Build Feather ESP32-S3 TFT environment  
+        echo "Building Feather ESP32-S3 TFT environment..."
         pio run --environment adafruit_feather_esp32s3_tft
+        
+        # Verify firmware files exist
+        echo "🔍 Verifying firmware files..."
+        
+        ESP32_BIN=".pio/build/esp32dev/firmware.bin"
+        ESP32_ELF=".pio/build/esp32dev/firmware.elf"
+        FEATHER_BIN=".pio/build/adafruit_feather_esp32s3_tft/firmware.bin"
+        FEATHER_ELF=".pio/build/adafruit_feather_esp32s3_tft/firmware.elf"
+        
+        if [ ! -f "$ESP32_BIN" ]; then
+          echo "❌ ESP32dev firmware.bin not found at $ESP32_BIN"
+          exit 1
+        fi
+        
+        if [ ! -f "$ESP32_ELF" ]; then
+          echo "❌ ESP32dev firmware.elf not found at $ESP32_ELF"
+          exit 1
+        fi
+        
+        if [ ! -f "$FEATHER_BIN" ]; then
+          echo "❌ Feather firmware.bin not found at $FEATHER_BIN"
+          exit 1
+        fi
+        
+        if [ ! -f "$FEATHER_ELF" ]; then
+          echo "❌ Feather firmware.elf not found at $FEATHER_ELF"
+          exit 1
+        fi
+        
+        # Show file sizes for verification
+        echo "✅ All firmware files built successfully:"
+        echo "   ESP32dev firmware.bin: $(ls -lh $ESP32_BIN | awk '{print $5}')"
+        echo "   ESP32dev firmware.elf: $(ls -lh $ESP32_ELF | awk '{print $5}')"  
+        echo "   Feather firmware.bin: $(ls -lh $FEATHER_BIN | awk '{print $5}')"
+        echo "   Feather firmware.elf: $(ls -lh $FEATHER_ELF | awk '{print $5}')"
     
     - name: Generate automated release notes
       run: |
@@ -222,6 +263,40 @@ jobs:
           echo "exists=false" >> $GITHUB_OUTPUT
         fi
     
+    - name: Verify firmware files before release
+      if: steps.tag-check.outputs.exists == 'false'
+      run: |
+        echo "🔍 Final firmware file verification before release..."
+        
+        # Define file paths
+        ESP32_BIN=".pio/build/esp32dev/firmware.bin"
+        ESP32_ELF=".pio/build/esp32dev/firmware.elf"
+        FEATHER_BIN=".pio/build/adafruit_feather_esp32s3_tft/firmware.bin"
+        FEATHER_ELF=".pio/build/adafruit_feather_esp32s3_tft/firmware.elf"
+        
+        # Check all files exist and have reasonable size
+        for file in "$ESP32_BIN" "$ESP32_ELF" "$FEATHER_BIN" "$FEATHER_ELF"; do
+          if [ ! -f "$file" ]; then
+            echo "❌ Required firmware file missing: $file"
+            echo "Available files in .pio/build/:"
+            find .pio/build/ -type f -name "*.bin" -o -name "*.elf" | sort
+            exit 1
+          fi
+          
+          # Check file size (should be > 100KB for .bin, > 1MB for .elf)
+          size=$(stat -c%s "$file")
+          if [[ "$file" == *.bin ]] && [ "$size" -lt 102400 ]; then
+            echo "❌ Firmware binary $file too small: ${size} bytes (expected > 100KB)"
+            exit 1
+          fi
+          if [[ "$file" == *.elf ]] && [ "$size" -lt 1048576 ]; then
+            echo "❌ Firmware ELF $file too small: ${size} bytes (expected > 1MB)"
+            exit 1
+          fi
+          
+          echo "✅ $file: $(ls -lh "$file" | awk '{print $5}')"
+        done
+
     - name: Create Release
       if: steps.tag-check.outputs.exists == 'false'
       env:
