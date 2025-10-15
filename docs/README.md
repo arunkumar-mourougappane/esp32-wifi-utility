@@ -18,6 +18,7 @@ In-depth technical information for developers and advanced users:
 - **[Channel Implementation](technical/CHANNEL_IMPLEMENTATION.md)** - Technical deep-dive into spectrum analysis algorithms
 - **[Test Infrastructure](technical/TEST_INFRASTRUCTURE.md)** - Comprehensive testing framework for dual-board support
 - **[Automated Releases](technical/AUTOMATED_RELEASES.md)** - GitHub Actions automated release system
+- **[Workflow Summary](technical/WORKFLOW_SUMMARY.md)** - Complete CI/CD pipeline and release automation overview
 - **[Implementation Summary](technical/IMPLEMENTATION_SUMMARY.md)** - Complete system architecture overview
 - **[Project Completion Summary](technical/PROJECT_COMPLETION_SUMMARY.md)** - Final project status and achievements
 
