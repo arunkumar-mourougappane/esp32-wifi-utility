@@ -186,12 +186,6 @@ Auto-generated release notes include:
 - Change trigger conditions
 - Customize asset naming
 
-### Manual Override
-The manual release workflow (`manual-release.yml`) remains available for:
-- Emergency releases
-- Pre-release versions
-- Custom release notes
-
 ## 📊 Benefits
 
 ### For Developers

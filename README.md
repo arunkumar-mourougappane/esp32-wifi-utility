@@ -150,7 +150,7 @@ This project includes professional-grade documentation covering all features and
 | **[Latency Testing Guide](docs/user-guides/LATENCY_GUIDE.md)** | Advanced network latency and jitter analysis | Performance metrics, statistical analysis, quality assessment |
 | **[Enhanced WiFi Scanning](docs/user-guides/ENHANCED_SCANNING.md)** | Advanced network scanning features and analysis | Visual indicators, security analysis, network statistics |
 | **[iPerf Network Testing](docs/user-guides/IPERF_GUIDE.md)** | Network performance measurement and throughput analysis | TCP/UDP testing, bandwidth measurement, diagnostics |
-| **[GitHub Actions CI/CD](GITHUB_ACTIONS.md)** | Continuous integration and deployment pipeline | Build automation, testing, releases, security scanning |
+| **[Automated Release System](docs/technical/AUTOMATED_RELEASES.md)** | GitHub Actions automated release pipeline | Version-based releases, dual-board builds, professional automation |
 
 ### 🔧 Technical Implementation Guides
 
@@ -943,9 +943,11 @@ esp32-wifi-utility/
 │   └── technical/                         # 🆕 Developer & technical documentation
 │       ├── CHANNEL_IMPLEMENTATION.md     # 🆕 Technical implementation details
 │       ├── TEST_INFRASTRUCTURE.md        # 🆕 Comprehensive testing framework
+│       ├── AUTOMATED_RELEASES.md         # 🆕 Automated GitHub release system
 │       ├── IMPLEMENTATION_SUMMARY.md     # 🆕 System enhancement overview
 │       └── PROJECT_COMPLETION_SUMMARY.md # 🆕 Complete project status
-├── GITHUB_ACTIONS.md                      # CI/CD pipeline documentation
+├── scripts/                               # 🆕 Development tools and utilities
+│   └── version-manager.sh                # 🆕 Version bumping and release management
 ├── 🧪 Test Infrastructure/                 # Professional testing suite
 │   ├── run_tests.sh                       # 🆕 Comprehensive test runner
 │   ├── run_tests_build_only.sh           # 🆕 Build verification script
