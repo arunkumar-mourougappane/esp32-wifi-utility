@@ -25,6 +25,13 @@ void initializeSerial() {
   Serial.println("\n==========================================");
   Serial.println("       ESP32 WiFi Scanner & AP");
   Serial.println("==========================================");
+  Serial.println("🟡 Device initialization starting...");
+  Serial.println("==========================================\n");
+}
+
+// Show initial prompt after all initialization is complete
+void showInitialPrompt() {
+  Serial.println("\n==========================================");
   Serial.println("🟡 Device in IDLE mode - Ready for commands");
   Serial.println("Type 'help' for available commands");
   Serial.println("==========================================\n");

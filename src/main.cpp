@@ -13,11 +13,11 @@
 // Global variables are defined in their respective modules
 
 void setup() {
+  // Initialize serial interface first
+  initializeSerial();
+  
   // Initialize hardware
   initializeLED();
-  
-  // Initialize serial interface
-  initializeSerial();
   
   // Initialize WiFi (will be configured by user commands)
   initializeWiFi();
@@ -30,6 +30,9 @@ void setup() {
   
   // Initialize channel analyzer
   initializeChannelAnalysis();
+  
+  // Show initial prompt after all initialization is complete
+  showInitialPrompt();
 }
 
 void loop() {

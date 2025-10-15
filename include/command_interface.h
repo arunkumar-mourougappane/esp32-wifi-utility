@@ -10,6 +10,7 @@ extern bool promptShown;
 extern unsigned long lastActivity;
 
 void initializeSerial();
+void showInitialPrompt();
 void handleSerialCommands();
 void processCharacter(char c);
 void executeCommand(String command);
