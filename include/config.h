@@ -5,6 +5,13 @@
 // ==========================================
 #define LED_PIN 2
 
+// NeoPixel configuration for Feather ESP32-S3 TFT
+#ifdef USE_NEOPIXEL
+  #define NEOPIXEL_PIN 33        // NeoPixel data pin on Feather ESP32-S3 TFT
+  #define NEOPIXEL_COUNT 1       // Number of NeoPixels
+  #define NEOPIXEL_BRIGHTNESS 50 // Brightness level (0-255)
+#endif
+
 // ==========================================
 // TIMING CONFIGURATION
 // ==========================================

@@ -2,6 +2,7 @@
 #include "wifi_manager.h"
 #include "ap_manager.h"
 #include "iperf_manager.h"
+#include "led_controller.h"
 #include "config.h"
 
 // ==========================================
@@ -80,13 +81,28 @@ void executeCommand(String command) {
       scanningEnabled = true;
       Serial.println("✓ WiFi scanning ENABLED");
       lastScan = 0; // Force immediate scan
+#ifdef USE_NEOPIXEL
+      // Brief cyan flash to indicate scan enabled
+      setNeoPixelColor(0, 255, 255);
+      delay(300);
+#endif
     } else {
       Serial.println("✗ Error: Must be in station mode to scan. Use 'mode station' first.");
+#ifdef USE_NEOPIXEL
+      // Brief red flash for error
+      setNeoPixelColor(255, 0, 0);
+      delay(500);
+#endif
     }
   }
   else if (command == "scan off") {
     scanningEnabled = false;
     Serial.println("✓ WiFi scanning DISABLED");
+#ifdef USE_NEOPIXEL
+    // Brief white flash to indicate scan disabled
+    setNeoPixelColor(255, 255, 255);
+    delay(300);
+#endif
   }
   else if (command == "scan now" && currentMode == MODE_STATION) {
     performWiFiScan(); // Immediate detailed scan

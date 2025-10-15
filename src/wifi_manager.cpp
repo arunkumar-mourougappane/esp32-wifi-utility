@@ -1,5 +1,6 @@
 #include "wifi_manager.h"
 #include "command_interface.h"
+#include "led_controller.h"
 #include <WiFi.h>
 #include <WiFiAP.h>
 #include <WiFiUdp.h>
@@ -317,6 +318,7 @@ void performWiFiScan() {
     
     Serial.println("\n🔗 To connect: use 'connect <SSID> <password>'");
     Serial.println("=== End of WiFi Scan ===\n");
+
   }
   
   // Clean up
@@ -558,12 +560,25 @@ void connectToNetwork(String ssid, String password) {
   
   Serial.printf("🔗 Connecting to '%s'...\n", ssid.c_str());
   
+#ifdef USE_NEOPIXEL
+  // Show yellow while connecting
+  setNeoPixelColor(255, 255, 0);
+#endif
+  
   WiFi.begin(ssid.c_str(), password.c_str());
   
   int attempts = 0;
   while (WiFi.status() != WL_CONNECTED && attempts < 20) {  // 10 seconds timeout
     delay(500);
     Serial.print(".");
+#ifdef USE_NEOPIXEL
+    // Blink yellow during connection attempts
+    if (attempts % 2 == 0) {
+      setNeoPixelColor(255, 255, 0); // Yellow
+    } else {
+      setNeoPixelColor(100, 100, 0); // Dim yellow
+    }
+#endif
     attempts++;
   }
   
@@ -573,10 +588,20 @@ void connectToNetwork(String ssid, String password) {
     Serial.printf("  IP Address: %s\n", WiFi.localIP().toString().c_str());
     Serial.printf("  Gateway: %s\n", WiFi.gatewayIP().toString().c_str());
     Serial.printf("  DNS: %s\n", WiFi.dnsIP().toString().c_str());
+#ifdef USE_NEOPIXEL
+    // Show solid green for successful connection
+    setNeoPixelColor(0, 255, 0);
+    delay(1000); // Show success for 1 second
+#endif
   } else {
     Serial.println();
     Serial.printf("✗ Failed to connect to '%s'\n", ssid.c_str());
     Serial.println("  Check SSID, password, and signal strength");
+#ifdef USE_NEOPIXEL
+    // Show red for connection failure
+    setNeoPixelColor(255, 0, 0);
+    delay(2000); // Show error for 2 seconds
+#endif
   }
   
   promptShown = false;
