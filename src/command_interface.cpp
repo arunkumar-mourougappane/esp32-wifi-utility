@@ -6,6 +6,7 @@
 #include "latency_analyzer.h"
 #include "channel_analyzer.h"
 #include "config.h"
+#include <esp_system.h>
 
 // ==========================================
 // COMMAND INTERFACE VARIABLES
@@ -239,9 +240,68 @@ void executeCommand(String command) {
   else if (command == "spectrum") {
     executeSpectrumAnalysis();
   }
+  else if (command == "reset" || command == "restart") {
+    executeResetCommand();
+  }
   else if (command.length() > 0) {
     Serial.println("✗ Unknown command. Type 'help' for available commands.");
   }
+}
+
+// ==========================================
+// SYSTEM CONTROL FUNCTIONS  
+// ==========================================
+void executeResetCommand() {
+  Serial.println("\n⚠️  SYSTEM RESET INITIATED");
+  Serial.println("==========================================");
+  Serial.println("🔄 Preparing for board reset...");
+  
+  // Stop all active services gracefully
+  Serial.println("🛑 Stopping active services...");
+  
+  // Stop WiFi operations
+  if (currentMode == MODE_AP) {
+    Serial.println("   - Stopping Access Point");
+    WiFi.softAPdisconnect(true);
+  }
+  if (currentMode == MODE_STATION) {
+    Serial.println("   - Disconnecting from WiFi");
+    WiFi.disconnect(true);
+  }
+  
+  // Stop iPerf if running
+  Serial.println("   - Stopping iPerf services");
+  shutdownIperf();
+  
+  // Stop latency analysis if running
+  Serial.println("   - Stopping latency analysis");
+  shutdownLatencyAnalysis();
+  
+  // Stop channel monitoring
+  Serial.println("   - Stopping channel monitoring");
+  channelMonitoringActive = false;
+  
+  // Turn off LEDs
+#ifdef USE_NEOPIXEL
+  Serial.println("   - Turning off NeoPixel");
+  setNeoPixelColor(0, 0, 0); // Turn off
+#else
+  Serial.println("   - Turning off LED");
+  digitalWrite(LED_PIN, LOW);
+#endif
+
+  Serial.println("✅ All services stopped");
+  Serial.println("🔄 Restarting ESP32 in 2 seconds...");
+  Serial.println("==========================================\n");
+  
+  // Flush serial output before reset
+  Serial.flush();
+  
+  // Wait a moment for the message to be sent
+  delay(2000);
+  
+  // Perform system reset
+  esp_restart();
 }
 
 // ==========================================
@@ -334,6 +394,7 @@ void printHelp() {
   Serial.println("│ congestion      │ Quick channel congestion scan        │");
   Serial.println("│ spectrum        │ Full spectrum analysis               │");
   Serial.println("│ clear           │ Clear console screen                 │");
+  Serial.println("│ reset           │ Restart the ESP32 device            │");
   Serial.println("│ help            │ Show this help                       │");
   Serial.println("└─────────────────┴──────────────────────────────────────┘");
   Serial.println();

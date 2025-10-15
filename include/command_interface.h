@@ -14,6 +14,7 @@ void showInitialPrompt();
 void handleSerialCommands();
 void processCharacter(char c);
 void executeCommand(String command);
+void executeResetCommand();
 void showPrompt();
 void clearConsole();
 void printHelp();
