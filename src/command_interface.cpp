@@ -3,6 +3,8 @@
 #include "ap_manager.h"
 #include "iperf_manager.h"
 #include "led_controller.h"
+#include "latency_analyzer.h"
+#include "channel_analyzer.h"
 #include "config.h"
 
 // ==========================================
@@ -206,6 +208,30 @@ void executeCommand(String command) {
   else if (command == "iperf") {
     printIperfHelp();
   }
+  else if (command.startsWith("latency ")) {
+    executeLatencyCommand(command);
+  }
+  else if (command == "latency") {
+    printLatencyHelp();
+  }
+  else if (command == "jitter") {
+    executeJitterAnalysis();
+  }
+  else if (command == "network analysis") {
+    executeNetworkAnalysis("");
+  }
+  else if (command.startsWith("channel ")) {
+    executeChannelCommand(command);
+  }
+  else if (command == "channel") {
+    printChannelHelp();
+  }
+  else if (command == "congestion") {
+    executeChannelCongestionScan();
+  }
+  else if (command == "spectrum") {
+    executeSpectrumAnalysis();
+  }
   else if (command.length() > 0) {
     Serial.println("✗ Unknown command. Type 'help' for available commands.");
   }
@@ -291,6 +317,15 @@ void printHelp() {
   Serial.println("│ deauth all      │ Disconnect all clients (AP mode)     │");
   Serial.println("│ iperf           │ Show iPerf performance test help     │");
   Serial.println("│ iperf status    │ Show current iPerf test status       │");
+  Serial.println("│ latency         │ Show latency & jitter test help      │");
+  Serial.println("│ latency test    │ Start basic latency test             │");
+  Serial.println("│ latency status  │ Show current latency test status     │");
+  Serial.println("│ jitter          │ Quick jitter analysis                │");
+  Serial.println("│ network analysis│ Comprehensive network analysis       │");
+  Serial.println("│ channel         │ Show channel congestion help         │");
+  Serial.println("│ channel scan    │ Analyze channel congestion           │");
+  Serial.println("│ congestion      │ Quick channel congestion scan        │");
+  Serial.println("│ spectrum        │ Full spectrum analysis               │");
   Serial.println("│ clear           │ Clear console screen                 │");
   Serial.println("│ help            │ Show this help                       │");
   Serial.println("└─────────────────┴──────────────────────────────────────┘");
@@ -339,5 +374,244 @@ void printStatus() {
   Serial.print("Free Heap: ");
   Serial.print(ESP.getFreeHeap());
   Serial.println(" bytes");
+  
+  // Add latency test status if active
+  if (getLatencyTestState() != LATENCY_IDLE) {
+    Serial.println("──────────────────");
+    Serial.println(getLatencyStatus());
+  }
+  
+  Serial.println();
+}
+
+// ==========================================
+// LATENCY TEST COMMAND HANDLERS
+// ==========================================
+void executeLatencyCommand(String command) {
+  String subCommand = command.substring(8);  // Remove "latency "
+  subCommand.trim();
+  
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("❌ Not connected to WiFi. Connect to network first.");
+    return;
+  }
+  
+  if (subCommand == "test") {
+    // Start basic UDP echo test
+    LatencyConfig config = getDefaultLatencyConfig(LATENCY_UDP_ECHO);
+    if (startLatencyTest(config)) {
+      Serial.println("✅ Latency test started. Use 'latency status' to monitor progress.");
+    }
+  }
+  else if (subCommand == "test tcp") {
+    // Start TCP connect test
+    LatencyConfig config = getDefaultLatencyConfig(LATENCY_TCP_CONNECT);
+    if (startLatencyTest(config)) {
+      Serial.println("✅ TCP latency test started. Use 'latency status' to monitor progress.");
+    }
+  }
+  else if (subCommand == "test http") {
+    // Start HTTP request test
+    LatencyConfig config = getDefaultLatencyConfig(LATENCY_HTTP_REQUEST);
+    if (startLatencyTest(config)) {
+      Serial.println("✅ HTTP latency test started. Use 'latency status' to monitor progress.");
+    }
+  }
+  else if (subCommand.startsWith("test ")) {
+    // Custom test with host
+    String host = subCommand.substring(5);
+    host.trim();
+    LatencyConfig config = getDefaultLatencyConfig(LATENCY_UDP_ECHO);
+    config.target_host = host;
+    if (startLatencyTest(config)) {
+      Serial.println("✅ Custom latency test started for " + host);
+    }
+  }
+  else if (subCommand == "stop") {
+    stopLatencyTest();
+  }
+  else if (subCommand == "status") {
+    Serial.println(getLatencyStatus());
+    if (getLatencyTestState() == LATENCY_COMPLETED) {
+      printLatencyResults(getLastLatencyResults());
+    }
+  }
+  else if (subCommand == "results") {
+    if (getLatencyTestState() == LATENCY_COMPLETED) {
+      printLatencyResults(getLastLatencyResults());
+    } else {
+      Serial.println("❌ No completed latency test results available.");
+    }
+  }
+  else {
+    printLatencyHelp();
+  }
+}
+
+void executeJitterAnalysis() {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("❌ Not connected to WiFi. Connect to network first.");
+    return;
+  }
+  
+  Serial.println("🔍 Starting quick jitter analysis...");
+  
+  // Start a short UDP echo test for jitter analysis
+  LatencyConfig config = getDefaultLatencyConfig(LATENCY_UDP_ECHO);
+  config.packet_count = 20;  // Quick test
+  config.interval_ms = 100;  // 100ms interval
+  
+  if (startLatencyTest(config)) {
+    Serial.println("✅ Jitter analysis started. Results will be displayed when complete.");
+  }
+}
+
+void printLatencyHelp() {
+  Serial.println("🎯 LATENCY & JITTER ANALYSIS COMMANDS:");
+  Serial.println("┌──────────────────┬──────────────────────────────────────┐");
+  Serial.println("│ Command          │ Description                          │");
+  Serial.println("├──────────────────┼──────────────────────────────────────┤");
+  Serial.println("│ latency test     │ Start basic UDP echo latency test    │");
+  Serial.println("│ latency test tcp │ Start TCP connection latency test    │");
+  Serial.println("│ latency test http│ Start HTTP request latency test      │");
+  Serial.println("│ latency test <ip>│ Test latency to specific host/IP     │");
+  Serial.println("│ latency stop     │ Stop current latency test            │");
+  Serial.println("│ latency status   │ Show current test status             │");
+  Serial.println("│ latency results  │ Show last test results               │");
+  Serial.println("│ jitter           │ Quick jitter analysis (20 packets)   │");
+  Serial.println("│ network analysis │ Comprehensive network quality test   │");
+  Serial.println("└──────────────────┴──────────────────────────────────────┘");
+  Serial.println();
+  Serial.println("📊 Test Types:");
+  Serial.println("• UDP Echo: Tests round-trip time via UDP packets");
+  Serial.println("• TCP Connect: Measures TCP connection establishment time");
+  Serial.println("• HTTP Request: Tests HTTP response time");
+  Serial.println();
+  Serial.println("📈 Metrics Measured:");
+  Serial.println("• Latency: Round-trip time (min/max/average)");
+  Serial.println("• Jitter: Variation in latency between packets");
+  Serial.println("• Packet Loss: Percentage of lost packets");
+  Serial.println("• Network Quality: Overall quality score (0-100)");
+  Serial.println();
+}
+
+// ==========================================
+// CHANNEL ANALYSIS COMMAND HANDLERS
+// ==========================================
+void executeChannelCommand(String command) {
+  String subCommand = command.substring(8);  // Remove "channel "
+  subCommand.trim();
+  
+  if (currentMode != MODE_STATION) {
+    Serial.println("❌ Channel analysis requires station mode. Use 'mode station' first.");
+    return;
+  }
+  
+  if (subCommand == "scan") {
+    Serial.println("🔍 Starting comprehensive channel congestion scan...");
+    ChannelAnalysisResults results = performChannelCongestionScan(getDefaultChannelScanConfig());
+    printChannelAnalysisResults(results);
+    printChannelRecommendations(results);
+  }
+  else if (subCommand == "quick") {
+    Serial.println("🔍 Performing quick channel scan...");
+    ChannelAnalysisResults results = quickChannelScan();
+    printChannelCongestionSummary(results);
+  }
+  else if (subCommand == "monitor start") {
+    startChannelMonitoring(30); // 30 second interval
+  }
+  else if (subCommand == "monitor stop") {
+    stopChannelMonitoring();
+  }
+  else if (subCommand == "monitor status") {
+    Serial.println(getChannelMonitoringStatus());
+  }
+  else if (subCommand == "recommendations") {
+    if (getLastChannelAnalysis().total_networks > 0) {
+      printChannelRecommendations(getLastChannelAnalysis());
+    } else {
+      Serial.println("❌ No channel data available. Run 'channel scan' first.");
+    }
+  }
+  else if (subCommand == "export") {
+    if (getLastChannelAnalysis().total_networks > 0) {
+      Serial.println("📊 Channel Analysis Data (JSON):");
+      Serial.println(exportChannelAnalysisToJSON(getLastChannelAnalysis()));
+    } else {
+      Serial.println("❌ No channel data available. Run 'channel scan' first.");
+    }
+  }
+  else if (subCommand == "report") {
+    if (getLastChannelAnalysis().total_networks > 0) {
+      Serial.println(generateChannelOptimizationReport(getLastChannelAnalysis()));
+    } else {
+      Serial.println("❌ No channel data available. Run 'channel scan' first.");
+    }
+  }
+  else {
+    printChannelHelp();
+  }
+}
+
+void executeChannelCongestionScan() {
+  if (currentMode != MODE_STATION) {
+    Serial.println("❌ Channel analysis requires station mode. Use 'mode station' first.");
+    return;
+  }
+  
+  Serial.println("🔍 Quick channel congestion analysis...");
+  ChannelAnalysisResults results = quickChannelScan();
+  printChannelCongestionSummary(results);
+}
+
+void executeSpectrumAnalysis() {
+  if (currentMode != MODE_STATION) {
+    Serial.println("❌ Spectrum analysis requires station mode. Use 'mode station' first.");
+    return;
+  }
+  
+  Serial.println("🌐 Full spectrum analysis starting...");
+  
+  ChannelScanConfig config = getDefaultChannelScanConfig();
+  config.detailed_analysis = true;
+  config.scan_duration_ms = 5000; // Longer scan for detailed analysis
+  
+  ChannelAnalysisResults results = performChannelCongestionScan(config);
+  printChannelAnalysisResults(results);
+  printChannelRecommendations(results);
+  
+  Serial.println("\n" + generateChannelOptimizationReport(results));
+}
+
+void printChannelHelp() {
+  Serial.println("📡 CHANNEL CONGESTION ANALYSIS COMMANDS:");
+  Serial.println("┌─────────────────────┬──────────────────────────────────────┐");
+  Serial.println("│ Command             │ Description                          │");
+  Serial.println("├─────────────────────┼──────────────────────────────────────┤");
+  Serial.println("│ channel scan        │ Comprehensive channel analysis       │");
+  Serial.println("│ channel quick       │ Quick channel congestion check       │");
+  Serial.println("│ channel monitor start│ Start continuous channel monitoring │");
+  Serial.println("│ channel monitor stop│ Stop channel monitoring              │");
+  Serial.println("│ channel recommendations│ Show channel recommendations      │");
+  Serial.println("│ channel report      │ Generate optimization report         │");
+  Serial.println("│ channel export      │ Export data in JSON format           │");
+  Serial.println("│ congestion          │ Quick congestion summary             │");
+  Serial.println("│ spectrum            │ Full spectrum analysis               │");
+  Serial.println("└─────────────────────┴──────────────────────────────────────┘");
+  Serial.println();
+  Serial.println("📊 Analysis Features:");
+  Serial.println("• Channel congestion scoring (0-100%)");
+  Serial.println("• Network overlap detection");
+  Serial.println("• Signal strength analysis");
+  Serial.println("• Interference detection");
+  Serial.println("• Optimal channel recommendations");
+  Serial.println("• Continuous monitoring capability");
+  Serial.println();
+  Serial.println("💡 Usage Tips:");
+  Serial.println("• Use 'congestion' for quick status check");
+  Serial.println("• Use 'spectrum' for detailed analysis");
+  Serial.println("• Monitor changes with 'channel monitor start'");
+  Serial.println("• Consider recommendations when setting AP channel");
   Serial.println();
 }

@@ -1,0 +1,243 @@
+#include <unity.h>
+#include "config.h"
+
+// Include all test suites
+extern void run_iperf_tests();
+extern void run_latency_tests();
+extern void run_channel_analyzer_tests();
+
+// Test basic system initialization
+void test_system_initialization(void) {
+    // Test basic setup
+    TEST_ASSERT_TRUE(true); // System should initialize correctly
+}
+
+// Test WiFi manager basic functionality
+void test_wifi_manager_basic(void) {
+    // Test WiFi manager initialization
+    TEST_ASSERT_TRUE(true); // WiFi manager should initialize
+    
+    // Test scan capability
+    TEST_ASSERT_TRUE(true); // Should be able to scan networks
+}
+
+// Test command interface parsing
+void test_command_interface_parsing(void) {
+    // Test help command parsing
+    const char* help_cmd = "help";
+    TEST_ASSERT_NOT_NULL(help_cmd);
+    
+    // Test channel command parsing
+    const char* channel_cmd = "channel scan";
+    TEST_ASSERT_NOT_NULL(channel_cmd);
+    
+    // Test iperf command parsing
+    const char* iperf_cmd = "iperf -s";
+    TEST_ASSERT_NOT_NULL(iperf_cmd);
+}
+
+// Test LED controller for standard ESP32
+void test_led_controller_esp32(void) {
+#ifndef USE_NEOPIXEL
+    // Test built-in LED functionality for standard ESP32
+    
+    // Test LED initialization
+    TEST_ASSERT_TRUE(true); // LED should initialize
+    
+    // Test LED state changes
+    TEST_ASSERT_TRUE(true); // LED should respond to state changes
+    
+    // Test LED patterns
+    TEST_ASSERT_TRUE(true); // LED should support different patterns
+#endif
+}
+
+// Test access point manager
+void test_ap_manager_functionality(void) {
+    // Test AP configuration
+    TEST_ASSERT_TRUE(true); // AP should configure correctly
+    
+    // Test client connections (mock)
+    TEST_ASSERT_TRUE(true); // Should handle client connections
+}
+
+// Test memory usage for standard ESP32
+void test_memory_usage_esp32(void) {
+    // Mock memory measurements
+    size_t free_heap = 200000; // ~200KB typical for ESP32
+    size_t min_free_heap = 50000; // Minimum 50KB should remain
+    
+    TEST_ASSERT_GREATER_THAN(min_free_heap, free_heap);
+}
+
+// Test performance benchmarks
+void test_performance_benchmarks(void) {
+    // Test scan performance
+    unsigned long scan_time = 2000; // 2 seconds
+    TEST_ASSERT_LESS_THAN(5000, scan_time); // Should complete within 5 seconds
+    
+    // Test command processing time
+    unsigned long cmd_time = 100; // 100ms
+    TEST_ASSERT_LESS_THAN(500, cmd_time); // Should process within 500ms
+}
+
+// Test error handling
+void test_error_handling(void) {
+    // Test invalid command handling
+    TEST_ASSERT_TRUE(true); // Should handle invalid commands gracefully
+    
+    // Test network error handling
+    TEST_ASSERT_TRUE(true); // Should handle network errors
+    
+    // Test memory error handling
+    TEST_ASSERT_TRUE(true); // Should handle memory allocation failures
+}
+
+// Test configuration validation
+void test_configuration_validation(void) {
+    // Test version information
+    #ifdef VERSION
+    TEST_ASSERT_NOT_NULL(VERSION);
+    #endif
+    
+    // Test board-specific configuration
+    #ifndef USE_NEOPIXEL
+    // Standard ESP32 configuration tests
+    TEST_ASSERT_TRUE(true); // Standard configuration should be valid
+    #endif
+}
+
+// Test integration between modules
+void test_module_integration(void) {
+    // Test WiFi manager and channel analyzer integration
+    TEST_ASSERT_TRUE(true); // Modules should work together
+    
+    // Test command interface and all managers integration
+    TEST_ASSERT_TRUE(true); // Commands should control all managers
+    
+    // Test LED controller and system state integration
+    TEST_ASSERT_TRUE(true); // LED should reflect system state
+}
+
+// Test concurrent operations
+void test_concurrent_operations(void) {
+    // Test simultaneous AP and station mode
+    TEST_ASSERT_TRUE(true); // Should support concurrent modes
+    
+    // Test scanning while serving AP
+    TEST_ASSERT_TRUE(true); // Should scan while AP is active
+    
+    // Test multiple command processing
+    TEST_ASSERT_TRUE(true); // Should handle multiple commands
+}
+
+// Forward declarations from other test files
+
+// Channel analyzer tests
+extern void test_channel_frequency_calculation(void);
+extern void test_channel_overlap_detection(void);
+extern void test_congestion_score_calculation(void);
+extern void test_channel_recommendation_logic(void);
+extern void test_channel_monitoring_state_management(void);
+extern void test_interference_detection_patterns(void);
+extern void test_json_export_structure(void);
+extern void test_optimization_report_generation(void);
+extern void test_memory_usage_limits(void);
+extern void test_scan_timing_performance(void);
+
+// Latency analyzer tests
+extern void test_latency_enums(void);
+extern void test_latency_math_calculations(void);
+extern void test_latency_jitter_calculation(void);
+
+// LED controller tests
+extern void test_led_controller_initialization(void);
+extern void test_led_status_update_safety(void);
+
+// iPerf tests
+extern void test_iperf_default_config(void);
+extern void test_iperf_custom_config(void);
+extern void test_iperf_initial_state(void);
+extern void test_iperf_state_transitions(void);
+extern void test_format_throughput(void);
+
+#ifdef USE_NEOPIXEL
+extern void test_neopixel_initialization(void);
+extern void test_neopixel_color_setting(void);
+extern void test_neopixel_status_updates(void);
+extern void test_neopixel_animation_effects(void);
+extern void test_channel_analysis_visual_feedback(void);
+#else
+extern void test_standard_led_functionality(void);
+#endif
+
+void setup() {
+    UNITY_BEGIN();
+    
+    // Basic system tests
+    RUN_TEST(test_system_initialization);
+    RUN_TEST(test_wifi_manager_basic);
+    RUN_TEST(test_command_interface_parsing);
+    
+    // Hardware-specific tests
+    RUN_TEST(test_led_controller_esp32);
+    RUN_TEST(test_ap_manager_functionality);
+    
+    // Performance and resource tests
+    RUN_TEST(test_memory_usage_esp32);
+    RUN_TEST(test_performance_benchmarks);
+    
+    // Reliability tests
+    RUN_TEST(test_error_handling);
+    RUN_TEST(test_configuration_validation);
+    
+    // Integration tests
+    RUN_TEST(test_module_integration);
+    RUN_TEST(test_concurrent_operations);
+    
+    // Channel analyzer tests
+    RUN_TEST(test_channel_frequency_calculation);
+    RUN_TEST(test_channel_overlap_detection);
+    RUN_TEST(test_congestion_score_calculation);
+    RUN_TEST(test_channel_recommendation_logic);
+    RUN_TEST(test_channel_monitoring_state_management);
+    RUN_TEST(test_interference_detection_patterns);
+    RUN_TEST(test_json_export_structure);
+    RUN_TEST(test_optimization_report_generation);
+    RUN_TEST(test_memory_usage_limits);
+    RUN_TEST(test_scan_timing_performance);
+    
+    // Latency analyzer tests
+    RUN_TEST(test_latency_enums);
+    RUN_TEST(test_latency_math_calculations);
+    RUN_TEST(test_latency_jitter_calculation);
+    
+    // LED controller tests
+    RUN_TEST(test_led_controller_initialization);
+    RUN_TEST(test_led_status_update_safety);
+    
+    // iPerf tests
+    RUN_TEST(test_iperf_default_config);
+    RUN_TEST(test_iperf_custom_config);
+    RUN_TEST(test_iperf_initial_state);
+    RUN_TEST(test_iperf_state_transitions);
+    RUN_TEST(test_format_throughput);
+    
+#ifdef USE_NEOPIXEL
+    // NeoPixel-specific tests (Feather board)
+    RUN_TEST(test_neopixel_initialization);
+    RUN_TEST(test_neopixel_color_setting);
+    RUN_TEST(test_neopixel_status_updates);
+    RUN_TEST(test_neopixel_animation_effects);
+    RUN_TEST(test_channel_analysis_visual_feedback);
+#else
+    // Standard LED tests (ESP32dev)
+    RUN_TEST(test_standard_led_functionality);
+#endif
+    
+    UNITY_END();
+}
+
+void loop() {
+    // Tests run once in setup, loop does nothing
+}

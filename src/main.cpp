@@ -7,6 +7,8 @@
 #include "led_controller.h"
 #include "command_interface.h"
 #include "iperf_manager.h"
+#include "latency_analyzer.h"
+#include "channel_analyzer.h"
 
 // Global variables are defined in their respective modules
 
@@ -22,6 +24,12 @@ void setup() {
   
   // Initialize iPerf manager
   initializeIperf();
+  
+  // Initialize latency analyzer
+  initializeLatencyAnalysis();
+  
+  // Initialize channel analyzer
+  initializeChannelAnalysis();
 }
 
 void loop() {
@@ -30,6 +38,12 @@ void loop() {
   
   // Handle iPerf background tasks
   handleIperfTasks();
+  
+  // Handle latency test background tasks
+  handleLatencyTasks();
+  
+  // Handle channel monitoring background tasks
+  handleChannelMonitoringTasks();
   
   // WiFi scanning logic (only in station mode)
   if (scanningEnabled && currentMode == MODE_STATION && (millis() - lastScan >= SCAN_INTERVAL)) {

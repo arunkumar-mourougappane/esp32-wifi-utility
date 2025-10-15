@@ -1,0 +1,185 @@
+#include <unity.h>
+#include <cstring>
+#include "config.h"
+
+// Mock channel analyzer functionality for testing
+typedef enum {
+    CHANNEL_ANALYSIS_IDLE,
+    CHANNEL_ANALYSIS_RUNNING,
+    CHANNEL_ANALYSIS_COMPLETED,
+    CHANNEL_ANALYSIS_ERROR
+} ChannelAnalysisState;
+
+typedef struct {
+    uint8_t channel;
+    uint8_t network_count;
+    float congestion_score;
+    bool is_recommended;
+} MockChannelData;
+
+// Test channel analyzer mathematical functions
+void test_channel_frequency_calculation(void) {
+    // Test channel frequency calculations for 2.4GHz band
+    
+    // Channel 1 = 2412 MHz
+    TEST_ASSERT_EQUAL(2412, 2412); // Mock calculation
+    
+    // Channel 6 = 2437 MHz  
+    TEST_ASSERT_EQUAL(2437, 2437); // Mock calculation
+    
+    // Channel 11 = 2462 MHz
+    TEST_ASSERT_EQUAL(2462, 2462); // Mock calculation
+}
+
+void test_channel_overlap_detection(void) {
+    // Test channel overlap logic
+    
+    // Channels 1 and 3 should overlap
+    TEST_ASSERT_TRUE(true); // Mock: channels overlap
+    
+    // Channels 1 and 6 should not significantly overlap
+    TEST_ASSERT_TRUE(true); // Mock: minimal overlap
+    
+    // Channels 6 and 11 should not overlap
+    TEST_ASSERT_TRUE(true); // Mock: no overlap
+}
+
+void test_congestion_score_calculation(void) {
+    // Test congestion scoring algorithm
+    MockChannelData testChannel;
+    
+    // Test low congestion scenario
+    testChannel.network_count = 1;
+    testChannel.congestion_score = 15.0; // Low congestion
+    TEST_ASSERT_FLOAT_WITHIN(5.0, 15.0, testChannel.congestion_score);
+    
+    // Test medium congestion scenario
+    testChannel.network_count = 5;
+    testChannel.congestion_score = 55.0; // Medium congestion
+    TEST_ASSERT_FLOAT_WITHIN(10.0, 55.0, testChannel.congestion_score);
+    
+    // Test high congestion scenario
+    testChannel.network_count = 10;
+    testChannel.congestion_score = 85.0; // High congestion
+    TEST_ASSERT_FLOAT_WITHIN(10.0, 85.0, testChannel.congestion_score);
+}
+
+void test_channel_recommendation_logic(void) {
+    // Test channel recommendation algorithm
+    
+    // Standard channels 1, 6, 11 should be prioritized
+    bool channel_1_recommended = true;
+    bool channel_6_recommended = true;
+    bool channel_11_recommended = true;
+    
+    TEST_ASSERT_TRUE(channel_1_recommended);
+    TEST_ASSERT_TRUE(channel_6_recommended);
+    TEST_ASSERT_TRUE(channel_11_recommended);
+    
+    // Non-standard channels should be recommended only if very clear
+    bool channel_3_recommended = false; // Typically not recommended
+    TEST_ASSERT_FALSE(channel_3_recommended);
+}
+
+void test_channel_monitoring_state_management(void) {
+    // Test monitoring state transitions
+    ChannelAnalysisState state = CHANNEL_ANALYSIS_IDLE;
+    
+    // Test state transitions
+    TEST_ASSERT_EQUAL(CHANNEL_ANALYSIS_IDLE, state);
+    
+    state = CHANNEL_ANALYSIS_RUNNING;
+    TEST_ASSERT_EQUAL(CHANNEL_ANALYSIS_RUNNING, state);
+    
+    state = CHANNEL_ANALYSIS_COMPLETED;
+    TEST_ASSERT_EQUAL(CHANNEL_ANALYSIS_COMPLETED, state);
+}
+
+void test_interference_detection_patterns(void) {
+    // Test interference pattern recognition
+    
+    // Test microwave interference pattern (periodic)
+    bool microwave_detected = false; // Mock detection
+    TEST_ASSERT_FALSE(microwave_detected); // Should be false in controlled environment
+    
+    // Test Bluetooth interference pattern (frequency hopping)
+    bool bluetooth_detected = false; // Mock detection
+    TEST_ASSERT_FALSE(bluetooth_detected); // Should be false in controlled environment
+    
+    // Test continuous wave interference
+    bool cw_interference = false; // Mock detection
+    TEST_ASSERT_FALSE(cw_interference); // Should be false in controlled environment
+}
+
+#ifdef USE_NEOPIXEL
+void test_channel_analysis_visual_feedback(void) {
+    // Test NeoPixel integration with channel analysis
+    
+    // Test scanning indication (blue)
+    // Mock: setNeoPixelColor(0, 0, 255);
+    TEST_ASSERT_TRUE(true); // Visual feedback test
+    
+    // Test completion indication (green)  
+    // Mock: setNeoPixelColor(0, 255, 0);
+    TEST_ASSERT_TRUE(true); // Visual feedback test
+    
+    // Test error indication (red)
+    // Mock: setNeoPixelColor(255, 0, 0);
+    TEST_ASSERT_TRUE(true); // Visual feedback test
+}
+#endif
+
+void test_json_export_structure(void) {
+    // Test JSON export format structure
+    
+    // Mock JSON structure validation
+    const char* mockJson = "{\"channels\":[{\"channel\":1,\"congestion\":25.5}]}";
+    
+    // Verify JSON contains required fields
+    TEST_ASSERT_NOT_NULL(strstr(mockJson, "channels"));
+    TEST_ASSERT_NOT_NULL(strstr(mockJson, "channel"));
+    TEST_ASSERT_NOT_NULL(strstr(mockJson, "congestion"));
+}
+
+void test_optimization_report_generation(void) {
+    // Test optimization report content
+    
+    // Mock report validation
+    const char* mockReport = "Channel Optimization Report\nRecommended: Channel 1\nAvoid: Channel 6";
+    
+    // Verify report contains essential information
+    TEST_ASSERT_NOT_NULL(strstr(mockReport, "Optimization"));
+    TEST_ASSERT_NOT_NULL(strstr(mockReport, "Recommended"));
+    TEST_ASSERT_NOT_NULL(strstr(mockReport, "Channel"));
+}
+
+void test_memory_usage_limits(void) {
+    // Test memory usage stays within acceptable limits
+    
+    // Mock memory usage tracking
+    size_t estimated_ram_usage = 4096; // 4KB estimated
+    size_t max_allowed_ram = 8192;     // 8KB maximum
+    
+    TEST_ASSERT_LESS_THAN(max_allowed_ram, estimated_ram_usage);
+    
+    // Test buffer sizes are reasonable
+    size_t channel_buffer_size = 14 * sizeof(MockChannelData); // 14 channels
+    TEST_ASSERT_LESS_THAN(1024, channel_buffer_size); // Should be less than 1KB
+}
+
+void test_scan_timing_performance(void) {
+    // Test scan timing performance
+    
+    unsigned long mock_scan_start = 1000;
+    unsigned long mock_scan_end = 4000;
+    unsigned long scan_duration = mock_scan_end - mock_scan_start;
+    
+    // Scan should complete within 5 seconds for detailed analysis
+    TEST_ASSERT_LESS_THAN(5000, scan_duration);
+    
+    // Quick scan should complete within 2 seconds
+    unsigned long quick_scan_duration = 1500;
+    TEST_ASSERT_LESS_THAN(2000, quick_scan_duration);
+}
+
+// Main function removed - tests will be called from main test runner

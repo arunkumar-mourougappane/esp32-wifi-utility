@@ -17,3 +17,14 @@ void showPrompt();
 void clearConsole();
 void printHelp();
 void printStatus();
+
+// Latency test command handlers
+void executeLatencyCommand(String command);
+void executeJitterAnalysis();
+void printLatencyHelp();
+
+// Channel analysis command handlers
+void executeChannelCommand(String command);
+void executeChannelCongestionScan();
+void executeSpectrumAnalysis();
+void printChannelHelp();
