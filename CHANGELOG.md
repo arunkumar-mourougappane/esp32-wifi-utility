@@ -52,14 +52,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Comprehensive graceful shutdown sequence for all active services
   - Professional status messages with progress indication
   - Safe alternative to physical reset button
+  - **Enhanced Initialization Flow**: Clean startup sequence with proper message ordering
+  - Improved `showInitialPrompt()` function for professional user experience
+  - All initialization messages displayed before interactive prompt
   - `channel scan` (quick <5s, detailed <30s options)
   - `channel monitor start/stop` for background analysis
   - `channel recommend` for AI-powered suggestions
   - `channel export` for JSON data export
   - `channel status` and comprehensive help system
 - **`main.cpp`**: Integrated channel analyzer with background task management
+  - **Enhanced Startup Sequence**: Restructured initialization for clean output
+  - Added Feather board-specific serial initialization delay
+  - Professional boot sequence with `showInitialPrompt()` after all modules ready
 - **`led_controller`**: Enhanced with NeoPixel support for Feather board
 - **`config.h`**: Board detection and conditional compilation setup
+- **`platformio.ini`**: Enhanced device detection with USB/ACM port configurations
+  - Automatic device detection for ESP32dev (`/dev/ttyUSB*`) and Feather (`/dev/ttyACM*`)
+  - Improved upload and monitoring reliability across different platforms
 
 ### 🧪 Professional Testing Infrastructure
 

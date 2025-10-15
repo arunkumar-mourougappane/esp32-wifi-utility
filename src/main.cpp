@@ -15,7 +15,11 @@
 void setup() {
   // Initialize serial interface first
   initializeSerial();
-  
+  // Wait for serial to initialize (Feather boards only)
+#ifdef ARDUINO_FEATHER_ESP32
+  sleep(3); 
+#endif
+
   // Initialize hardware
   initializeLED();
   

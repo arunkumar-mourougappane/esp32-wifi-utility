@@ -394,7 +394,7 @@ void printHelp() {
   Serial.println("│ congestion      │ Quick channel congestion scan        │");
   Serial.println("│ spectrum        │ Full spectrum analysis               │");
   Serial.println("│ clear           │ Clear console screen                 │");
-  Serial.println("│ reset           │ Restart the ESP32 device            │");
+  Serial.println("│ reset           │ Restart the ESP32 device             │");
   Serial.println("│ help            │ Show this help                       │");
   Serial.println("└─────────────────┴──────────────────────────────────────┘");
   Serial.println();
