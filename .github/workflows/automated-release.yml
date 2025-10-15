@@ -1,0 +1,263 @@
+name: Automated Release on Version Bump
+
+on:
+  push:
+    branches: [ main ]
+    paths: 
+      - 'platformio.ini'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'platformio.ini'
+    types: [ closed ]
+
+permissions:
+  contents: write
+
+jobs:
+  check-version-bump:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    runs-on: ubuntu-latest
+    outputs:
+      version-changed: ${{ steps.version-check.outputs.changed }}
+      new-version: ${{ steps.version-check.outputs.new-version }}
+      old-version: ${{ steps.version-check.outputs.old-version }}
+    
+    steps:
+    - name: Checkout current code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Check version bump
+      id: version-check
+      run: |
+        # Extract current version from platformio.ini
+        CURRENT_VERSION=$(grep -o 'DVERSION="[^"]*"' platformio.ini | head -1 | sed 's/DVERSION="//;s/"//')
+        echo "Current version: $CURRENT_VERSION"
+        
+        # Get the previous commit's version (if exists)
+        if git rev-parse HEAD~1 >/dev/null 2>&1; then
+          git show HEAD~1:platformio.ini > /tmp/old_platformio.ini 2>/dev/null || echo "No previous version found"
+          if [ -f /tmp/old_platformio.ini ]; then
+            OLD_VERSION=$(grep -o 'DVERSION="[^"]*"' /tmp/old_platformio.ini | head -1 | sed 's/DVERSION="//;s/"//' || echo "unknown")
+          else
+            OLD_VERSION="unknown"
+          fi
+        else
+          OLD_VERSION="unknown"
+        fi
+        
+        echo "Previous version: $OLD_VERSION"
+        
+        # Check if version changed
+        if [ "$CURRENT_VERSION" != "$OLD_VERSION" ] && [ "$OLD_VERSION" != "unknown" ]; then
+          echo "Version changed from $OLD_VERSION to $CURRENT_VERSION"
+          echo "changed=true" >> $GITHUB_OUTPUT
+          echo "new-version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "old-version=$OLD_VERSION" >> $GITHUB_OUTPUT
+        else
+          echo "No version change detected or first commit"
+          echo "changed=false" >> $GITHUB_OUTPUT
+          echo "new-version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "old-version=$OLD_VERSION" >> $GITHUB_OUTPUT
+        fi
+
+  automated-release:
+    needs: check-version-bump
+    if: needs.check-version-bump.outputs.version-changed == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install PlatformIO
+      run: |
+        python -m pip install --upgrade pip
+        pip install --upgrade platformio
+
+    - name: Validate version format
+      run: |
+        VERSION="${{ needs.check-version-bump.outputs.new-version }}"
+        if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
+          echo "❌ Invalid version format: $VERSION"
+          echo "Version must follow semantic versioning (e.g., 2.0.0, 2.1.0-beta)"
+          exit 1
+        fi
+        echo "✅ Valid version format: $VERSION"
+    
+    - name: Build release firmware
+      run: |
+        echo "🔨 Building firmware for version ${{ needs.check-version-bump.outputs.new-version }}"
+        pio run --environment esp32dev
+        pio run --environment adafruit_feather_esp32s3_tft
+    
+    - name: Generate automated release notes
+      run: |
+        VERSION="${{ needs.check-version-bump.outputs.new-version }}"
+        OLD_VERSION="${{ needs.check-version-bump.outputs.old-version }}"
+        BUILD_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+        COMMIT_SHA="${{ github.sha }}"
+        SHORT_SHA=$(echo $COMMIT_SHA | cut -c1-7)
+        
+        # Get commit messages since last version
+        if [ "$OLD_VERSION" != "unknown" ]; then
+          LAST_TAG=$(git tag -l "v$OLD_VERSION" | head -1)
+          if [ -n "$LAST_TAG" ]; then
+            CHANGES=$(git log --pretty=format:"- %s" $LAST_TAG..HEAD | head -20)
+          else
+            CHANGES=$(git log --pretty=format:"- %s" --since="7 days ago" | head -10)
+          fi
+        else
+          CHANGES=$(git log --pretty=format:"- %s" -10)
+        fi
+        
+        cat > release_notes.md << EOF
+        ## ESP32 WiFi Utility v${VERSION}
+        
+        🎉 **Automated release triggered by version bump from v${OLD_VERSION} to v${VERSION}**
+        
+        ### 🔄 What's Changed
+        
+        ${CHANGES}
+        
+        ### 🚀 Core Features
+        - ✅ Professional WiFi Channel Analysis with AI-powered congestion scoring (0-100%)
+        - ✅ Dual-board support: ESP32dev + Adafruit Feather ESP32-S3 TFT
+        - ✅ Advanced network scanning with spectrum analysis and interference detection
+        - ✅ Complete iPerf network performance testing (TCP/UDP client/server modes)
+        - ✅ Access Point management with QR code generation
+        - ✅ Interactive command interface with 15+ channel analysis commands
+        - 🌈 NeoPixel status display for Feather ESP32-S3 TFT board
+        - 🧪 Comprehensive Unity test framework with automated CI/CD
+        
+        ### 📊 Channel Analysis Capabilities
+        - **Real-time Spectrum Scanning**: Complete 2.4GHz band analysis (channels 1-14)
+        - **Advanced Congestion Analysis**: Mathematical interference modeling with 0-100% scoring
+        - **Channel Overlap Detection**: Precise interference calculations and optimization
+        - **Smart Recommendations**: AI-powered optimal channel selection with detailed rationale
+        - **Interference Classification**: Microwave, Bluetooth, and continuous wave detection
+        
+        ### 🛠 Technical Specifications
+        
+        #### ESP32 Development Board
+        - **Flash Usage**: ~61% (optimized for standard ESP32)
+        - **RAM Usage**: ~14% (efficient memory utilization)
+        - **Features**: Full channel analysis suite, iPerf testing, AP management
+        
+        #### Adafruit Feather ESP32-S3 TFT
+        - **Flash Usage**: ~54% (includes NeoPixel library)
+        - **RAM Usage**: ~18% (enhanced visual feedback)
+        - **Features**: All standard features PLUS NeoPixel status display
+        
+        ### 🔧 Build Information
+        - **Version**: ${VERSION}
+        - **Previous Version**: ${OLD_VERSION}
+        - **Commit**: ${SHORT_SHA}
+        - **Build Date**: ${BUILD_DATE}
+        - **Release Type**: Automated (version bump detected)
+        
+        ### 📦 Installation Instructions
+        
+        #### Download Firmware
+        1. **ESP32 Development Board**: \`esp32-wifi-utility-esp32dev-v${VERSION}.bin\`
+        2. **Feather ESP32-S3 TFT**: \`esp32-wifi-utility-feather-s3-tft-v${VERSION}.bin\`
+        
+        #### Flashing
+        \`\`\`bash
+        # Using esptool (install with: pip install esptool)
+        esptool.py --port /dev/ttyUSB0 write_flash 0x10000 firmware.bin
+        
+        # Or use Arduino IDE / PlatformIO for uploading
+        \`\`\`
+        
+        #### Quick Start
+        \`\`\`bash
+        # Connect via serial at 115200 baud
+        help                    # Show all commands
+        channel scan           # Quick spectrum scan
+        channel analyze        # Detailed channel analysis
+        channel best           # Get optimal channel recommendation
+        channel congestion     # Show all channels with congestion levels
+        mode ap                # Start access point with QR code
+        \`\`\`
+        
+        ### 🎯 Professional Channel Commands
+        - \`channel scan\` - Real-time spectrum analysis
+        - \`channel analyze\` - Detailed congestion assessment
+        - \`channel best\` - AI-powered channel recommendation
+        - \`channel congestion\` - Complete congestion overview
+        - \`channel interference\` - Interference source detection
+        - \`channel overlap\` - Mathematical overlap analysis
+        - \`channel quality [num]\` - Specific channel quality assessment
+        
+        ### 📚 Documentation
+        - [Complete User Guide](docs/user-guides/) - Step-by-step guides
+        - [Technical Documentation](docs/technical/) - Implementation details
+        - [Channel Analysis Guide](docs/user-guides/CHANNEL_GUIDE.md) - Professional channel analysis
+        - [CHANGELOG.md](CHANGELOG.md) - Detailed version history
+        
+        ---
+        
+        **🤖 This release was automatically created when version ${VERSION} was detected in platformio.ini**
+        EOF
+    
+    - name: Check if tag exists
+      id: tag-check
+      run: |
+        TAG_NAME="v${{ needs.check-version-bump.outputs.new-version }}"
+        if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+          echo "Tag $TAG_NAME already exists"
+          echo "exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "Tag $TAG_NAME does not exist"
+          echo "exists=false" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Create Release
+      if: steps.tag-check.outputs.exists == 'false'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        VERSION="${{ needs.check-version-bump.outputs.new-version }}"
+        TAG_NAME="v${VERSION}"
+        RELEASE_NAME="ESP32 WiFi Utility v${VERSION}"
+        
+        echo "🚀 Creating automated release: $TAG_NAME"
+        
+        # Create release with firmware attachments for both boards
+        gh release create "$TAG_NAME" \
+          --title "$RELEASE_NAME" \
+          --notes-file release_notes.md \
+          --latest \
+          .pio/build/esp32dev/firmware.bin#esp32-wifi-utility-esp32dev-v${VERSION}.bin \
+          .pio/build/esp32dev/firmware.elf#esp32-wifi-utility-esp32dev-debug-v${VERSION}.elf \
+          .pio/build/adafruit_feather_esp32s3_tft/firmware.bin#esp32-wifi-utility-feather-s3-tft-v${VERSION}.bin \
+          .pio/build/adafruit_feather_esp32s3_tft/firmware.elf#esp32-wifi-utility-feather-s3-tft-debug-v${VERSION}.elf
+        
+        echo "✅ Automated release created successfully: $TAG_NAME"
+        echo "📦 Firmware binaries attached for both ESP32dev and Feather ESP32-S3 TFT"
+        
+    - name: Release Summary
+      if: steps.tag-check.outputs.exists == 'false'
+      run: |
+        echo "🎉 Release Summary:"
+        echo "   Version: ${{ needs.check-version-bump.outputs.new-version }}"
+        echo "   Previous: ${{ needs.check-version-bump.outputs.old-version }}"
+        echo "   Type: Automated (version bump detected)"
+        echo "   Firmware: ESP32dev + Feather ESP32-S3 TFT variants"
+        echo "   Status: ✅ Successfully created"
+    
+    - name: Skip Release (Tag Exists)
+      if: steps.tag-check.outputs.exists == 'true'
+      run: |
+        echo "⏭️  Skipping release creation - tag v${{ needs.check-version-bump.outputs.new-version }} already exists"
+        echo "   This prevents duplicate releases for the same version"

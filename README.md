@@ -245,6 +245,24 @@ main.cpp
 - **Computer** with PlatformIO or Arduino IDE
 - **Serial Terminal** for command interface (115200 baud)
 
+## 📦 Pre-Built Firmware Downloads
+
+**🎯 Want to use it immediately?** Download pre-built firmware from our [latest release](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/releases/latest):
+
+- **ESP32dev**: `esp32-wifi-utility-esp32dev-v{version}.bin` - Standard ESP32 development board
+- **Feather ESP32-S3 TFT**: `esp32-wifi-utility-feather-s3-tft-v{version}.bin` - Enhanced with NeoPixel support
+
+### Flash Pre-Built Firmware
+```bash
+# Using esptool (install with: pip install esptool)
+esptool.py --port /dev/ttyUSB0 write_flash 0x10000 firmware.bin
+
+# Or use Arduino IDE / PlatformIO for uploading
+```
+
+### 🤖 Automated Releases
+Every version bump in `platformio.ini` automatically triggers a new release with fresh firmware builds for both boards. See our [Automated Release Documentation](docs/technical/AUTOMATED_RELEASES.md) for details.
+
 ## ⚡ Quick Start
 
 ### 1. Hardware Setup
