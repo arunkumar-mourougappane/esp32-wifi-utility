@@ -48,6 +48,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Enhanced Existing Modules
 - **`command_interface`**: Added 15+ new channel analysis commands
+  - **NEW**: `reset`/`restart` commands for graceful device restart
+  - Comprehensive graceful shutdown sequence for all active services
+  - Professional status messages with progress indication
+  - Safe alternative to physical reset button
   - `channel scan` (quick <5s, detailed <30s options)
   - `channel monitor start/stop` for background analysis
   - `channel recommend` for AI-powered suggestions
