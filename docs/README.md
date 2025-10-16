@@ -9,6 +9,8 @@ Comprehensive guides for using all features of the ESP32 WiFi Utility:
 - **[Latency Testing Guide](user-guides/LATENCY_GUIDE.md)** - Network performance and jitter analysis
 - **[Enhanced WiFi Scanning](user-guides/ENHANCED_SCANNING.md)** - Advanced network discovery and analysis
 - **[iPerf Network Testing](user-guides/IPERF_GUIDE.md)** - Comprehensive throughput and performance testing
+- **[Web Interface Guide](user-guides/WEB_INTERFACE.md)** - 🆕 Complete web-based dashboard documentation (Feather ESP32-S3 TFT only)
+- **[NeoPixel Status Display](user-guides/NEOPIXEL_GUIDE.md)** - RGB LED status indicators (Feather ESP32-S3 TFT only)
 
 ## 🔧 Technical Documentation
 
@@ -30,8 +32,16 @@ New to the ESP32 WiFi Utility? Start here:
 2. **[Hardware Setup](../README.md#hardware-requirements--dual-board-support)** - Choose and configure your ESP32 board
 3. **[Quick Start Guide](../README.md#quick-start)** - Build and deploy in minutes
 4. **[Command Reference](../README.md#command-reference)** - Complete command documentation
+5. **[Web Interface](user-guides/WEB_INTERFACE.md)** - 🆕 Access features via browser (Feather only)
 
 ## 🎯 Feature Highlights
+
+### 🆕 v2.1.0: Web-Based Interface
+- Browser-accessible dashboard for all features (Feather ESP32-S3 TFT only)
+- Hierarchical dropdown navigation with professional UI/UX
+- Real-time progress indicators with backdrop overlays
+- Mobile-responsive design with touch-friendly controls
+- Unified Analysis Dashboard for network testing tools
 
 ### 🆕 Professional Channel Analysis
 - Real-time 2.4GHz spectrum scanning with AI-powered recommendations
@@ -45,7 +55,7 @@ New to the ESP32 WiFi Utility? Start here:
 
 ### 🔧 Dual-Board Support
 - ESP32 Development Board with standard LED indication
-- Adafruit Feather ESP32-S3 TFT with enhanced NeoPixel feedback
+- Adafruit Feather ESP32-S3 TFT with enhanced NeoPixel feedback and web server
 - Hardware-specific optimizations and conditional compilation
 
 ### 🧪 Professional Testing Framework
@@ -62,13 +72,22 @@ docs/
 │   ├── CHANNEL_GUIDE.md        # Channel analysis user guide
 │   ├── LATENCY_GUIDE.md        # Latency testing guide
 │   ├── ENHANCED_SCANNING.md    # WiFi scanning features
-│   └── IPERF_GUIDE.md          # Performance testing guide
+│   ├── IPERF_GUIDE.md          # Performance testing guide
+│   └── WEB_INTERFACE.md        # 🆕 Web dashboard documentation
 └── technical/                   # Developer documentation
     ├── CHANNEL_IMPLEMENTATION.md     # Algorithm implementation
     ├── TEST_INFRASTRUCTURE.md       # Testing framework
     ├── IMPLEMENTATION_SUMMARY.md    # Architecture overview
     └── PROJECT_COMPLETION_SUMMARY.md # Project achievements
 ```
+
+## 🌐 Web Interface Quick Reference
+
+**For Feather ESP32-S3 TFT users:**
+- Start: `webserver start`
+- Access: `http://<device-ip>` (displayed after start)
+- Features: All network analysis tools via browser
+- Guide: [Complete Web Interface Documentation](user-guides/WEB_INTERFACE.md)
 
 ## 🤝 Contributing
 
@@ -80,7 +99,8 @@ For questions or issues:
 1. Check the relevant user guide above
 2. Review the [Command Reference](../README.md#command-reference)
 3. Try the `help` command in the serial interface
-4. Open an issue on the project repository
+4. For web interface: See [Web Interface Guide](user-guides/WEB_INTERFACE.md#troubleshooting)
+5. Open an issue on the project repository
 
 ---
 

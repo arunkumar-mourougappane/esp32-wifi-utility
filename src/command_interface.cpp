@@ -7,6 +7,9 @@
 #include "channel_analyzer.h"
 #include "config.h"
 #include <esp_system.h>
+#ifdef USE_NEOPIXEL
+#include "web_server.h"
+#endif
 
 // ==========================================
 // COMMAND INTERFACE VARIABLES
@@ -83,6 +86,7 @@ void processCharacter(char c) {
 // ==========================================
 void executeCommand(String command) {
   command.trim();
+  String originalCommand = command; // Preserve original case for SSID/password extraction
   command.toLowerCase();
   promptShown = false; // Reset prompt flag
   
@@ -129,7 +133,7 @@ void executeCommand(String command) {
     startAccessPoint();
   }
   else if (command.startsWith("mode ap ")) {
-    String params = command.substring(8);
+    String params = originalCommand.substring(8); // Use originalCommand to preserve case
     params.trim();
     
     int spaceIndex = params.indexOf(' ');
@@ -192,8 +196,8 @@ void executeCommand(String command) {
     }
   }
   else if (command.startsWith("connect ") && currentMode == MODE_STATION) {
-    // Parse SSID and password from command
-    String params = command.substring(8);
+    // Parse SSID and password from command (preserve case sensitivity)
+    String params = originalCommand.substring(8); // Use originalCommand to preserve case
     params.trim();
     
     int spaceIndex = params.indexOf(' ');
@@ -243,6 +247,29 @@ void executeCommand(String command) {
   else if (command == "reset" || command == "restart") {
     executeResetCommand();
   }
+#ifdef USE_NEOPIXEL
+  else if (command == "webserver start") {
+    if (startWebServer()) {
+      Serial.println("🌐 Web server started successfully");
+      Serial.println("📡 Access at: " + getWebServerURL());
+    }
+  }
+  else if (command == "webserver stop") {
+    stopWebServer();
+  }
+  else if (command == "webserver status") {
+    if (isWebServerRunning()) {
+      Serial.println("✅ Web server is running");
+      Serial.println("📡 URL: " + getWebServerURL());
+    } else {
+      Serial.println("❌ Web server is not running");
+      Serial.println("💡 Use 'webserver start' to start it");
+    }
+  }
+  else if (command == "webserver") {
+    printWebServerHelp();
+  }
+#endif
   else if (command.length() > 0) {
     Serial.println("✗ Unknown command. Type 'help' for available commands.");
   }
@@ -393,6 +420,12 @@ void printHelp() {
   Serial.println("│ channel scan    │ Analyze channel congestion           │");
   Serial.println("│ congestion      │ Quick channel congestion scan        │");
   Serial.println("│ spectrum        │ Full spectrum analysis               │");
+#ifdef USE_NEOPIXEL
+  Serial.println("│ webserver       │ Show web server help (Feather only)  │");
+  Serial.println("│ webserver start │ Start web server (Feather only)      │");
+  Serial.println("│ webserver stop  │ Stop web server (Feather only)       │");
+  Serial.println("│ webserver status│ Check web server status              │");
+#endif
   Serial.println("│ clear           │ Clear console screen                 │");
   Serial.println("│ reset           │ Restart the ESP32 device             │");
   Serial.println("│ help            │ Show this help                       │");
@@ -683,3 +716,35 @@ void printChannelHelp() {
   Serial.println("• Consider recommendations when setting AP channel");
   Serial.println();
 }
+
+#ifdef USE_NEOPIXEL
+void printWebServerHelp() {
+  Serial.println("\n🌐 WEB SERVER COMMANDS (Feather ESP32-S3 TFT Only):");
+  Serial.println("┌─────────────────────┬──────────────────────────────────────┐");
+  Serial.println("│ Command             │ Description                          │");
+  Serial.println("├─────────────────────┼──────────────────────────────────────┤");
+  Serial.println("│ webserver start     │ Start the web server                 │");
+  Serial.println("│ webserver stop      │ Stop the web server                  │");
+  Serial.println("│ webserver status    │ Check server status & get URL        │");
+  Serial.println("└─────────────────────┴──────────────────────────────────────┘");
+  Serial.println();
+  Serial.println("🌐 Web Interface Features:");
+  Serial.println("• Real-time system status & statistics");
+  Serial.println("• WiFi network scanning & display");
+  Serial.println("• Channel analysis information");
+  Serial.println("• Client connection monitoring (AP mode)");
+  Serial.println("• Responsive mobile-friendly design");
+  Serial.println();
+  Serial.println("📋 Requirements:");
+  Serial.println("• Must be in AP mode OR connected to WiFi network");
+  Serial.println("• Web server runs on port 80 (default HTTP port)");
+  Serial.println("• Access via browser at displayed IP address");
+  Serial.println();
+  Serial.println("💡 Usage Tips:");
+  Serial.println("• In AP mode: Connect to AP, then access web interface");
+  Serial.println("• In Station mode: Connect to WiFi first, then start server");
+  Serial.println("• Use 'webserver status' to get the current access URL");
+  Serial.println("• Web interface updates show real-time device status");
+  Serial.println();
+}
+#endif

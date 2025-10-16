@@ -5,6 +5,9 @@
 #include <WiFiAP.h>
 #include <WiFiUdp.h>
 #include <qrcode.h>
+#ifdef USE_NEOPIXEL
+#include "web_server.h"
+#endif
 
 // ==========================================
 // GLOBAL STATE VARIABLES
@@ -44,6 +47,17 @@ void startStationMode() {
   
   Serial.println("✓ Station mode activated - Ready to scan for networks");
   Serial.println("  Use 'scan on' to start scanning");
+  
+#ifdef USE_NEOPIXEL
+  // Automatically start web server in station mode
+  Serial.println("🌐 Starting web server...");
+  if (startWebServer()) {
+    Serial.println("✅ Web server is ready at: " + getWebServerURL());
+  } else {
+    Serial.println("⚠️  Web server will start after WiFi connection");
+  }
+#endif
+  
   promptShown = false;
 }
 
@@ -69,6 +83,14 @@ void startAccessPoint() {
     
     // Generate and display QR code for easy mobile connection
     generateAPQRCode(currentAPSSID, currentAPPassword, "WPA");
+    
+#ifdef USE_NEOPIXEL
+    // Automatically start web server in AP mode
+    Serial.println("🌐 Starting web server...");
+    if (startWebServer()) {
+      Serial.println("✅ Web server is ready at: " + getWebServerURL());
+    }
+#endif
     
     promptShown = false;
   } else {
@@ -117,6 +139,14 @@ void startAccessPoint(const String& ssid, const String& password) {
     // Generate and display QR code for easy mobile connection
     generateAPQRCode(currentAPSSID, currentAPPassword, "WPA");
     
+#ifdef USE_NEOPIXEL
+    // Automatically start web server in AP mode
+    Serial.println("🌐 Starting web server...");
+    if (startWebServer()) {
+      Serial.println("✅ Web server is ready at: " + getWebServerURL());
+    }
+#endif
+    
     promptShown = false;
   } else {
     currentMode = MODE_OFF;
@@ -132,6 +162,14 @@ void startAccessPoint(const String& ssid, const String& password) {
 }
 
 void stopWiFi() {
+#ifdef USE_NEOPIXEL
+  // Stop web server before disabling WiFi
+  if (isWebServerRunning()) {
+    Serial.println("🌐 Stopping web server...");
+    stopWebServer();
+  }
+#endif
+  
   WiFi.disconnect();
   WiFi.softAPdisconnect(true);
   WiFi.mode(WIFI_OFF);
@@ -145,6 +183,14 @@ void stopWiFi() {
 }
 
 void setIdleMode() {
+#ifdef USE_NEOPIXEL
+  // Stop web server before setting idle mode
+  if (isWebServerRunning()) {
+    Serial.println("🌐 Stopping web server...");
+    stopWebServer();
+  }
+#endif
+  
   WiFi.disconnect();
   WiFi.softAPdisconnect(true);
   WiFi.mode(WIFI_OFF);
@@ -592,6 +638,14 @@ void connectToNetwork(String ssid, String password) {
     // Show solid green for successful connection
     setNeoPixelColor(0, 255, 0);
     delay(1000); // Show success for 1 second
+    
+    // Automatically start web server after successful connection
+    if (!isWebServerRunning()) {
+      Serial.println("🌐 Starting web server...");
+      if (startWebServer()) {
+        Serial.println("✅ Web server is ready at: " + getWebServerURL());
+      }
+    }
 #endif
   } else {
     Serial.println();
@@ -621,6 +675,15 @@ void disconnectFromNetwork() {
   
   if (WiFi.status() == WL_CONNECTED) {
     String ssid = WiFi.SSID();
+    
+#ifdef USE_NEOPIXEL
+    // Stop web server before disconnecting
+    if (isWebServerRunning()) {
+      Serial.println("🌐 Stopping web server...");
+      stopWebServer();
+    }
+#endif
+    
     WiFi.disconnect();
     Serial.printf("✓ Disconnected from '%s'\n", ssid.c_str());
   } else {

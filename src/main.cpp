@@ -9,6 +9,9 @@
 #include "iperf_manager.h"
 #include "latency_analyzer.h"
 #include "channel_analyzer.h"
+#ifdef USE_NEOPIXEL
+#include "web_server.h"
+#endif
 
 // Global variables are defined in their respective modules
 
@@ -35,6 +38,11 @@ void setup() {
   // Initialize channel analyzer
   initializeChannelAnalysis();
   
+#ifdef USE_NEOPIXEL
+  // Initialize web server (Feather ESP32-S3 TFT only)
+  initializeWebServer();
+#endif
+  
   // Show initial prompt after all initialization is complete
   showInitialPrompt();
 }
@@ -51,6 +59,11 @@ void loop() {
   
   // Handle channel monitoring background tasks
   handleChannelMonitoringTasks();
+  
+#ifdef USE_NEOPIXEL
+  // Handle web server requests (Feather ESP32-S3 TFT only)
+  handleWebServerRequests();
+#endif
   
   // WiFi scanning logic (only in station mode)
   if (scanningEnabled && currentMode == MODE_STATION && (millis() - lastScan >= SCAN_INTERVAL)) {
