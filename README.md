@@ -60,7 +60,7 @@ A professional-grade ESP32 WiFi analysis and management suite featuring comprehe
   - Encryption Type (🔓 Open, 🔒 WEP/WPA2, 🔐 WPA3, 🏢 Enterprise)
   - BSSID (Access Point MAC Address)
   - Real-time channel congestion scoring (0-100%)
-- **Advanced Channel Commands**: 
+- **Advanced Channel Commands**:
   - `channel scan` - Quick spectrum analysis (<5 seconds)
   - `channel scan detailed` - Comprehensive analysis (<30 seconds)
   - `channel monitor start/stop` - Background monitoring
@@ -79,6 +79,42 @@ A professional-grade ESP32 WiFi analysis and management suite featuring comprehe
 - Deauthentication capability for access control and testing
 - Displays comprehensive AP network information
 - Easy connection for mobile devices and computers
+
+### 🌐 **Web Server Interface** (Feather ESP32-S3 TFT Only)
+
+- **Browser-Based Control**: Access device features via any web browser
+- **Mobile-Responsive Design**: Beautiful interface optimized for phones, tablets, and desktops
+- **Hierarchical Navigation**: Professional dropdown menu system for organized access
+- **Progress Indicators**: Visual feedback with backdrop overlay during scan operations
+- **Real-Time Monitoring**: Live system status, WiFi statistics, and client information
+- **Network Visualization**: Visual WiFi scanning with signal strength indicators
+- **Professional Dashboard Pages**:
+  - 🏠 **Home** - Quick stats and system overview with unified metrics
+  - 📊 **Status** - Detailed system information and configuration
+  - 🔍 **Scan Networks** - Interactive WiFi scanning with progress indicators
+  - 🔬 **Analysis Dashboard** - Unified testing hub with quick actions
+    - ⚡ iPerf Testing - Bandwidth measurement and throughput analysis
+    - 📉 Latency Testing - Network quality and jitter analysis
+    - 📡 Channel Analysis - Spectrum analysis and congestion monitoring
+- **Modern UI/UX Features**:
+  - Gradient design with professional styling and smooth animations
+  - Dropdown menus with hover states and mobile-responsive behavior
+  - Full-screen progress overlays with animated spinners
+  - Smart status badges for connection state and mode
+  - Responsive grid layouts and card-based design
+- **Advanced Functionality**:
+  - Zero Configuration: Automatic IP detection and URL generation
+  - Multi-Mode Support: Works in both AP mode and Station mode
+  - Interactive Forms: Configure and launch tests from web interface
+  - Real-time Statistics: Live bandwidth, latency, and channel metrics
+  - Button-Triggered Scans: Prevent duplicate operations with progress feedback
+- **Access Control**:
+  - In AP mode: Accessible to connected clients at AP IP
+  - In Station mode: Accessible on local network at device IP
+- **Simple Commands**:
+  - `webserver start` - Launch web interface
+  - `webserver stop` - Stop web server
+  - `webserver status` - Get access URL and server state
 
 ### 🌐 Network Connection & Testing
 
@@ -143,23 +179,23 @@ This project includes professional-grade documentation covering all features and
 
 ### 📖 Core Feature Documentation
 
-| Document | Description | Key Topics |
-|----------|-------------|------------|
-| **[📚 Documentation Index](docs/README.md)** | **Complete documentation portal** | **All guides and technical documentation** |
-| **[Channel Analysis Guide](docs/user-guides/CHANNEL_GUIDE.md)** | Complete guide to professional spectrum analysis | AI recommendations, congestion analysis, interference detection |
-| **[Latency Testing Guide](docs/user-guides/LATENCY_GUIDE.md)** | Advanced network latency and jitter analysis | Performance metrics, statistical analysis, quality assessment |
-| **[Enhanced WiFi Scanning](docs/user-guides/ENHANCED_SCANNING.md)** | Advanced network scanning features and analysis | Visual indicators, security analysis, network statistics |
-| **[iPerf Network Testing](docs/user-guides/IPERF_GUIDE.md)** | Network performance measurement and throughput analysis | TCP/UDP testing, bandwidth measurement, diagnostics |
-| **[Automated Release System](docs/technical/AUTOMATED_RELEASES.md)** | GitHub Actions automated release pipeline | Version-based releases, dual-board builds, professional automation |
+| Document                                                             | Description                                             | Key Topics                                                         |
+| -------------------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------ |
+| **[📚 Documentation Index](docs/README.md)**                         | **Complete documentation portal**                       | **All guides and technical documentation**                         |
+| **[Channel Analysis Guide](docs/user-guides/CHANNEL_GUIDE.md)**      | Complete guide to professional spectrum analysis        | AI recommendations, congestion analysis, interference detection    |
+| **[Latency Testing Guide](docs/user-guides/LATENCY_GUIDE.md)**       | Advanced network latency and jitter analysis            | Performance metrics, statistical analysis, quality assessment      |
+| **[Enhanced WiFi Scanning](docs/user-guides/ENHANCED_SCANNING.md)**  | Advanced network scanning features and analysis         | Visual indicators, security analysis, network statistics           |
+| **[iPerf Network Testing](docs/user-guides/IPERF_GUIDE.md)**         | Network performance measurement and throughput analysis | TCP/UDP testing, bandwidth measurement, diagnostics                |
+| **[Automated Release System](docs/technical/AUTOMATED_RELEASES.md)** | GitHub Actions automated release pipeline               | Version-based releases, dual-board builds, professional automation |
 
 ### 🔧 Technical Implementation Guides
 
-| Document | Description | Key Topics |
-|----------|-------------|------------|
-| **[Test Infrastructure Guide](docs/technical/TEST_INFRASTRUCTURE.md)** | Comprehensive testing framework for dual-board support | Unity testing, CI/CD, hardware validation |
-| **[Channel Implementation Details](docs/technical/CHANNEL_IMPLEMENTATION.md)** | Technical deep-dive into spectrum analysis algorithms | Mathematical models, interference patterns, optimization |
-| **[Implementation Summary](docs/technical/IMPLEMENTATION_SUMMARY.md)** | Overview of all system enhancements and architecture | Module structure, performance metrics, technical specs |
-| **[Project Completion Summary](docs/technical/PROJECT_COMPLETION_SUMMARY.md)** | Comprehensive project status and feature completion | Achievement tracking, performance benchmarks, deployment guide |
+| Document                                                                       | Description                                            | Key Topics                                                     |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------ | -------------------------------------------------------------- |
+| **[Test Infrastructure Guide](docs/technical/TEST_INFRASTRUCTURE.md)**         | Comprehensive testing framework for dual-board support | Unity testing, CI/CD, hardware validation                      |
+| **[Channel Implementation Details](docs/technical/CHANNEL_IMPLEMENTATION.md)** | Technical deep-dive into spectrum analysis algorithms  | Mathematical models, interference patterns, optimization       |
+| **[Implementation Summary](docs/technical/IMPLEMENTATION_SUMMARY.md)**         | Overview of all system enhancements and architecture   | Module structure, performance metrics, technical specs         |
+| **[Project Completion Summary](docs/technical/PROJECT_COMPLETION_SUMMARY.md)** | Comprehensive project status and feature completion    | Achievement tracking, performance benchmarks, deployment guide |
 
 ### 🎯 Quick Start Guides
 
@@ -172,7 +208,7 @@ This project includes professional-grade documentation covering all features and
 ### 📊 Feature Highlights
 
 - **🎯 Professional Spectrum Analysis**: AI-powered channel recommendations with 0-100% congestion scoring
-- **� Advanced Performance Testing**: Comprehensive latency analysis with jitter calculations and statistical reporting  
+- **� Advanced Performance Testing**: Comprehensive latency analysis with jitter calculations and statistical reporting
 - **🔧 Dual-Board Support**: ESP32dev and Adafruit Feather ESP32-S3 TFT with hardware-specific optimizations
 - **🧪 Enterprise Testing**: Unity framework with comprehensive test coverage for both platforms
 - **📱 Visual Feedback**: Smart LED/NeoPixel status indication with real-time analysis progress
@@ -228,19 +264,22 @@ main.cpp
 ### Supported Boards
 
 #### Option 1: ESP32 Development Board (Standard)
+
 - **Board**: Any ESP32dev variant (DevKitC, NodeMCU-32S, etc.)
 - **LED**: Built-in LED on GPIO 2 (standard on most ESP32 boards)
 - **Memory**: 4MB Flash, 320KB RAM minimum
 - **Features**: Full functionality with standard LED status indication
 
 #### Option 2: Adafruit Feather ESP32-S3 TFT (Enhanced) 🆕
+
 - **Board**: Adafruit Feather ESP32-S3 TFT with 4MB Flash
 - **LED**: NeoPixel RGB LED on GPIO 48 (enhanced color status indication)
-- **Display**: 1.14" Color TFT Display (240x135) - *Future enhancement planned*
+- **Display**: 1.14" Color TFT Display (240x135) - _Future enhancement planned_
 - **Features**: Enhanced visual feedback with RGB color coding for analysis status
 - **Memory**: 8MB PSRAM, enhanced performance for complex analysis
 
 ### Universal Requirements
+
 - **USB Cable** for programming and serial communication
 - **Computer** with PlatformIO or Arduino IDE
 - **Serial Terminal** for command interface (115200 baud)
@@ -253,6 +292,7 @@ main.cpp
 - **Feather ESP32-S3 TFT**: `esp32-wifi-utility-feather-s3-tft-v{version}.bin` - Enhanced with NeoPixel support
 
 ### Flash Pre-Built Firmware
+
 ```bash
 # Using esptool (install with: pip install esptool)
 esptool.py --port /dev/ttyUSB0 write_flash 0x10000 firmware.bin
@@ -261,17 +301,21 @@ esptool.py --port /dev/ttyUSB0 write_flash 0x10000 firmware.bin
 ```
 
 ### 🤖 Automated Releases
-Every version bump in `platformio.ini` automatically triggers a new release with fresh firmware builds for both boards. See our [Automated Release Documentation](docs/technical/AUTOMATED_RELEASES.md) for details.
+
+Every version bump in `platformio.ini` automatically triggers a new release with fresh firmware builds for both boards.
+See our [Automated Release Documentation](docs/technical/AUTOMATED_RELEASES.md) for details.
 
 ## ⚡ Quick Start
 
 ### 1. Hardware Setup
 
 #### For ESP32 Development Board:
+
 1. Connect your ESP32dev to your computer via USB
 2. Ensure the built-in LED is available (GPIO 2)
 
 #### For Adafruit Feather ESP32-S3 TFT:
+
 1. Connect your Feather board to your computer via USB
 2. The NeoPixel LED will provide enhanced RGB status indication
 
@@ -284,6 +328,7 @@ Every version bump in `platformio.ini` automatically triggers a new release with
 ### 3. Build and Upload (Dual-Board Support)
 
 #### For ESP32 Development Board:
+
 ```bash
 # Using PlatformIO (recommended)
 pio run -e esp32dev -t upload
@@ -296,11 +341,12 @@ pio device monitor
 ```
 
 #### For Adafruit Feather ESP32-S3 TFT:
+
 ```bash
 # Using PlatformIO with NeoPixel support
 pio run -e adafruit_feather_esp32s3_tft -t upload
 
-# Build only to check compilation  
+# Build only to check compilation
 pio run -e adafruit_feather_esp32s3_tft
 
 # Monitor serial output
@@ -308,6 +354,7 @@ pio device monitor
 ```
 
 #### Build All Configurations:
+
 ```bash
 # Build both board configurations
 pio run
@@ -317,9 +364,11 @@ pio run
 ```
 
 #### Using Arduino IDE:
+
 **File → Open → select main.cpp** (ESP32dev configuration only)
 
-**Note**: The project uses a professional modular structure with multiple source files. PlatformIO automatically handles the compilation of all `.cpp` files in the `src/` directory and applies board-specific configurations.
+**Note**: The project uses a professional modular structure with multiple source files.
+PlatformIO automatically handles the compilation of all `.cpp` files in the `src/` directory and applies board-specific configurations.
 
 ### 4. Connect to Serial Monitor
 
@@ -340,37 +389,39 @@ pio run
 
 ### Scanning Commands (Station Mode)
 
-| Command           | Description                                        |
-| ----------------- | -------------------------------------------------- |
-| `scan on`         | Start automatic WiFi network scanning              |
-| `scan off`        | Stop WiFi scanning                                 |
-| `scan now`        | Immediate detailed scan with enhanced analysis     |
-| `scan info <id>`  | Show comprehensive details for specific network    |
+| Command          | Description                                     |
+| ---------------- | ----------------------------------------------- |
+| `scan on`        | Start automatic WiFi network scanning           |
+| `scan off`       | Stop WiFi scanning                              |
+| `scan now`       | Immediate detailed scan with enhanced analysis  |
+| `scan info <id>` | Show comprehensive details for specific network |
 
 ### 🆕 Professional Channel Analysis Commands
 
-| Command                    | Description                                                    |
-| -------------------------- | -------------------------------------------------------------- |
-| `channel scan`             | Quick spectrum analysis of all 2.4GHz channels (<5 seconds)   |
-| `channel scan quick`       | Fast 5-second channel congestion scan                         |
-| `channel scan detailed`    | Comprehensive 30-second spectrum analysis                     |
-| `channel monitor start`    | Begin continuous background channel monitoring                 |
-| `channel monitor stop`     | End background monitoring                                      |
-| `channel recommend`        | AI-powered optimal channel recommendations with rationale     |
-| `channel export`           | Export scan data to JSON format for external analysis        |
-| `channel status`           | Show current monitoring status and recent scan results        |
-| `channel help`             | Display comprehensive channel analysis command reference       |
+| Command                 | Description                                                 |
+| ----------------------- | ----------------------------------------------------------- |
+| `channel scan`          | Quick spectrum analysis of all 2.4GHz channels (<5 seconds) |
+| `channel scan quick`    | Fast 5-second channel congestion scan                       |
+| `channel scan detailed` | Comprehensive 30-second spectrum analysis                   |
+| `channel monitor start` | Begin continuous background channel monitoring              |
+| `channel monitor stop`  | End background monitoring                                   |
+| `channel recommend`     | AI-powered optimal channel recommendations with rationale   |
+| `channel export`        | Export scan data to JSON format for external analysis       |
+| `channel status`        | Show current monitoring status and recent scan results      |
+| `channel help`          | Display comprehensive channel analysis command reference    |
 
 ### 🆕 Network Performance & Latency Analysis
 
-| Command                    | Description                                                    |
-| -------------------------- | -------------------------------------------------------------- |
-| `latency test <host>`      | Comprehensive latency test with jitter analysis              |
-| `latency monitor <host>`   | Continuous latency monitoring with statistics                 |
-| `latency report`           | Generate detailed network performance report                  |
-| `latency help`             | Display latency analysis command reference                    |
+| Command                  | Description                                     |
+| ------------------------ | ----------------------------------------------- |
+| `latency test <host>`    | Comprehensive latency test with jitter analysis |
+| `latency monitor <host>` | Continuous latency monitoring with statistics   |
+| `latency report`         | Generate detailed network performance report    |
+| `latency help`           | Display latency analysis command reference      |
 
-💡 **Professional Analysis**: The new channel and latency analysis systems provide enterprise-grade network diagnostics with AI-powered recommendations. See [Channel Analysis Guide](CHANNEL_GUIDE.md) and [Latency Testing Guide](LATENCY_GUIDE.md) for complete details.
+💡 **Professional Analysis**: The new channel and latency analysis systems provide enterprise-grade
+network diagnostics with AI-powered recommendations. See [Channel Analysis Guide](CHANNEL_GUIDE.md) and
+[Latency Testing Guide](LATENCY_GUIDE.md) for complete details.
 
 ### Network Connection Commands (Station Mode)
 
@@ -381,12 +432,14 @@ pio run
 
 ### Network Performance Testing Commands
 
-| Command           | Description                                    |
-| ----------------- | ---------------------------------------------- |
-| `iperf`          | Show iPerf performance test help               |
-| `iperf status`   | Show current iPerf test status                 |
+| Command        | Description                      |
+| -------------- | -------------------------------- |
+| `iperf`        | Show iPerf performance test help |
+| `iperf status` | Show current iPerf test status   |
 
-💡 **Network Performance Testing**: The iPerf functionality provides comprehensive network bandwidth and performance analysis with both TCP and UDP protocols. See [iPerf Testing Guide](IPERF_GUIDE.md) for detailed usage, configuration options, and examples.
+💡 **Network Performance Testing**: The iPerf functionality provides comprehensive network bandwidth and performance
+analysis with both TCP and UDP protocols. See [iPerf Testing Guide](IPERF_GUIDE.md) for detailed usage, configuration
+options, and examples.
 
 ### Information Commands
 
@@ -398,6 +451,19 @@ pio run
 | `qr`         | Display QR code for easy mobile connection (AP mode only)    |
 | `clear`      | Clear console screen and redisplay header                    |
 | `help`       | Display all available commands                               |
+
+### 🆕 Web Server Commands (Feather ESP32-S3 TFT Only)
+
+| Command            | Description                                     |
+| ------------------ | ----------------------------------------------- |
+| `webserver start`  | Launch web server for browser-based interface   |
+| `webserver stop`   | Stop the web server                             |
+| `webserver status` | Check server status and get access URL          |
+| `webserver`        | Display web server help and feature information |
+
+💡 **Web Interface Access**: Once started, access the web interface at the displayed IP address
+(e.g., `http://192.168.4.1` in AP mode or your device IP in Station mode). The web interface
+provides real-time monitoring, WiFi scanning, and channel analysis through a beautiful mobile-responsive dashboard.
 
 ### Client Management Commands (AP Mode Only)
 
@@ -982,6 +1048,7 @@ esp32-wifi-utility/
 ### Memory Usage (Optimized for Dual-Board Support)
 
 #### ESP32 Development Board:
+
 - **Flash**: ~1018KB total (77.6% of ESP32 capacity with all features)
   - Core WiFi functionality: ~200KB
   - **NEW**: Channel analyzer engine: ~45KB
@@ -994,6 +1061,7 @@ esp32-wifi-utility/
 - **Free Heap**: Typically 275KB+ available during operation
 
 #### Adafruit Feather ESP32-S3 TFT:
+
 - **Flash**: ~991KB total (68.7% of ESP32-S3 capacity with enhanced features)
   - All standard features plus NeoPixel integration: ~15KB
   - Enhanced visual feedback system: ~8KB
@@ -1011,12 +1079,14 @@ esp32-wifi-utility/
 ### Performance (Enhanced Capabilities)
 
 #### Core Performance:
+
 - **Scan Speed**: ~3-5 seconds per enhanced scan with full analysis
 - **AP Capacity**: Up to 4 simultaneous clients (ESP32 limitation)
 - **Response Time**: <100ms for serial commands
 - **Connection Time**: Typical WiFi connection in 5-10 seconds
 
 #### 🆕 Professional Channel Analysis Performance:
+
 - **Quick Scan**: <5 seconds for basic channel congestion analysis
 - **Detailed Scan**: <30 seconds for comprehensive spectrum analysis
 - **Background Monitoring**: Configurable 1-60 second intervals
@@ -1026,12 +1096,14 @@ esp32-wifi-utility/
 - **Reliability**: 99.5%+ successful scan completion rate
 
 #### 🆕 Network Performance & Latency Analysis:
+
 - **Latency Testing**: Comprehensive ping-style analysis with jitter calculations
 - **Statistical Processing**: Real-time mean, median, standard deviation calculation
 - **Packet Loss Detection**: Accurate network quality assessment
 - **Response Time**: <50ms for latency command processing
 
 #### Traditional Performance:
+
 - **iPerf Throughput**:
   - TCP: Up to 10-20 Mbps depending on network conditions
   - UDP: Configurable rates up to network capacity
@@ -1050,20 +1122,20 @@ esp32-wifi-utility/
 - **Total Lines**: ~4400+ lines organized across enterprise-grade modular architecture
 - **Main Loop**: Clean entry point in `main.cpp` with minimal logic
 - **Modular Design**: 8 specialized modules with clear separation of concerns
-- **Enhanced Features**: 
+- **Enhanced Features**:
   - Professional spectrum analysis engine (570+ lines)
   - Advanced latency analysis with statistical processing
   - Comprehensive WiFi scanning with AI recommendations
   - iPerf performance testing suite
   - Dual-board hardware abstraction layer
 - **Memory Efficient**: Optimized global state management with proper extern declarations
-- **Quality Assurance**: 
+- **Quality Assurance**:
   - Unity test framework integration
   - Comprehensive test coverage for both board types
   - Automated build verification system
   - Professional CI/CD pipeline ready
 - **Compilation**: Zero warnings with optimized builds for both platforms
-- **Documentation**: 
+- **Documentation**:
   - 6 comprehensive documentation files (1000+ pages total)
   - Professional API documentation
   - Complete user guides and technical implementation details

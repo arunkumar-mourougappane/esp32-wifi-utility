@@ -30,3 +30,8 @@ void executeChannelCommand(String command);
 void executeChannelCongestionScan();
 void executeSpectrumAnalysis();
 void printChannelHelp();
+
+#ifdef USE_NEOPIXEL
+// Web server command handlers (Feather ESP32-S3 TFT only)
+void printWebServerHelp();
+#endif
