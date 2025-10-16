@@ -308,15 +308,19 @@ jobs:
         
         echo "🚀 Creating automated release: $TAG_NAME"
         
+        # Prepare firmware files with proper names
+        mkdir -p release_assets
+        cp .pio/build/esp32dev/firmware.bin release_assets/esp32-wifi-utility-esp32dev-v${VERSION}.bin
+        cp .pio/build/esp32dev/firmware.elf release_assets/esp32-wifi-utility-esp32dev-debug-v${VERSION}.elf
+        cp .pio/build/adafruit_feather_esp32s3_tft/firmware.bin release_assets/esp32-wifi-utility-feather-s3-tft-v${VERSION}.bin
+        cp .pio/build/adafruit_feather_esp32s3_tft/firmware.elf release_assets/esp32-wifi-utility-feather-s3-tft-debug-v${VERSION}.elf
+        
         # Create release with firmware attachments for both boards
         gh release create "$TAG_NAME" \
           --title "$RELEASE_NAME" \
           --notes-file release_notes.md \
           --latest \
-          .pio/build/esp32dev/firmware.bin#esp32-wifi-utility-esp32dev-v${VERSION}.bin \
-          .pio/build/esp32dev/firmware.elf#esp32-wifi-utility-esp32dev-debug-v${VERSION}.elf \
-          .pio/build/adafruit_feather_esp32s3_tft/firmware.bin#esp32-wifi-utility-feather-s3-tft-v${VERSION}.bin \
-          .pio/build/adafruit_feather_esp32s3_tft/firmware.elf#esp32-wifi-utility-feather-s3-tft-debug-v${VERSION}.elf
+          release_assets/*
         
         echo "✅ Automated release created successfully: $TAG_NAME"
         echo "📦 Firmware binaries attached for both ESP32dev and Feather ESP32-S3 TFT"
