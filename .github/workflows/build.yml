@@ -141,8 +141,8 @@ jobs:
     
     - name: Get current build size
       run: |
-        CURRENT_FLASH=$(pio run --environment esp32dev 2>&1 | grep -o "Flash: \[[^]]*\] [0-9.]*%" | grep -o "[0-9.]*%" | tail -1)
-        CURRENT_RAM=$(pio run --environment esp32dev 2>&1 | grep -o "RAM: \[[^]]*\] [0-9.]*%" | grep -o "[0-9.]*%" | tail -1)
+        CURRENT_FLASH=$(pio run --environment esp32dev 2>&1 | grep -oP 'Flash:\s+\[.*?\]\s+\K[0-9.]+%' | tail -1)
+        CURRENT_RAM=$(pio run --environment esp32dev 2>&1 | grep -oP 'RAM:\s+\[.*?\]\s+\K[0-9.]+%' | tail -1)
         echo "CURRENT_FLASH=${CURRENT_FLASH}" >> $GITHUB_ENV
         echo "CURRENT_RAM=${CURRENT_RAM}" >> $GITHUB_ENV
     
@@ -156,8 +156,8 @@ jobs:
     
     - name: Get base build size
       run: |
-        BASE_FLASH=$(pio run --environment esp32dev 2>&1 | grep -o "Flash: \[[^]]*\] [0-9.]*%" | grep -o "[0-9.]*%" | tail -1)
-        BASE_RAM=$(pio run --environment esp32dev 2>&1 | grep -o "RAM: \[[^]]*\] [0-9.]*%" | grep -o "[0-9.]*%" | tail -1)
+        BASE_FLASH=$(pio run --environment esp32dev 2>&1 | grep -oP 'Flash:\s+\[.*?\]\s+\K[0-9.]+%' | tail -1)
+        BASE_RAM=$(pio run --environment esp32dev 2>&1 | grep -oP 'RAM:\s+\[.*?\]\s+\K[0-9.]+%' | tail -1)
         echo "BASE_FLASH=${BASE_FLASH}" >> $GITHUB_ENV
         echo "BASE_RAM=${BASE_RAM}" >> $GITHUB_ENV
     
