@@ -41,8 +41,8 @@ String getVersionString() {
     #endif
 }
 
-// HTML page styling - Minified to reduce memory
-const char* HTML_HEADER = R"rawliteral(
+// HTML page styling - Stored in PROGMEM (flash) to save RAM
+const char HTML_HEADER[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html><head>
 <meta charset="UTF-8">
@@ -53,7 +53,7 @@ const char* HTML_HEADER = R"rawliteral(
 body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#333;padding:20px;min-height:100vh}
 .container{max-width:1200px;margin:0 auto;background:#fff;border-radius:15px;box-shadow:0 10px 40px rgba(0,0,0,.2);padding:30px}
 h1{color:#667eea;margin-bottom:10px;font-size:2em}
-h2{color:# 764ba2;margin:30px 0 15px;font-size:1.5em;border-bottom:2px solid #667eea;padding-bottom:10px}
+h2{color:#764ba2;margin:30px 0 15px;font-size:1.5em;border-bottom:2px solid #667eea;padding-bottom:10px}
 .header{text-align:center;margin-bottom:30px}
 .badge{display:inline-block;padding:8px 15px;border-radius:20px;font-weight:bold;margin:5px;font-size:.9em}
 .badge.success{background:#10b981;color:#fff}
@@ -100,19 +100,23 @@ function startScan(u,t,m){showProgress(t,m);window.location.href=u}
 <div class="container">
 )rawliteral";
 
-// Generate dynamic HTML footer
+// Generate dynamic HTML footer - optimized with F() macro
 String generateHtmlFooter() {
-    String footer = "<div class=\"footer\"><p>🚀 ESP32 WiFi v";
+    String footer;
+    footer.reserve(256);
+    footer = F("<div class=\"footer\"><p>🚀 ESP32 WiFi v");
     footer += getVersionString();
-    footer += " | ";
+    footer += F(" | ");
     footer += getDeviceName();
-    footer += "</p></div></div></body></html>";
+    footer += F("</p></div></div></body></html>");
     return footer;
 }
 
-// Generate common navigation menu
+// Generate common navigation menu - stored in PROGMEM
+const char NAV_MENU[] PROGMEM = "<div class=\"nav\"><div><a href=\"/\">🏠 Home</a></div><div><a href=\"/status\">📊 Status</a></div><div><a href=\"/scan\">🔍 Scan</a></div><div class=\"dropdown\"><a href=\"/analysis\">🔬 Analysis</a><div class=\"dropdown-content\"><a href=\"/analysis\">📊 Dashboard</a><a href=\"/iperf\">⚡ iPerf</a><a href=\"/latency\">📉 Latency</a><a href=\"/channel\">📡 Channel</a></div></div></div>";
+
 String generateNav() {
-    return "<div class=\"nav\"><div><a href=\"/\">🏠 Home</a></div><div><a href=\"/status\">📊 Status</a></div><div><a href=\"/scan\">🔍 Scan</a></div><div class=\"dropdown\"><a href=\"/analysis\">🔬 Analysis</a><div class=\"dropdown-content\"><a href=\"/analysis\">📊 Dashboard</a><a href=\"/iperf\">⚡ iPerf</a><a href=\"/latency\">📉 Latency</a><a href=\"/channel\">📡 Channel</a></div></div></div>";
+    return FPSTR(NAV_MENU);
 }
 
 // ==========================================
@@ -291,154 +295,156 @@ String getWebServerURL() {
 // ==========================================
 
 void handleRoot() {
-    String html = HTML_HEADER;
+    String html;
+    html.reserve(4096);  // Pre-allocate to reduce heap fragmentation
+    html = FPSTR(HTML_HEADER);  // Read from PROGMEM
     
-    html += "<div class=\"header\"><h1>🚀 ESP32 WiFi</h1><p>Network Analysis & Testing</p><div><span class=\"badge info\">";
+    html += F("<div class=\"header\"><h1>🚀 ESP32 WiFi</h1><p>Network Analysis & Testing</p><div><span class=\"badge info\">");
     html += getDeviceName();
-    html += "</span>";
+    html += F("</span>");
     
     if (currentMode == MODE_AP) {
-        html += "<span class=\"badge success\">Access Point Mode</span>";
+        html += F("<span class=\"badge success\">Access Point Mode</span>");
     } else if (WiFi.status() == WL_CONNECTED) {
-        html += "<span class=\"badge success\">Connected</span>";
+        html += F("<span class=\"badge success\">Connected</span>");
     } else {
-        html += "<span class=\"badge warning\">Station Mode</span>";
+        html += F("<span class=\"badge warning\">Station Mode</span>");
     }
     
-    html += "</div></div>";
-    
-    // Compact navigation
+    html += F("</div></div>");
     html += generateNav();
-    
-    html += "<h2>📊 Stats</h2><div class=\"stat-grid\"><div class=\"stat-card\"><div class=\"stat-label\">Mode</div><div class=\"stat-value\">";
+    html += F("<h2>📊 Stats</h2><div class=\"stat-grid\"><div class=\"stat-card\"><div class=\"stat-label\">Mode</div><div class=\"stat-value\">");
     
     switch (currentMode) {
-        case MODE_IDLE: html += "IDLE"; break;
-        case MODE_STATION: html += "STATION"; break;
-        case MODE_AP: html += "AP"; break;
-        case MODE_OFF: html += "OFF"; break;
+        case MODE_IDLE: html += F("IDLE"); break;
+        case MODE_STATION: html += F("STATION"); break;
+        case MODE_AP: html += F("AP"); break;
+        case MODE_OFF: html += F("OFF"); break;
     }
     
-    html += "</div></div><div class=\"stat-card\"><div class=\"stat-label\">IP Address</div><div class=\"stat-value\" style=\"font-size:1.2em\">";
+    html += F("</div></div><div class=\"stat-card\"><div class=\"stat-label\">IP Address</div><div class=\"stat-value\" style=\"font-size:1.2em\">");
     
     if (currentMode == MODE_AP) {
         html += WiFi.softAPIP().toString();
     } else if (WiFi.status() == WL_CONNECTED) {
         html += WiFi.localIP().toString();
     } else {
-        html += "N/A";
+        html += F("N/A");
     }
     
-    html += "</div></div><div class=\"stat-card\"><div class=\"stat-label\">Free Heap</div><div class=\"stat-value\">";
-    html += String(ESP.getFreeHeap() / 1024) + " KB";
-    html += "</div></div><div class=\"stat-card\"><div class=\"stat-label\">Clients</div><div class=\"stat-value\">";
+    html += F("</div></div><div class=\"stat-card\"><div class=\"stat-label\">Free Heap</div><div class=\"stat-value\">");
+    html += ESP.getFreeHeap() / 1024;
+    html += F(" KB</div></div><div class=\"stat-card\"><div class=\"stat-label\">Clients</div><div class=\"stat-value\">");
     
     if (currentMode == MODE_AP) {
-        html += String(WiFi.softAPgetStationNum());
+        html += WiFi.softAPgetStationNum();
     } else {
-        html += "N/A";
+        html += F("N/A");
     }
     
-    html += "</div></div></div>";
+    html += F("</div></div></div>");
     
     // QR Code for AP mode
     if (currentMode == MODE_AP) {
-        html += "<h2>📱 Connect</h2><div style=\"background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:30px;border-radius:10px;text-align:center;color:#fff\"><p style=\"font-size:1.3em;margin-bottom:20px;font-weight:bold\">📷 Scan QR Code</p><div style=\"display:inline-block;background:#fff;padding:15px;border-radius:10px\">";
-        html += "<div style='width:250px;height:250px'>" + generateQRCodeSVG(currentAPSSID, currentAPPassword, "WPA") + "</div>";
-        html += "</div><div style=\"margin-top:20px\"><p><strong>Network:</strong> " + String(currentAPSSID) + "</p></div></div>";
+        html += F("<h2>📱 Connect</h2><div style=\"background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:30px;border-radius:10px;text-align:center;color:#fff\"><p style=\"font-size:1.3em;margin-bottom:20px;font-weight:bold\">📷 Scan QR Code</p><div style=\"display:inline-block;background:#fff;padding:15px;border-radius:10px\">");
+        html += F("<div style='width:250px;height:250px'>");
+        html += generateQRCodeSVG(currentAPSSID, currentAPPassword, "WPA");
+        html += F("</div></div><div style=\"margin-top:20px\"><p><strong>Network:</strong> ");
+        html += currentAPSSID;
+        html += F("</p></div></div>");
     }
 
-    html += "<h2>ℹ️ Features</h2><ul style=\"margin:15px 0 15px 30px;line-height:1.8\"><li>📡 <strong>Channel Analysis</strong>: 2.4GHz spectrum scanning</li><li>🔍 <strong>Network Scanning</strong>: WiFi discovery</li><li>⚡ <strong>iPerf Testing</strong>: Bandwidth measurement</li><li>📊 <strong>Latency Analysis</strong>: Jitter & packet loss testing</li><li>🌐 <strong>Access Point</strong>: WiFi hotspot with QR</li></ul>";
+    html += F("<h2>ℹ️ Features</h2><ul style=\"margin:15px 0 15px 30px;line-height:1.8\"><li>📡 <strong>Channel Analysis</strong>: 2.4GHz spectrum scanning</li><li>🔍 <strong>Network Scanning</strong>: WiFi discovery</li><li>⚡ <strong>iPerf Testing</strong>: Bandwidth measurement</li><li>📊 <strong>Latency Analysis</strong>: Jitter & packet loss testing</li><li>🌐 <strong>Access Point</strong>: WiFi hotspot with QR</li></ul>");
     
     html += generateHtmlFooter();
     webServer->send(200, "text/html", html);
 }
 
 void handleStatus() {
-    String html = HTML_HEADER;
+    String html;
+    html.reserve(4096);  // Pre-allocate to reduce heap fragmentation
+    html = FPSTR(HTML_HEADER);  // Read from PROGMEM
     
-    html += "<div class=\"header\"><h1>📊 Status</h1></div>";
+    html += F("<div class=\"header\"><h1>📊 Status</h1></div>");
     html += generateNav();
-    html += "<h2>🔧 System Info</h2><div style=\"background:#f8f9fa;padding:20px;border-radius:10px;margin:20px 0\">";
+    html += F("<h2>🔧 System Info</h2><div style=\"background:#f8f9fa;padding:20px;border-radius:10px;margin:20px 0\">");
     
-    html += "<p><strong>WiFi Mode:</strong> ";
+    html += F("<p><strong>WiFi Mode:</strong> ");
     switch (currentMode) {
         case MODE_IDLE:
-            html += "⚪ Idle (Ready)";
+            html += F("⚪ Idle (Ready)");
             break;
         case MODE_STATION:
-            html += "🔍 Station (Scanner)";
+            html += F("🔍 Station (Scanner)");
             break;
         case MODE_AP:
-            html += "📡 Access Point";
+            html += F("📡 Access Point");
             break;
         case MODE_OFF:
-            html += "🔴 Disabled";
+            html += F("🔴 Disabled");
             break;
     }
-    html += "</p>";
+    html += F("</p>");
     
-    html += "<p><strong>Scanning:</strong> " + String(scanningEnabled ? "✅ Enabled" : "❌ Disabled") + "</p>";
+    html += F("<p><strong>Scanning:</strong> ");
+    html += scanningEnabled ? F("✅ Enabled") : F("❌ Disabled");
+    html += F("</p>");
     
     if (currentMode == MODE_AP) {
-        html += "<p><strong>AP SSID:</strong> " + String(currentAPSSID) + "</p>";
-        html += "<p><strong>AP IP:</strong> " + WiFi.softAPIP().toString() + "</p>";
-        html += "<p><strong>Connected Clients:</strong> " + String(WiFi.softAPgetStationNum()) + "</p>";
+        html += F("<p><strong>AP SSID:</strong> ");
+        html += currentAPSSID;
+        html += F("</p><p><strong>AP IP:</strong> ");
+        html += WiFi.softAPIP().toString();
+        html += F("</p><p><strong>Connected Clients:</strong> ");
+        html += WiFi.softAPgetStationNum();
+        html += F("</p>");
     } else if (WiFi.status() == WL_CONNECTED) {
-        html += "<p><strong>Connected to:</strong> " + WiFi.SSID() + "</p>";
-        html += "<p><strong>IP Address:</strong> " + WiFi.localIP().toString() + "</p>";
-        html += "<p><strong>Signal Strength:</strong> " + String(WiFi.RSSI()) + " dBm</p>";
+        html += F("<p><strong>Connected to:</strong> ");
+        html += WiFi.SSID();
+        html += F("</p><p><strong>IP Address:</strong> ");
+        html += WiFi.localIP().toString();
+        html += F("</p><p><strong>Signal Strength:</strong> ");
+        html += WiFi.RSSI();
+        html += F(" dBm</p>");
     }
     
-    html += "<p><strong>Free Heap:</strong> " + String(ESP.getFreeHeap()) + " bytes</p>";
-    html += "<p><strong>Chip Model:</strong> " + String(ESP.getChipModel()) + "</p>";
-    html += "<p><strong>CPU Frequency:</strong> " + String(ESP.getCpuFreqMHz()) + " MHz</p>";
-    html += "<p><strong>Flash Size:</strong> " + String(ESP.getFlashChipSize() / 1024 / 1024) + " MB</p>";
-    html += "</div>";
+    html += F("<p><strong>Free Heap:</strong> ");
+    html += ESP.getFreeHeap();
+    html += F(" bytes</p><p><strong>Chip Model:</strong> ");
+    html += ESP.getChipModel();
+    html += F("</p><p><strong>CPU Frequency:</strong> ");
+    html += ESP.getCpuFreqMHz();
+    html += F(" MHz</p><p><strong>Flash Size:</strong> ");
+    html += ESP.getFlashChipSize() / 1024 / 1024;
+    html += F(" MB</p></div>");
     
     // QR Code for AP mode
     if (currentMode == MODE_AP) {
-        html += "<h2>📱 Connect</h2><div style=\"background:#f8f9fa;padding:30px;border-radius:10px;text-align:center\"><p style=\"font-size:1.2em;margin-bottom:20px;color:#667eea;font-weight:bold\">Scan QR to connect</p><div style=\"display:inline-block;background:#fff;padding:20px;border-radius:10px\">";
-        html += "<div style='width:300px;height:300px'>" + generateQRCodeSVG(currentAPSSID, currentAPPassword, "WPA") + "</div>";
-        html += "</div><div style=\"margin-top:20px;padding:20px;background:#fff;border-radius:8px;display:inline-block;text-align:left\"><p><strong>SSID:</strong> " + String(currentAPSSID) + "</p><p><strong>Password:</strong> " + String(currentAPPassword) + "</p><p><strong>Security:</strong> WPA2</p><p><strong>IP:</strong> " + WiFi.softAPIP().toString() + "</p></div></div>";
+        html += F("<h2>📱 Connect</h2><div style=\"background:#f8f9fa;padding:30px;border-radius:10px;text-align:center\"><p style=\"font-size:1.2em;margin-bottom:20px;color:#667eea;font-weight:bold\">Scan QR to connect</p><div style=\"display:inline-block;background:#fff;padding:20px;border-radius:10px\">");
+        html += F("<div style='width:300px;height:300px'>");
+        html += generateQRCodeSVG(currentAPSSID, currentAPPassword, "WPA");
+        html += F("</div></div><div style=\"margin-top:20px;padding:20px;background:#fff;border-radius:8px;display:inline-block;text-align:left\"><p><strong>SSID:</strong> ");
+        html += currentAPSSID;
+        html += F("</p><p><strong>Password:</strong> ");
+        html += currentAPPassword;
+        html += F("</p><p><strong>Security:</strong> WPA2</p><p><strong>IP:</strong> ");
+        html += WiFi.softAPIP().toString();
+        html += F("</p></div></div>");
     }
     
     html += generateHtmlFooter();
     webServer->send(200, "text/html", html);
 }
 
+// Scan page header - stored in PROGMEM
+const char SCAN_HEADER[] PROGMEM = R"rawliteral(<div class="header"><h1>🔍 Network Scan</h1></div><h2>📡 Available Networks</h2><div style="text-align:center;margin:20px 0"><button onclick="startScan('/scan?doscan=1','🔍 Scanning Networks...','Please wait while we discover nearby WiFi networks')" style="padding:15px 40px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:8px;font-size:1.1em;font-weight:bold;cursor:pointer;box-shadow:0 4px 12px rgba(102,126,234,0.4)">🔍 Start Network Scan</button></div>)rawliteral";
+
 void handleScan() {
-    String html = HTML_HEADER;
-    
-    html += R"rawliteral(
-    <div class="header">
-        <h1>🔍 Network Scan</h1>
-    </div>
-
-    <div class="nav">
-        <div><a href="/">🏠 Home</a></div>
-        <div><a href="/status">📊 Status</a></div>
-        <div><a href="/scan">🔍 Scan Networks</a></div>
-        <div class="dropdown">
-            <a href="/analysis">🔬 Analysis</a>
-            <div class="dropdown-content">
-                <a href="/analysis">📊 Dashboard</a>
-                <a href="/iperf">⚡ iPerf</a>
-                <a href="/latency">📉 Latency</a>
-                <a href="/channel">📡 Channel</a>
-            </div>
-        </div>
-    </div>
-
-    <h2>📡 Available Networks</h2>
-    
-    <div style="text-align: center; margin: 20px 0;">
-        <button onclick="startScan('/scan?doscan=1', '🔍 Scanning Networks...', 'Please wait while we discover nearby WiFi networks')" 
-                style="padding: 15px 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 1.1em; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
-            🔍 Start Network Scan
-        </button>
-    </div>
-    )rawliteral";
+    String html;
+    html.reserve(8192);  // Pre-allocate for scan results
+    html = FPSTR(HTML_HEADER);
+    html += generateNav();
+    html += FPSTR(SCAN_HEADER);
     
     // Check if scan was requested
     if (webServer->hasArg("doscan")) {
@@ -446,18 +452,18 @@ void handleScan() {
         int n = WiFi.scanNetworks();
         
         if (n == 0) {
-            html += "<p style='text-align: center; padding: 40px; color: #666;'>No networks found. Try scanning again.</p>";
+            html += F("<p style='text-align:center;padding:40px;color:#666'>No networks found. Try scanning again.</p>");
         } else {
-            html += "<ul class=\"network-list\">";
+            html += F("<ul class=\"network-list\">");
             
             for (int i = 0; i < n; i++) {
-            html += "<li class=\"network-item\">";
-            html += "<div class=\"network-info\">";
-            html += "<div class=\"network-name\">" + WiFi.SSID(i) + "</div>";
-            html += "<div class=\"network-details\">";
-            html += "Channel: " + String(WiFi.channel(i)) + " | ";
-            html += "Security: " + String(WiFi.encryptionType(i) == WIFI_AUTH_OPEN ? "Open" : "Secured");
-            html += "</div></div>";
+            html += F("<li class=\"network-item\"><div class=\"network-info\"><div class=\"network-name\">");
+            html += WiFi.SSID(i);
+            html += F("</div><div class=\"network-details\">Channel: ");
+            html += WiFi.channel(i);
+            html += F(" | Security: ");
+            html += (WiFi.encryptionType(i) == WIFI_AUTH_OPEN) ? F("Open") : F("Secured");
+            html += F("</div></div>");
             
             // Signal strength with colored circles
             int rssi = WiFi.RSSI(i);
@@ -483,28 +489,31 @@ void handleScan() {
             }
             
             // Build signal strength indicator with colored circles
-            html += "<div class=\"signal-strength\" title=\"" + String(rssi) + " dBm\" style=\"display: flex; gap: 3px; align-items: center;\">";
+            html += F("<div class=\"signal-strength\" title=\"");
+            html += rssi;
+            html += F(" dBm\" style=\"display:flex;gap:3px;align-items:center\">");
             for (int j = 0; j < 5; j++) {
                 if (j < bars) {
-                    // Filled circle with color
-                    html += "<svg width=\"14\" height=\"14\" style=\"display: block;\"><circle cx=\"7\" cy=\"7\" r=\"6\" fill=\"" + color + "\"/></svg>";
+                    html += F("<svg width=\"14\" height=\"14\" style=\"display:block\"><circle cx=\"7\" cy=\"7\" r=\"6\" fill=\"");
+                    html += color;
+                    html += F("\"/></svg>");
                 } else {
-                    // Empty circle (gray outline)
-                    html += "<svg width=\"14\" height=\"14\" style=\"display: block;\"><circle cx=\"7\" cy=\"7\" r=\"6\" fill=\"none\" stroke=\"#d1d5db\" stroke-width=\"2\"/></svg>";
+                    html += F("<svg width=\"14\" height=\"14\" style=\"display:block\"><circle cx=\"7\" cy=\"7\" r=\"6\" fill=\"none\" stroke=\"#d1d5db\" stroke-width=\"2\"/></svg>");
                 }
             }
-            html += "<span style=\"margin-left: 8px; color: #666; font-size: 0.9em;\">" + String(rssi) + " dBm</span>";
-            html += "</div>";
-            html += "</li>";
+            html += F("<span style=\"margin-left:8px;color:#666;font-size:0.9em\">");
+            html += rssi;
+            html += F(" dBm</span></div></li>");
         }
         
-        html += "</ul>";
-        html += "<p style='text-align: center; margin-top: 20px;'><strong>Found " + String(n) + " network(s)</strong></p>";
+        html += F("</ul><p style='text-align:center;margin-top:20px'><strong>Found ");
+        html += n;
+        html += F(" network(s)</strong></p>");
         }
         
         WiFi.scanDelete();
     } else {
-        html += "<p style='text-align: center; padding: 40px; color: #999;'>Click the button above to scan for available WiFi networks.</p>";
+        html += F("<p style='text-align:center;padding:40px;color:#999'>Click the button above to scan for available WiFi networks.</p>");
     }
     
     html += generateHtmlFooter();
