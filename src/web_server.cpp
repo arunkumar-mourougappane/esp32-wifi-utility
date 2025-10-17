@@ -1,6 +1,6 @@
 #include "web_server.h"
 
-#ifdef USE_NEOPIXEL  // Web server only available on Feather ESP32-S3 TFT
+#ifdef USE_WEBSERVER  // Web server available when enabled
 
 #include "wifi_manager.h"
 #include "ap_manager.h"
@@ -2027,4 +2027,4 @@ void handleLatencyStop() {
     webServer->send(302, "text/plain", "");
 }
 
-#endif // USE_NEOPIXEL
+#endif // USE_WEBSERVER

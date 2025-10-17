@@ -7,7 +7,7 @@
 #include "channel_analyzer.h"
 #include "config.h"
 #include <esp_system.h>
-#ifdef USE_NEOPIXEL
+#ifdef USE_WEBSERVER
 #include "web_server.h"
 #endif
 
@@ -247,7 +247,7 @@ void executeCommand(String command) {
   else if (command == "reset" || command == "restart") {
     executeResetCommand();
   }
-#ifdef USE_NEOPIXEL
+#ifdef USE_WEBSERVER
   else if (command == "webserver start") {
     if (startWebServer()) {
       Serial.println("🌐 Web server started successfully");
@@ -420,10 +420,10 @@ void printHelp() {
   Serial.println("│ channel scan    │ Analyze channel congestion           │");
   Serial.println("│ congestion      │ Quick channel congestion scan        │");
   Serial.println("│ spectrum        │ Full spectrum analysis               │");
-#ifdef USE_NEOPIXEL
-  Serial.println("│ webserver       │ Show web server help (Feather only)  │");
-  Serial.println("│ webserver start │ Start web server (Feather only)      │");
-  Serial.println("│ webserver stop  │ Stop web server (Feather only)       │");
+#ifdef USE_WEBSERVER
+  Serial.println("│ webserver       │ Show web server help                 │");
+  Serial.println("│ webserver start │ Start web server on port 80          │");
+  Serial.println("│ webserver stop  │ Stop web server                      │");
   Serial.println("│ webserver status│ Check web server status              │");
 #endif
   Serial.println("│ clear           │ Clear console screen                 │");
@@ -717,9 +717,9 @@ void printChannelHelp() {
   Serial.println();
 }
 
-#ifdef USE_NEOPIXEL
+#ifdef USE_WEBSERVER
 void printWebServerHelp() {
-  Serial.println("\n🌐 WEB SERVER COMMANDS (Feather ESP32-S3 TFT Only):");
+  Serial.println("\n🌐 WEB SERVER COMMANDS:");
   Serial.println("┌─────────────────────┬──────────────────────────────────────┐");
   Serial.println("│ Command             │ Description                          │");
   Serial.println("├─────────────────────┼──────────────────────────────────────┤");

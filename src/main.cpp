@@ -9,7 +9,7 @@
 #include "iperf_manager.h"
 #include "latency_analyzer.h"
 #include "channel_analyzer.h"
-#ifdef USE_NEOPIXEL
+#ifdef USE_WEBSERVER
 #include "web_server.h"
 #endif
 
@@ -38,8 +38,8 @@ void setup() {
   // Initialize channel analyzer
   initializeChannelAnalysis();
   
-#ifdef USE_NEOPIXEL
-  // Initialize web server (Feather ESP32-S3 TFT only)
+#ifdef USE_WEBSERVER
+  // Initialize web server
   initializeWebServer();
 #endif
   
@@ -60,8 +60,8 @@ void loop() {
   // Handle channel monitoring background tasks
   handleChannelMonitoringTasks();
   
-#ifdef USE_NEOPIXEL
-  // Handle web server requests (Feather ESP32-S3 TFT only)
+#ifdef USE_WEBSERVER
+  // Handle web server requests
   handleWebServerRequests();
 #endif
   
