@@ -21,8 +21,6 @@
 // ==========================================
 // ACCESS POINT CONFIGURATION
 // ==========================================
-// Note: Default SSID is dynamically generated as <chip_id>_AABBCCDDEEFF using device MAC address
-// This define is kept for backward compatibility but not used by default
 #define AP_SSID "ESP32-WiFiScanner"
 #define AP_PASSWORD "123456789"  // Minimum 8 characters for WPA2
 

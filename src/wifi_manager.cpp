@@ -5,7 +5,6 @@
 #include <WiFiAP.h>
 #include <WiFiUdp.h>
 #include <qrcode.h>
-#include <esp_system.h>
 #ifdef USE_NEOPIXEL
 #include "web_server.h"
 #endif
@@ -22,23 +21,7 @@ bool ledState = false;
 // ==========================================
 // ACCESS POINT CONFIGURATION VARIABLES
 // ==========================================
-String generateDefaultSSID() {
-  uint8_t mac[6];
-  esp_efuse_mac_get_default(mac);
-  char macStr[13];
-  sprintf(macStr, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-  
-  // Get chip ID (using MAC as unique identifier)
-  uint64_t chipid = ESP.getEfuseMac();
-  uint32_t chip_id_lower = (uint32_t)(chipid & 0xFFFFFFFF);
-  
-  char ssid[33]; // Max SSID length is 32 + null terminator
-  sprintf(ssid, "%08X_%s", chip_id_lower, macStr);
-  
-  return String(ssid);
-}
-
-String currentAPSSID = generateDefaultSSID();
+String currentAPSSID = AP_SSID;
 String currentAPPassword = AP_PASSWORD;
 
 // ==========================================
@@ -171,7 +154,7 @@ void startAccessPoint(const String& ssid, const String& password) {
     Serial.println("  Check SSID and password requirements");
     
     // Restore default configuration on failure
-    currentAPSSID = generateDefaultSSID();
+    currentAPSSID = AP_SSID;
     currentAPPassword = AP_PASSWORD;
     
     promptShown = false;
