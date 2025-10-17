@@ -13,6 +13,11 @@
 #include "web_server.h"
 #endif
 
+// RTOS Support (v4.1.0)
+#ifdef USE_RTOS
+#include "rtos_manager.h"
+#endif
+
 // Global variables are defined in their respective modules
 
 void setup() {
@@ -21,6 +26,28 @@ void setup() {
   // Wait for serial to initialize (Feather boards only)
 #ifdef ARDUINO_FEATHER_ESP32
   sleep(3); 
+#endif
+
+#ifdef USE_RTOS
+  // Initialize RTOS infrastructure (v4.1.0)
+  Serial.println("\n===========================================");
+  Serial.println("ESP32 WiFi Utility v4.1.0 - RTOS Edition");
+  Serial.println("===========================================\n");
+  
+  if (!initializeRTOS()) {
+    Serial.println("FATAL ERROR: RTOS initialization failed!");
+    Serial.println("System cannot continue. Please check serial output.");
+    while (1) {
+      delay(1000);
+    }
+  }
+  
+  // Print RTOS system information
+  printRTOSStatistics();
+  
+  Serial.println("[RTOS] Starting legacy modules in compatibility mode...");
+  Serial.println("[RTOS] NOTE: Full task migration will occur in future phases");
+  Serial.println();
 #endif
 
   // Initialize hardware
