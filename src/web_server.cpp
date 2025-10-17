@@ -1,6 +1,6 @@
 #include "web_server.h"
 
-#ifdef USE_NEOPIXEL  // Web server only available on Feather ESP32-S3 TFT
+#ifdef USE_WEBSERVER  // Web server available when enabled
 
 #include "wifi_manager.h"
 #include "ap_manager.h"
@@ -13,306 +13,107 @@
 WebServer* webServer = nullptr;
 bool webServerEnabled = false;
 
-// HTML page styling
+// ==========================================
+// HELPER FUNCTIONS
+// ==========================================
+String getDeviceName() {
+    // Get chip model (e.g., "ESP32", "ESP32-S3", "ESP32-C3")
+    String chipModel = String(ESP.getChipModel());
+    
+    // Check for specific board types
+    #ifdef ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT
+        return "Feather " + chipModel + " TFT";
+    #elif defined(ARDUINO_FEATHER_ESP32)
+        return "Feather " + chipModel;
+    #else
+        return chipModel + " Dev Module";
+    #endif
+}
+
+String getVersionString() {
+    #ifdef VERSION
+        // VERSION is defined as a string literal in build flags
+        #define STRINGIFY(x) #x
+        #define TOSTRING(x) STRINGIFY(x)
+        return String(TOSTRING(VERSION));
+    #else
+        return "3.0.0";
+    #endif
+}
+
+// HTML page styling - Minified to reduce memory
 const char* HTML_HEADER = R"rawliteral(
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESP32 WiFi Utility</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
-            padding: 20px;
-            min-height: 100vh;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            padding: 30px;
-        }
-        h1 {
-            color: #667eea;
-            margin-bottom: 10px;
-            font-size: 2em;
-        }
-        h2 {
-            color: #764ba2;
-            margin: 30px 0 15px;
-            font-size: 1.5em;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .badge {
-            display: inline-block;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-            margin: 5px;
-            font-size: 0.9em;
-        }
-        .badge.success { background: #10b981; color: white; }
-        .badge.warning { background: #f59e0b; color: white; }
-        .badge.info { background: #3b82f6; color: white; }
-        .badge.danger { background: #ef4444; color: white; }
-        .stat-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
-        }
-        .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-        }
-        .stat-value {
-            font-size: 2em;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-        .stat-label {
-            font-size: 0.9em;
-            opacity: 0.9;
-        }
-        .network-list {
-            list-style: none;
-            margin: 20px 0;
-        }
-        .network-item {
-            background: #f8f9fa;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .network-info {
-            flex-grow: 1;
-        }
-        .network-name {
-            font-weight: bold;
-            font-size: 1.1em;
-            margin-bottom: 5px;
-        }
-        .network-details {
-            color: #666;
-            font-size: 0.9em;
-        }
-        .signal-strength {
-            font-size: 1.5em;
-            margin-left: 20px;
-        }
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
-            color: #666;
-            font-size: 0.9em;
-        }
-        .nav {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin: 20px 0;
-        }
-        .nav a {
-            text-decoration: none;
-            padding: 10px 20px;
-            background: #667eea;
-            color: white;
-            border-radius: 5px;
-            transition: all 0.3s;
-        }
-        .nav a:hover {
-            background: #764ba2;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        /* Dropdown Menu Styles */
-        .nav {
-            position: relative;
-        }
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: #667eea;
-            min-width: 200px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-            z-index: 1;
-            border-radius: 5px;
-            margin-top: 5px;
-        }
-        .dropdown-content a {
-            color: white;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            border-radius: 0;
-            margin: 0;
-        }
-        .dropdown-content a:first-child {
-            border-radius: 5px 5px 0 0;
-        }
-        .dropdown-content a:last-child {
-            border-radius: 0 0 5px 5px;
-        }
-        .dropdown-content a:hover {
-            background-color: #764ba2;
-            transform: none;
-        }
-        .dropdown:hover .dropdown-content {
-            display: block;
-        }
-        .dropdown > a::after {
-            content: ' ▼';
-            font-size: 0.8em;
-        }
-        @media (max-width: 768px) {
-            .container { padding: 15px; }
-            h1 { font-size: 1.5em; }
-            .stat-grid { grid-template-columns: 1fr; }
-            .dropdown-content {
-                position: relative;
-                display: none;
-                margin-top: 5px;
-            }
-            .dropdown:hover .dropdown-content,
-            .dropdown:focus-within .dropdown-content {
-                display: block;
-            }
-        }
-        /* Progress Bar Styles */
-        .progress-backdrop {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 9999;
-            justify-content: center;
-            align-items: center;
-        }
-        .progress-container {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            text-align: center;
-            min-width: 300px;
-            max-width: 500px;
-        }
-        .progress-title {
-            color: #667eea;
-            font-size: 1.5em;
-            margin-bottom: 20px;
-            font-weight: bold;
-        }
-        .progress-bar-container {
-            width: 100%;
-            height: 30px;
-            background: #e0e0e0;
-            border-radius: 15px;
-            overflow: hidden;
-            margin: 20px 0;
-        }
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            width: 0%;
-            transition: width 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-        .progress-message {
-            color: #666;
-            font-size: 1em;
-            margin-top: 10px;
-        }
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
-    <script>
-        function showProgress(title, message) {
-            const backdrop = document.getElementById('progressBackdrop');
-            const titleEl = document.getElementById('progressTitle');
-            const messageEl = document.getElementById('progressMessage');
-            
-            if (titleEl) titleEl.textContent = title;
-            if (messageEl) messageEl.textContent = message;
-            if (backdrop) backdrop.style.display = 'flex';
-        }
-        
-        function hideProgress() {
-            const backdrop = document.getElementById('progressBackdrop');
-            if (backdrop) backdrop.style.display = 'none';
-        }
-        
-        function startScan(url, title, message) {
-            showProgress(title, message);
-            window.location.href = url;
-        }
-    </script>
+<html><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ESP32 WiFi</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#333;padding:20px;min-height:100vh}
+.container{max-width:1200px;margin:0 auto;background:#fff;border-radius:15px;box-shadow:0 10px 40px rgba(0,0,0,.2);padding:30px}
+h1{color:#667eea;margin-bottom:10px;font-size:2em}
+h2{color:# 764ba2;margin:30px 0 15px;font-size:1.5em;border-bottom:2px solid #667eea;padding-bottom:10px}
+.header{text-align:center;margin-bottom:30px}
+.badge{display:inline-block;padding:8px 15px;border-radius:20px;font-weight:bold;margin:5px;font-size:.9em}
+.badge.success{background:#10b981;color:#fff}
+.badge.warning{background:#f59e0b;color:#fff}
+.badge.info{background:#3b82f6;color:#fff}
+.badge.danger{background:#ef4444;color:#fff}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin:20px 0}
+.stat-card{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:20px;border-radius:10px;text-align:center}
+.stat-value{font-size:2em;font-weight:bold;margin:10px 0}
+.stat-label{font-size:.9em;opacity:.9}
+.network-list{list-style:none;margin:20px 0}
+.network-item{background:#f8f9fa;padding:15px;margin:10px 0;border-radius:8px;border-left:4px solid #667eea;display:flex;justify-content:space-between;align-items:center}
+.network-info{flex-grow:1}
+.network-name{font-weight:bold;font-size:1.1em;margin-bottom:5px}
+.network-details{color:#666;font-size:.9em}
+.signal-strength{font-size:1.5em;margin-left:20px}
+.footer{text-align:center;margin-top:30px;padding-top:20px;border-top:1px solid #e0e0e0;color:#666;font-size:.9em}
+.nav{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:20px 0;position:relative}
+.nav a{text-decoration:none;padding:10px 20px;background:#667eea;color:#fff;border-radius:5px;transition:all .3s}
+.nav a:hover{background:#764ba2;transform:translateY(-2px);box-shadow:0 4px 8px rgba(0,0,0,.2)}
+.dropdown{position:relative;display:inline-block}
+.dropdown-content{display:none;position:absolute;background-color:#667eea;min-width:200px;box-shadow:0 8px 16px rgba(0,0,0,.3);z-index:1;border-radius:5px;margin-top:5px}
+.dropdown-content a{color:#fff;padding:12px 16px;text-decoration:none;display:block;border-radius:0;margin:0}
+.dropdown-content a:first-child{border-radius:5px 5px 0 0}
+.dropdown-content a:last-child{border-radius:0 0 5px 5px}
+.dropdown-content a:hover{background-color:#764ba2;transform:none}
+.dropdown:hover .dropdown-content{display:block}
+.dropdown>a::after{content:' ▼';font-size:.8em}
+.progress-backdrop{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:9999;justify-content:center;align-items:center}
+.progress-container{background:#fff;padding:30px;border-radius:15px;box-shadow:0 10px 40px rgba(0,0,0,.3);text-align:center;min-width:300px;max-width:500px}
+.progress-title{color:#667eea;font-size:1.5em;margin-bottom:20px;font-weight:bold}
+.spinner{border:4px solid #f3f3f3;border-top:4px solid #667eea;border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin:20px auto}
+@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+@media(max-width:768px){.container{padding:15px}h1{font-size:1.5em}.stat-grid{grid-template-columns:1fr}.dropdown-content{position:relative;margin-top:5px}.dropdown:hover .dropdown-content,.dropdown:focus-within .dropdown-content{display:block}}
+</style>
+<script>
+function showProgress(t,m){const b=document.getElementById('progressBackdrop'),ti=document.getElementById('progressTitle'),me=document.getElementById('progressMessage');if(ti)ti.textContent=t;if(me)me.textContent=m;if(b)b.style.display='flex'}
+function hideProgress(){const b=document.getElementById('progressBackdrop');if(b)b.style.display='none'}
+function startScan(u,t,m){showProgress(t,m);window.location.href=u}
+</script>
 </head>
 <body>
-<!-- Progress Bar Backdrop -->
-<div id="progressBackdrop" class="progress-backdrop">
-    <div class="progress-container">
-        <div id="progressTitle" class="progress-title">Scanning...</div>
-        <div class="spinner"></div>
-        <div id="progressMessage" class="progress-message">Please wait while we scan the networks...</div>
-    </div>
-</div>
-
+<div id="progressBackdrop" class="progress-backdrop"><div class="progress-container"><div id="progressTitle" class="progress-title">Scanning...</div><div class="spinner"></div><div id="progressMessage" class="progress-message">Please wait...</div></div></div>
 <div class="container">
 )rawliteral";
 
-const char* HTML_FOOTER = R"rawliteral(
-    <div class="footer">
-        <p>🚀 ESP32 WiFi Utility v2.1.0 | Feather ESP32-S3 TFT</p>
-        <p>Professional Network Analysis & Performance Testing</p>
-    </div>
-</div>
-</body>
-</html>
-)rawliteral";
+// Generate dynamic HTML footer
+String generateHtmlFooter() {
+    String footer = "<div class=\"footer\"><p>🚀 ESP32 WiFi v";
+    footer += getVersionString();
+    footer += " | ";
+    footer += getDeviceName();
+    footer += "</p></div></div></body></html>";
+    return footer;
+}
+
+// Generate common navigation menu
+String generateNav() {
+    return "<div class=\"nav\"><div><a href=\"/\">🏠 Home</a></div><div><a href=\"/status\">📊 Status</a></div><div><a href=\"/scan\">🔍 Scan</a></div><div class=\"dropdown\"><a href=\"/analysis\">🔬 Analysis</a><div class=\"dropdown-content\"><a href=\"/analysis\">📊 Dashboard</a><a href=\"/iperf\">⚡ iPerf</a><a href=\"/latency\">📉 Latency</a><a href=\"/channel\">📡 Channel</a></div></div></div>";
+}
 
 // ==========================================
 // INITIALIZATION
@@ -393,6 +194,52 @@ void handleWebServerRequests() {
 }
 
 // ==========================================
+// MONITOR AND AUTO-RESTART WEB SERVER
+// ==========================================
+void monitorWebServerState() {
+    static bool wasConnected = false;
+    static WiFiMode lastMode = MODE_IDLE;
+    
+    bool isConnected = (WiFi.status() == WL_CONNECTED);
+    bool shouldRun = (currentMode == MODE_AP) || isConnected;
+    bool isRunning = isWebServerRunning();
+    
+    // Detect mode change
+    bool modeChanged = (currentMode != lastMode);
+    
+    // Auto-start web server if conditions are met and it's not running
+    if (shouldRun && !isRunning) {
+        // Only auto-start if:
+        // 1. We just switched to AP mode, OR
+        // 2. We just connected to WiFi in Station mode
+        bool justSwitchedToAP = (currentMode == MODE_AP && modeChanged);
+        bool justConnected = (isConnected && !wasConnected && currentMode == MODE_STATION);
+        
+        if (justSwitchedToAP || justConnected) {
+            Serial.println("🔄 Auto-starting web server...");
+            if (startWebServer()) {
+                Serial.println("✅ Web server auto-started at: " + getWebServerURL());
+            }
+        }
+    }
+    
+    // Auto-stop web server if conditions are no longer met
+    if (!shouldRun && isRunning) {
+        // Only auto-stop if we disconnected in Station mode
+        bool disconnectedInStation = (!isConnected && wasConnected && currentMode == MODE_STATION);
+        
+        if (disconnectedInStation) {
+            Serial.println("🔄 Auto-stopping web server (WiFi disconnected)...");
+            stopWebServer();
+        }
+    }
+    
+    // Update state tracking
+    wasConnected = isConnected;
+    lastMode = currentMode;
+}
+
+// ==========================================
 // WEB SERVER STATUS
 // ==========================================
 bool isWebServerRunning() {
@@ -446,13 +293,9 @@ String getWebServerURL() {
 void handleRoot() {
     String html = HTML_HEADER;
     
-    html += R"rawliteral(
-    <div class="header">
-        <h1>🚀 ESP32 WiFi Utility</h1>
-        <p>Professional Network Analysis & Performance Testing</p>
-        <div>
-            <span class="badge info">Feather ESP32-S3 TFT</span>
-    )rawliteral";
+    html += "<div class=\"header\"><h1>🚀 ESP32 WiFi</h1><p>Network Analysis & Testing</p><div><span class=\"badge info\">";
+    html += getDeviceName();
+    html += "</span>";
     
     if (currentMode == MODE_AP) {
         html += "<span class=\"badge success\">Access Point Mode</span>";
@@ -462,54 +305,21 @@ void handleRoot() {
         html += "<span class=\"badge warning\">Station Mode</span>";
     }
     
-    html += R"rawliteral(
-        </div>
-    </div>
-
-    <div class="nav">
-        <div><a href="/">🏠 Home</a></div>
-        <div><a href="/status">📊 Status</a></div>
-        <div><a href="/scan">🔍 Scan Networks</a></div>
-        <div class="dropdown">
-            <a href="/analysis">🔬 Analysis</a>
-            <div class="dropdown-content">
-                <a href="/analysis">📊 Dashboard</a>
-                <a href="/iperf">⚡ iPerf</a>
-                <a href="/latency">📉 Latency</a>
-                <a href="/channel">📡 Channel</a>
-            </div>
-        </div>
-    </div>
-
-    <h2>📊 Quick Stats</h2>
-    <div class="stat-grid">
-        <div class="stat-card">
-            <div class="stat-label">Current Mode</div>
-            <div class="stat-value">
-    )rawliteral";
+    html += "</div></div>";
+    
+    // Compact navigation
+    html += generateNav();
+    
+    html += "<h2>📊 Stats</h2><div class=\"stat-grid\"><div class=\"stat-card\"><div class=\"stat-label\">Mode</div><div class=\"stat-value\">";
     
     switch (currentMode) {
-        case MODE_IDLE:
-            html += "⚪ IDLE";
-            break;
-        case MODE_STATION:
-            html += "🔍 STATION";
-            break;
-        case MODE_AP:
-            html += "📡 AP";
-            break;
-        case MODE_OFF:
-            html += "🔴 OFF";
-            break;
+        case MODE_IDLE: html += "IDLE"; break;
+        case MODE_STATION: html += "STATION"; break;
+        case MODE_AP: html += "AP"; break;
+        case MODE_OFF: html += "OFF"; break;
     }
     
-    html += R"rawliteral(
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">IP Address</div>
-            <div class="stat-value" style="font-size: 1.2em;">
-    )rawliteral";
+    html += "</div></div><div class=\"stat-card\"><div class=\"stat-label\">IP Address</div><div class=\"stat-value\" style=\"font-size:1.2em\">";
     
     if (currentMode == MODE_AP) {
         html += WiFi.softAPIP().toString();
@@ -519,23 +329,9 @@ void handleRoot() {
         html += "N/A";
     }
     
-    html += R"rawliteral(
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Free Heap</div>
-            <div class="stat-value">
-    )rawliteral";
-    
+    html += "</div></div><div class=\"stat-card\"><div class=\"stat-label\">Free Heap</div><div class=\"stat-value\">";
     html += String(ESP.getFreeHeap() / 1024) + " KB";
-    
-    html += R"rawliteral(
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Connected Clients</div>
-            <div class="stat-value">
-    )rawliteral";
+    html += "</div></div><div class=\"stat-card\"><div class=\"stat-label\">Clients</div><div class=\"stat-value\">";
     
     if (currentMode == MODE_AP) {
         html += String(WiFi.softAPgetStationNum());
@@ -543,82 +339,27 @@ void handleRoot() {
         html += "N/A";
     }
     
-    html += R"rawliteral(
-            </div>
-        </div>
-    </div>
-    )rawliteral";
+    html += "</div></div></div>";
     
-    // Add QR Code for AP mode on home page
+    // QR Code for AP mode
     if (currentMode == MODE_AP) {
-        html += R"rawliteral(
-        <h2>📱 Quick Connect</h2>
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px; margin: 20px 0; text-align: center; color: white;">
-            <p style="font-size: 1.3em; margin-bottom: 20px; font-weight: bold;">
-                📷 Scan to Connect to WiFi
-            </p>
-            <div style="display: inline-block; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.3);">
-        )rawliteral";
-        
-        // Generate and add QR code SVG
-        String qrcodeSVG = generateQRCodeSVG(currentAPSSID, currentAPPassword, "WPA");
-        html += "<div style='width: 250px; height: 250px;'>" + qrcodeSVG + "</div>";
-        
-        html += R"rawliteral(
-            </div>
-            <div style="margin-top: 20px; font-size: 1.1em;">
-                <p style="margin: 5px 0;"><strong>Network:</strong> )rawliteral";
-        html += String(currentAPSSID);
-        html += R"rawliteral(</p>
-                <p style="margin: 5px 0; font-size: 0.9em; opacity: 0.9;">Point your camera at the QR code to connect instantly</p>
-            </div>
-        </div>
-        )rawliteral";
+        html += "<h2>📱 Connect</h2><div style=\"background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:30px;border-radius:10px;text-align:center;color:#fff\"><p style=\"font-size:1.3em;margin-bottom:20px;font-weight:bold\">📷 Scan QR Code</p><div style=\"display:inline-block;background:#fff;padding:15px;border-radius:10px\">";
+        html += "<div style='width:250px;height:250px'>" + generateQRCodeSVG(currentAPSSID, currentAPPassword, "WPA") + "</div>";
+        html += "</div><div style=\"margin-top:20px\"><p><strong>Network:</strong> " + String(currentAPSSID) + "</p></div></div>";
     }
 
-    html += R"rawliteral(
-    <h2>ℹ️ About</h2>
-    <p>This ESP32 WiFi Utility provides professional-grade network analysis and performance testing capabilities:</p>
-    <ul style="margin: 15px 0 15px 30px; line-height: 1.8;">
-        <li>📡 <strong>Channel Analysis</strong>: Real-time 2.4GHz spectrum scanning with AI-powered congestion scoring</li>
-        <li>🔍 <strong>Network Scanning</strong>: Advanced WiFi network discovery with signal quality analysis</li>
-        <li>⚡ <strong>iPerf Testing</strong>: Professional bandwidth and throughput measurement with TCP/UDP support</li>
-        <li>📊 <strong>Latency Analysis</strong>: Comprehensive latency, jitter, and packet loss testing</li>
-        <li>🌐 <strong>Access Point</strong>: Create a WiFi hotspot with QR code generation</li>
-        <li>🎨 <strong>NeoPixel Status</strong>: Visual feedback via RGB LED</li>
-    </ul>
-    )rawliteral";
+    html += "<h2>ℹ️ Features</h2><ul style=\"margin:15px 0 15px 30px;line-height:1.8\"><li>📡 <strong>Channel Analysis</strong>: 2.4GHz spectrum scanning</li><li>🔍 <strong>Network Scanning</strong>: WiFi discovery</li><li>⚡ <strong>iPerf Testing</strong>: Bandwidth measurement</li><li>📊 <strong>Latency Analysis</strong>: Jitter & packet loss testing</li><li>🌐 <strong>Access Point</strong>: WiFi hotspot with QR</li></ul>";
     
-    html += HTML_FOOTER;
+    html += generateHtmlFooter();
     webServer->send(200, "text/html", html);
 }
 
 void handleStatus() {
     String html = HTML_HEADER;
     
-    html += R"rawliteral(
-    <div class="header">
-        <h1>📊 System Status</h1>
-    </div>
-
-    <div class="nav">
-        <div><a href="/">🏠 Home</a></div>
-        <div><a href="/status">📊 Status</a></div>
-        <div><a href="/scan">🔍 Scan Networks</a></div>
-        <div class="dropdown">
-            <a href="/analysis">🔬 Analysis</a>
-            <div class="dropdown-content">
-                <a href="/analysis">📊 Dashboard</a>
-                <a href="/iperf">⚡ iPerf</a>
-                <a href="/latency">📉 Latency</a>
-                <a href="/channel">📡 Channel</a>
-            </div>
-        </div>
-    </div>
-
-    <h2>🔧 System Information</h2>
-    <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0;">
-    )rawliteral";
+    html += "<div class=\"header\"><h1>📊 Status</h1></div>";
+    html += generateNav();
+    html += "<h2>🔧 System Info</h2><div style=\"background:#f8f9fa;padding:20px;border-radius:10px;margin:20px 0\">";
     
     html += "<p><strong>WiFi Mode:</strong> ";
     switch (currentMode) {
@@ -653,52 +394,16 @@ void handleStatus() {
     html += "<p><strong>Chip Model:</strong> " + String(ESP.getChipModel()) + "</p>";
     html += "<p><strong>CPU Frequency:</strong> " + String(ESP.getCpuFreqMHz()) + " MHz</p>";
     html += "<p><strong>Flash Size:</strong> " + String(ESP.getFlashChipSize() / 1024 / 1024) + " MB</p>";
+    html += "</div>";
     
-    html += R"rawliteral(
-    </div>
-    )rawliteral";
-    
-    // Add QR Code section for AP mode
+    // QR Code for AP mode
     if (currentMode == MODE_AP) {
-        html += R"rawliteral(
-        <h2>📱 Connect to Access Point</h2>
-        <div style="background: #f8f9fa; padding: 30px; border-radius: 10px; margin: 20px 0; text-align: center;">
-            <p style="font-size: 1.2em; margin-bottom: 20px; color: #667eea; font-weight: bold;">
-                Scan this QR code with your mobile device to connect instantly
-            </p>
-            <div style="display: inline-block; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-        )rawliteral";
-        
-        // Generate and add QR code SVG
-        String qrcodeSVG = generateQRCodeSVG(currentAPSSID, currentAPPassword, "WPA");
-        html += "<div style='width: 300px; height: 300px;'>" + qrcodeSVG + "</div>";
-        
-        html += R"rawliteral(
-            </div>
-            <div style="margin-top: 20px; padding: 20px; background: white; border-radius: 8px; display: inline-block; text-align: left;">
-                <h3 style="color: #667eea; margin-bottom: 10px;">📶 Network Details</h3>
-                <p style="margin: 5px 0;"><strong>Network Name (SSID):</strong> )rawliteral";
-        html += String(currentAPSSID);
-        html += R"rawliteral(</p>
-                <p style="margin: 5px 0;"><strong>Password:</strong> )rawliteral";
-        html += String(currentAPPassword);
-        html += R"rawliteral(</p>
-                <p style="margin: 5px 0;"><strong>Security:</strong> WPA/WPA2</p>
-                <p style="margin: 5px 0;"><strong>IP Address:</strong> )rawliteral";
-        html += WiFi.softAPIP().toString();
-        html += R"rawliteral(</p>
-            </div>
-            <div style="margin-top: 20px; padding: 15px; background: #e3f2fd; border-left: 4px solid #2196f3; border-radius: 5px; text-align: left;">
-                <p style="margin: 0; font-size: 0.9em;">
-                    <strong>💡 Tip:</strong> Most modern smartphones can scan QR codes directly from their camera app. 
-                    Just point your camera at the QR code above, and tap the notification to connect to this WiFi network.
-                </p>
-            </div>
-        </div>
-        )rawliteral";
+        html += "<h2>📱 Connect</h2><div style=\"background:#f8f9fa;padding:30px;border-radius:10px;text-align:center\"><p style=\"font-size:1.2em;margin-bottom:20px;color:#667eea;font-weight:bold\">Scan QR to connect</p><div style=\"display:inline-block;background:#fff;padding:20px;border-radius:10px\">";
+        html += "<div style='width:300px;height:300px'>" + generateQRCodeSVG(currentAPSSID, currentAPPassword, "WPA") + "</div>";
+        html += "</div><div style=\"margin-top:20px;padding:20px;background:#fff;border-radius:8px;display:inline-block;text-align:left\"><p><strong>SSID:</strong> " + String(currentAPSSID) + "</p><p><strong>Password:</strong> " + String(currentAPPassword) + "</p><p><strong>Security:</strong> WPA2</p><p><strong>IP:</strong> " + WiFi.softAPIP().toString() + "</p></div></div>";
     }
     
-    html += HTML_FOOTER;
+    html += generateHtmlFooter();
     webServer->send(200, "text/html", html);
 }
 
@@ -802,7 +507,7 @@ void handleScan() {
         html += "<p style='text-align: center; padding: 40px; color: #999;'>Click the button above to scan for available WiFi networks.</p>";
     }
     
-    html += HTML_FOOTER;
+    html += generateHtmlFooter();
     webServer->send(200, "text/html", html);
 }
 
@@ -1040,7 +745,7 @@ void handleNetworkAnalysis() {
     </div>
     )rawliteral";
     
-    html += HTML_FOOTER;
+    html += generateHtmlFooter();
     webServer->send(200, "text/html", html);
 }
 
@@ -1170,7 +875,7 @@ void handleChannelAnalysis() {
     </div>
     )rawliteral";
     
-    html += HTML_FOOTER;
+    html += generateHtmlFooter();
     webServer->send(200, "text/html", html);
 }
 
@@ -1208,7 +913,7 @@ void handleNotFound() {
     </div>
     )rawliteral";
     
-    html += HTML_FOOTER;
+    html += generateHtmlFooter();
     webServer->send(404, "text/html", html);
 }
 
@@ -1396,7 +1101,7 @@ void handleIperf() {
     </div>
     )rawliteral";
     
-    html += HTML_FOOTER;
+    html += generateHtmlFooter();
     webServer->send(200, "text/html", html);
 }
 
@@ -1602,7 +1307,7 @@ void handleIperfStart() {
     </script>
     )rawliteral";
     
-    html += HTML_FOOTER;
+    html += generateHtmlFooter();
     webServer->send(200, "text/html", html);
 }
 
@@ -1827,7 +1532,7 @@ void handleLatency() {
     </div>
     )rawliteral";
     
-    html += HTML_FOOTER;
+    html += generateHtmlFooter();
     webServer->send(200, "text/html", html);
 }
 
@@ -2015,7 +1720,7 @@ void handleLatencyStart() {
     </form>
     )rawliteral";
     
-    html += HTML_FOOTER;
+    html += generateHtmlFooter();
     webServer->send(200, "text/html", html);
 }
 
@@ -2027,4 +1732,4 @@ void handleLatencyStop() {
     webServer->send(302, "text/plain", "");
 }
 
-#endif // USE_NEOPIXEL
+#endif // USE_WEBSERVER

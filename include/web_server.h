@@ -1,7 +1,7 @@
 #ifndef WEB_SERVER_H
 #define WEB_SERVER_H
 
-#ifdef USE_NEOPIXEL  // Web server only available on Feather ESP32-S3 TFT
+#ifdef USE_WEBSERVER  // Web server available when enabled
 
 #include <Arduino.h>
 #include <WiFi.h>
@@ -24,6 +24,9 @@ void stopWebServer();
 // Handle web server requests
 void handleWebServerRequests();
 
+// Monitor and auto-restart web server based on WiFi state
+void monitorWebServerState();
+
 // Web server status
 bool isWebServerRunning();
 String getWebServerURL();
@@ -44,6 +47,6 @@ void handleIperfStop();
 void handleIperfResults();
 void handleNotFound();
 
-#endif // USE_NEOPIXEL
+#endif // USE_WEBSERVER
 
 #endif // WEB_SERVER_H

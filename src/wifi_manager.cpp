@@ -47,16 +47,7 @@ void startStationMode() {
   
   Serial.println("✓ Station mode activated - Ready to scan for networks");
   Serial.println("  Use 'scan on' to start scanning");
-  
-#ifdef USE_NEOPIXEL
-  // Automatically start web server in station mode
-  Serial.println("🌐 Starting web server...");
-  if (startWebServer()) {
-    Serial.println("✅ Web server is ready at: " + getWebServerURL());
-  } else {
-    Serial.println("⚠️  Web server will start after WiFi connection");
-  }
-#endif
+  Serial.println("  Web server will auto-start upon WiFi connection");
   
   promptShown = false;
 }
@@ -84,13 +75,8 @@ void startAccessPoint() {
     // Generate and display QR code for easy mobile connection
     generateAPQRCode(currentAPSSID, currentAPPassword, "WPA");
     
-#ifdef USE_NEOPIXEL
-    // Automatically start web server in AP mode
-    Serial.println("🌐 Starting web server...");
-    if (startWebServer()) {
-      Serial.println("✅ Web server is ready at: " + getWebServerURL());
-    }
-#endif
+    // Web server will be auto-started by monitorWebServerState()
+    Serial.println("  Web server will auto-start momentarily");
     
     promptShown = false;
   } else {
@@ -139,13 +125,8 @@ void startAccessPoint(const String& ssid, const String& password) {
     // Generate and display QR code for easy mobile connection
     generateAPQRCode(currentAPSSID, currentAPPassword, "WPA");
     
-#ifdef USE_NEOPIXEL
-    // Automatically start web server in AP mode
-    Serial.println("🌐 Starting web server...");
-    if (startWebServer()) {
-      Serial.println("✅ Web server is ready at: " + getWebServerURL());
-    }
-#endif
+    // Web server will be auto-started by monitorWebServerState()
+    Serial.println("  Web server will auto-start momentarily");
     
     promptShown = false;
   } else {
