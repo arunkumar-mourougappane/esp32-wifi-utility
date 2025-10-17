@@ -1,15 +1,71 @@
 # ESP32 WiFi Utility Suite
 
 ![Build Status](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/actions/workflows/build.yml/badge.svg)
+![Version](https://img.shields.io/badge/version-3.1.0--dev-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-ESP32-blue.svg)
 ![Framework](https://img.shields.io/badge/framework-Arduino-green.svg)
 ![PlatformIO](https://img.shields.io/badge/build-PlatformIO-orange.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Boards](https://img.shields.io/badge/boards-ESP32dev%20|%20Feather%20ESP32--S3-brightgreen.svg)
+[![Changelog](https://img.shields.io/badge/changelog-available-brightgreen.svg)](CHANGELOG.md)
 
 A professional-grade ESP32 WiFi analysis and management suite featuring comprehensive network scanning, spectrum analysis, performance testing, and dual-board support with advanced channel congestion analysis.
 
-## 🚀 Features
+## � What's New in v3.1.0
+
+### 🌐 Web Server Now Available on Both Boards!
+
+The comprehensive web interface is now available on **both ESP32 Development Board and Feather ESP32-S3 TFT**! Previously exclusive to the Feather board, you can now access all network analysis features via browser on any ESP32 device.
+
+**Access the web interface:**
+- In **AP Mode**: Connect to the ESP32's WiFi hotspot and navigate to the displayed URL
+- In **Station Mode**: Access via the device's IP address on your local network
+- Use commands: `webserver start`, `webserver stop`, `webserver status`
+
+### 📱 Clickable Network Details View (Issue #10)
+
+**Interactive WiFi scanning** has been enhanced with a detailed information page for each network:
+
+- **Click any network** in scan results to view comprehensive details
+- **8-level signal quality scale** from "Excellent (Very Close)" to "Extremely Weak"
+- **Channel congestion analysis** with Clear/Light/Moderate/Heavy/Severe ratings
+- **Security assessment** with recommendations for all 9 WiFi encryption types
+- **Connection recommendations** based on signal strength and channel conditions
+- **Visual indicators** throughout with emoji icons and color-coded ratings
+- **Smart caching** stores up to 50 networks for 5 minutes, reducing re-scans
+- **Mobile-friendly** responsive design with touch-optimized interface
+
+### ⚡ Memory Optimization
+
+**Significant flash and RAM savings** achieved through compiler optimizations:
+
+- **ESP32dev**: Flash reduced from 84.5% to 82.4% (**-27.7 KB saved**)
+- **Feather ESP32-S3**: Flash reduced from 73.1% to 71.3% (**-25.4 KB saved**)
+- **Compiler flags**: `-Os` size optimization, dead code elimination
+- **PROGMEM storage**: HTML and constants moved to flash memory (~4KB RAM saved)
+- **F() macro**: 200+ string literals kept in flash instead of RAM (~3KB saved)
+- **String pre-allocation**: Reduced heap fragmentation and reallocation overhead
+
+### 🧪 Comprehensive Test Coverage
+
+**19 automated test cases** covering all new functionality:
+
+- **Cache management tests**: Validity, timeout, capacity limits
+- **Network details tests**: Signal quality, encryption types, channel frequencies
+- **WiFi fundamentals**: RSSI ranges, channel validation, BSSID format
+- **System integration**: Board identification, heap availability, configuration
+- **All tests passing** on both ESP32dev and Feather ESP32-S3 TFT
+- **Test documentation**: Complete guide in `test/TEST_DOCUMENTATION.md`
+
+### 🔄 Auto-Restart Web Server
+
+The web server now **automatically restarts** when switching between AP and Station modes:
+
+- Seamless WiFi mode transitions with web interface preservation
+- Dynamic SSID and device name updates based on chip ID
+- No manual restart required after mode changes
+
+## �🚀 Features
 
 ### 🎯 **NEW: Professional Channel Analysis System**
 
@@ -80,18 +136,28 @@ A professional-grade ESP32 WiFi analysis and management suite featuring comprehe
 - Displays comprehensive AP network information
 - Easy connection for mobile devices and computers
 
-### 🌐 **Web Server Interface** (Feather ESP32-S3 TFT Only)
+### 🌐 **Web Server Interface** (Available on Both Boards!)
 
-- **Browser-Based Control**: Access device features via any web browser
+- **Browser-Based Control**: Access device features via any web browser on ESP32dev or Feather
 - **Mobile-Responsive Design**: Beautiful interface optimized for phones, tablets, and desktops
 - **Hierarchical Navigation**: Professional dropdown menu system for organized access
 - **Progress Indicators**: Visual feedback with backdrop overlay during scan operations
 - **Real-Time Monitoring**: Live system status, WiFi statistics, and client information
-- **Network Visualization**: Visual WiFi scanning with signal strength indicators
+- **Network Visualization**: Interactive WiFi scanning with clickable network details
+- **Clickable Network Details**: Click any scanned network to view comprehensive information
+  - 8-level signal quality assessment with recommendations
+  - Channel congestion analysis (Clear to Severe ratings)
+  - Security evaluation with encryption type details
+  - Connection recommendations based on signal and channel conditions
+  - Visual indicators with emoji icons and color-coded ratings
 - **Professional Dashboard Pages**:
   - 🏠 **Home** - Quick stats and system overview with unified metrics
   - 📊 **Status** - Detailed system information and configuration
-  - 🔍 **Scan Networks** - Interactive WiFi scanning with progress indicators
+  - 🔍 **Scan Networks** - Interactive WiFi scanning with clickable network details (v3.1.0+)
+    - Click any network to view comprehensive information
+    - Signal quality assessment with 8-level scale
+    - Channel congestion analysis and recommendations
+    - Security evaluation with encryption details
   - 🔬 **Analysis Dashboard** - Unified testing hub with quick actions
     - ⚡ iPerf Testing - Bandwidth measurement and throughput analysis
     - 📉 Latency Testing - Network quality and jitter analysis
@@ -370,7 +436,33 @@ pio run
 **Note**: The project uses a professional modular structure with multiple source files.
 PlatformIO automatically handles the compilation of all `.cpp` files in the `src/` directory and applies board-specific configurations.
 
-### 4. Connect to Serial Monitor
+### 4. Running Tests (Optional)
+
+#### Run Automated Test Suite
+
+```bash
+# Test on ESP32 Development Board
+pio test --environment test
+
+# Test on Feather ESP32-S3 TFT
+pio test --environment test_feather
+
+# Build tests without uploading (no hardware required)
+pio test --environment test --without-uploading
+pio test --environment test_feather --without-uploading
+```
+
+**Test Coverage**: 19 test cases covering:
+- Cache management and validation
+- Network details and signal quality
+- WiFi fundamentals (RSSI, channels, encryption)
+- System integration and memory management
+
+**Test Results**: All tests pass on both boards (~14 seconds on ESP32, ~5.5 seconds on Feather)
+
+See [Test Documentation](test/TEST_DOCUMENTATION.md) for detailed information.
+
+### 5. Connect to Serial Monitor
 
 - **Baud Rate**: 115200
 - **Line Ending**: Newline (NL)
@@ -452,7 +544,7 @@ options, and examples.
 | `clear`      | Clear console screen and redisplay header                    |
 | `help`       | Display all available commands                               |
 
-### 🆕 Web Server Commands (Feather ESP32-S3 TFT Only)
+### 🆕 Web Server Commands (Available on Both Boards!)
 
 | Command            | Description                                     |
 | ------------------ | ----------------------------------------------- |
@@ -463,7 +555,9 @@ options, and examples.
 
 💡 **Web Interface Access**: Once started, access the web interface at the displayed IP address
 (e.g., `http://192.168.4.1` in AP mode or your device IP in Station mode). The web interface
-provides real-time monitoring, WiFi scanning, and channel analysis through a beautiful mobile-responsive dashboard.
+provides real-time monitoring, interactive WiFi scanning with clickable network details, and comprehensive
+channel analysis through a beautiful mobile-responsive dashboard. **Now available on both ESP32dev and 
+Feather ESP32-S3 TFT boards!** (v3.0.0+)
 
 ### Client Management Commands (AP Mode Only)
 
@@ -1092,6 +1186,8 @@ esp32-wifi-utility/
 - **Background Monitoring**: Configurable 1-60 second intervals
 - **AI Recommendations**: <2 seconds for optimal channel calculation
 - **Memory Efficiency**: <8KB RAM usage for full channel analysis functionality
+- **Memory Optimization**: Flash usage reduced by ~27KB through compiler optimizations (v3.1.0+)
+- **Web Server Caching**: 50 networks cached for 5 minutes with minimal RAM impact
 - **Accuracy**: ±1 dBm RSSI measurement precision
 - **Reliability**: 99.5%+ successful scan completion rate
 
@@ -1119,19 +1215,26 @@ esp32-wifi-utility/
 
 ### Code Organization (Professional Architecture)
 
-- **Total Lines**: ~4400+ lines organized across enterprise-grade modular architecture
+- **Total Lines**: ~4500+ lines organized across enterprise-grade modular architecture
 - **Main Loop**: Clean entry point in `main.cpp` with minimal logic
 - **Modular Design**: 8 specialized modules with clear separation of concerns
 - **Enhanced Features**:
   - Professional spectrum analysis engine (570+ lines)
   - Advanced latency analysis with statistical processing
   - Comprehensive WiFi scanning with AI recommendations
+  - Interactive web interface with clickable network details (336+ lines added in v3.1.0)
   - iPerf performance testing suite
   - Dual-board hardware abstraction layer
-- **Memory Efficient**: Optimized global state management with proper extern declarations
+- **Memory Efficient**: 
+  - Optimized global state management with proper extern declarations
+  - PROGMEM storage for HTML/CSS (4KB+ moved to flash)
+  - F() macro for 200+ string literals (~3KB RAM saved)
+  - String pre-allocation to reduce heap fragmentation
+  - Compiler optimizations: -Os, -ffunction-sections, -fdata-sections, -Wl,--gc-sections
 - **Quality Assurance**:
   - Unity test framework integration
-  - Comprehensive test coverage for both board types
+  - 19 comprehensive test cases (100% pass rate)
+  - Test coverage for cache management, network details, WiFi fundamentals
   - Automated build verification system
   - Professional CI/CD pipeline ready
 - **Compilation**: Zero warnings with optimized builds for both platforms
@@ -1145,7 +1248,8 @@ esp32-wifi-utility/
 ### 🔧 Core Features
 
 - [ ] **Power Management**: Sleep mode for battery operation
-- [ ] **Web Interface**: Wireless control via built-in web server
+- [x] **Web Interface**: ✅ Implemented! Browser-based control available on both boards (v3.0.0+)
+- [x] **Clickable Network Details**: ✅ Implemented! Interactive scan results with detailed analysis (v3.1.0+)
 - [ ] **Network Storage**: Save and auto-connect to known networks
 - [ ] **Signal Analysis**: Real-time signal strength graphing
 - [ ] **Multi-AP Support**: Multiple AP configurations and switching

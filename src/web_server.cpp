@@ -14,6 +14,58 @@ WebServer* webServer = nullptr;
 bool webServerEnabled = false;
 
 // ==========================================
+// SCAN RESULT CACHING
+// ==========================================
+// Structure to cache scan results for details view
+struct CachedScanResult {
+    String ssid;
+    int32_t rssi;
+    uint8_t channel;
+    wifi_auth_mode_t encryptionType;
+    uint8_t bssid[6];
+    bool hasBssid;
+};
+
+#define MAX_CACHED_NETWORKS 50
+#define CACHE_TIMEOUT_MS 300000  // 5 minutes
+
+static CachedScanResult cachedNetworks[MAX_CACHED_NETWORKS];
+static int cachedNetworkCount = 0;
+static unsigned long lastScanTime = 0;
+
+// Check if cached results are still valid
+bool isCacheValid() {
+    return (cachedNetworkCount > 0 && (millis() - lastScanTime < CACHE_TIMEOUT_MS));
+}
+
+// Cache scan results
+void cacheScanResults() {
+    cachedNetworkCount = WiFi.scanComplete();
+    if (cachedNetworkCount <= 0) return;
+    
+    if (cachedNetworkCount > MAX_CACHED_NETWORKS) {
+        cachedNetworkCount = MAX_CACHED_NETWORKS;
+    }
+    
+    for (int i = 0; i < cachedNetworkCount; i++) {
+        cachedNetworks[i].ssid = WiFi.SSID(i);
+        cachedNetworks[i].rssi = WiFi.RSSI(i);
+        cachedNetworks[i].channel = WiFi.channel(i);
+        cachedNetworks[i].encryptionType = WiFi.encryptionType(i);
+        
+        uint8_t* bssid = WiFi.BSSID(i);
+        if (bssid) {
+            memcpy(cachedNetworks[i].bssid, bssid, 6);
+            cachedNetworks[i].hasBssid = true;
+        } else {
+            cachedNetworks[i].hasBssid = false;
+        }
+    }
+    
+    lastScanTime = millis();
+}
+
+// ==========================================
 // HELPER FUNCTIONS
 // ==========================================
 String getDeviceName() {
@@ -151,6 +203,7 @@ bool startWebServer() {
     webServer->on("/", handleRoot);
     webServer->on("/status", handleStatus);
     webServer->on("/scan", handleScan);
+    webServer->on("/scan/details", handleScanDetails);  // New route for network details
     webServer->on("/analysis", handleNetworkAnalysis);
     webServer->on("/channel", handleChannelAnalysis);
     webServer->on("/channel/scan", handleChannelScan);
@@ -451,14 +504,20 @@ void handleScan() {
         // Perform WiFi scan
         int n = WiFi.scanNetworks();
         
+        // Cache the results for details view
+        cacheScanResults();
+        
         if (n == 0) {
             html += F("<p style='text-align:center;padding:40px;color:#666'>No networks found. Try scanning again.</p>");
         } else {
             html += F("<ul class=\"network-list\">");
             
             for (int i = 0; i < n; i++) {
-            html += F("<li class=\"network-item\"><div class=\"network-info\"><div class=\"network-name\">");
-            html += WiFi.SSID(i);
+            // Make the entire list item clickable
+            html += F("<li class=\"network-item\" onclick=\"window.location.href='/scan/details?id=");
+            html += i;
+            html += F("'\" style=\"cursor:pointer;transition:background-color 0.2s\" onmouseover=\"this.style.backgroundColor='#f0f0f0'\" onmouseout=\"this.style.backgroundColor='#f8f9fa'\"><div class=\"network-info\"><div class=\"network-name\">");
+            html += WiFi.SSID(i).length() > 0 ? WiFi.SSID(i) : F("<Hidden Network>");
             html += F("</div><div class=\"network-details\">Channel: ");
             html += WiFi.channel(i);
             html += F(" | Security: ");
@@ -509,12 +568,285 @@ void handleScan() {
         html += F("</ul><p style='text-align:center;margin-top:20px'><strong>Found ");
         html += n;
         html += F(" network(s)</strong></p>");
+        html += F("<p style='text-align:center;color:#666;font-size:0.9em;margin-top:10px'>💡 Click on any network to view detailed information</p>");
         }
         
-        WiFi.scanDelete();
+        // Don't delete scan results yet - keep them cached for details view
+        // WiFi.scanDelete();
     } else {
         html += F("<p style='text-align:center;padding:40px;color:#999'>Click the button above to scan for available WiFi networks.</p>");
     }
+    
+    html += generateHtmlFooter();
+    webServer->send(200, "text/html", html);
+}
+
+// ==========================================
+// NETWORK DETAILS PAGE HANDLER
+// ==========================================
+void handleScanDetails() {
+    // Check if cache is valid
+    if (!isCacheValid()) {
+        // Redirect back to scan page if cache expired
+        webServer->sendHeader("Location", "/scan");
+        webServer->send(302, "text/plain", "Scan results expired. Please scan again.");
+        return;
+    }
+    
+    // Get network ID from query parameter
+    if (!webServer->hasArg("id")) {
+        webServer->sendHeader("Location", "/scan");
+        webServer->send(302, "text/plain", "Missing network ID");
+        return;
+    }
+    
+    int networkId = webServer->arg("id").toInt();
+    
+    // Validate network ID
+    if (networkId < 0 || networkId >= cachedNetworkCount) {
+        webServer->sendHeader("Location", "/scan");
+        webServer->send(302, "text/plain", "Invalid network ID");
+        return;
+    }
+    
+    // Get cached network data
+    CachedScanResult& network = cachedNetworks[networkId];
+    
+    String html;
+    html.reserve(8192);
+    html = FPSTR(HTML_HEADER);
+    
+    // Header with back button
+    html += F("<div class=\"header\"><a href=\"/scan?doscan=1\" style=\"position:absolute;left:30px;top:30px;color:#667eea;text-decoration:none;font-weight:bold;font-size:1.1em\">← Back to Scan</a><h1>🔍 Network Details</h1></div>");
+    
+    html += generateNav();
+    
+    // Network name section
+    html += F("<h2>📡 Network Information</h2>");
+    html += F("<div style=\"background:#f8f9fa;padding:20px;border-radius:10px;margin:20px 0\">");
+    html += F("<p><strong>Network Name (SSID):</strong> ");
+    html += network.ssid.length() > 0 ? network.ssid : F("<em>Hidden Network</em>");
+    html += F("</p>");
+    
+    // BSSID (MAC Address)
+    html += F("<p><strong>MAC Address (BSSID):</strong> ");
+    if (network.hasBssid) {
+        char bssidStr[18];
+        sprintf(bssidStr, "%02X:%02X:%02X:%02X:%02X:%02X", 
+                network.bssid[0], network.bssid[1], network.bssid[2], 
+                network.bssid[3], network.bssid[4], network.bssid[5]);
+        html += bssidStr;
+    } else {
+        html += F("<em>Not Available</em>");
+    }
+    html += F("</p></div>");
+    
+    // Signal Strength section
+    html += F("<h2>📶 Signal Strength</h2>");
+    html += F("<div style=\"background:#f8f9fa;padding:20px;border-radius:10px;margin:20px 0\">");
+    html += F("<p><strong>RSSI:</strong> ");
+    html += network.rssi;
+    html += F(" dBm</p>");
+    
+    // Calculate signal quality
+    int quality = 0;
+    String qualityDesc = "";
+    String signalIcon = "";
+    String qualityColor = "";
+    
+    if (network.rssi >= -30) {
+        quality = 100; qualityDesc = F("Excellent (Very Close)"); signalIcon = F("🟢🟢🟢🟢"); qualityColor = "#10b981";
+    } else if (network.rssi >= -50) {
+        quality = 90; qualityDesc = F("Excellent"); signalIcon = F("🟢🟢🟢🟢"); qualityColor = "#10b981";
+    } else if (network.rssi >= -60) {
+        quality = 80; qualityDesc = F("Very Good"); signalIcon = F("🟢🟢🟢⚪"); qualityColor = "#10b981";
+    } else if (network.rssi >= -67) {
+        quality = 70; qualityDesc = F("Good"); signalIcon = F("🟢🟢🟡⚪"); qualityColor = "#10b981";
+    } else if (network.rssi >= -70) {
+        quality = 60; qualityDesc = F("Fair"); signalIcon = F("🟢🟡🟡⚪"); qualityColor = "#fbbf24";
+    } else if (network.rssi >= -80) {
+        quality = 50; qualityDesc = F("Weak"); signalIcon = F("🟡🟡🔴⚪"); qualityColor = "#f59e0b";
+    } else if (network.rssi >= -90) {
+        quality = 30; qualityDesc = F("Very Weak"); signalIcon = F("🟡🔴🔴⚪"); qualityColor = "#ef4444";
+    } else {
+        quality = 10; qualityDesc = F("Extremely Weak"); signalIcon = F("🔴🔴🔴⚪"); qualityColor = "#ef4444";
+    }
+    
+    html += F("<p><strong>Signal Quality:</strong> <span style=\"color:");
+    html += qualityColor;
+    html += F(";font-weight:bold\">");
+    html += quality;
+    html += F("% - ");
+    html += qualityDesc;
+    html += F("</span> ");
+    html += signalIcon;
+    html += F("</p>");
+    
+    // Visual quality bar
+    html += F("<div style=\"background:#e0e0e0;height:30px;border-radius:15px;overflow:hidden;margin-top:15px\"><div style=\"background:");
+    html += qualityColor;
+    html += F(";height:100%;width:");
+    html += quality;
+    html += F("%;transition:width 0.3s;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold\">");
+    html += quality;
+    html += F("%</div></div></div>");
+    
+    // Channel Information section
+    html += F("<h2>📻 Channel Information</h2>");
+    html += F("<div style=\"background:#f8f9fa;padding:20px;border-radius:10px;margin:20px 0\">");
+    html += F("<p><strong>Channel:</strong> ");
+    html += network.channel;
+    
+    // Determine frequency band
+    String bandInfo = "";
+    if (network.channel >= 1 && network.channel <= 13) {
+        bandInfo = F(" (2.4 GHz)");
+    } else if (network.channel >= 36 && network.channel <= 165) {
+        bandInfo = F(" (5 GHz)");
+    }
+    html += bandInfo;
+    html += F("</p>");
+    
+    // Calculate channel congestion
+    int channelUsage = 0;
+    for (int i = 0; i < cachedNetworkCount; i++) {
+        if (cachedNetworks[i].channel == network.channel) {
+            channelUsage++;
+        }
+    }
+    
+    String congestionLevel = "";
+    String congestionColor = "";
+    if (channelUsage == 1) {
+        congestionLevel = F("Clear"); congestionColor = "#10b981";
+    } else if (channelUsage <= 3) {
+        congestionLevel = F("Light"); congestionColor = "#10b981";
+    } else if (channelUsage <= 6) {
+        congestionLevel = F("Moderate"); congestionColor = "#fbbf24";
+    } else if (channelUsage <= 10) {
+        congestionLevel = F("Heavy"); congestionColor = "#fb923c";
+    } else {
+        congestionLevel = F("Severe"); congestionColor = "#ef4444";
+    }
+    
+    html += F("<p><strong>Channel Congestion:</strong> <span style=\"color:");
+    html += congestionColor;
+    html += F(";font-weight:bold\">");
+    html += congestionLevel;
+    html += F("</span> (");
+    html += channelUsage;
+    html += F(" network");
+    if (channelUsage != 1) html += F("s");
+    html += F(" on this channel)</p></div>");
+    
+    // Security Information section
+    html += F("<h2>🔐 Security</h2>");
+    html += F("<div style=\"background:#f8f9fa;padding:20px;border-radius:10px;margin:20px 0\">");
+    
+    String encIcon = "";
+    String encDescription = "";
+    String securityLevel = "";
+    String securityColor = "";
+    
+    switch (network.encryptionType) {
+        case WIFI_AUTH_OPEN:
+            encIcon = F("🔓"); encDescription = F("Open (No Security)"); 
+            securityLevel = F("None"); securityColor = "#ef4444";
+            break;
+        case WIFI_AUTH_WEP:
+            encIcon = F("🔒"); encDescription = F("WEP (Deprecated)"); 
+            securityLevel = F("Weak"); securityColor = "#f59e0b";
+            break;
+        case WIFI_AUTH_WPA_PSK:
+            encIcon = F("🔒"); encDescription = F("WPA Personal"); 
+            securityLevel = F("Moderate"); securityColor = "#fb923c";
+            break;
+        case WIFI_AUTH_WPA2_PSK:
+            encIcon = F("🔒"); encDescription = F("WPA2 Personal"); 
+            securityLevel = F("Good"); securityColor = "#10b981";
+            break;
+        case WIFI_AUTH_WPA_WPA2_PSK:
+            encIcon = F("🔒"); encDescription = F("WPA/WPA2 Mixed"); 
+            securityLevel = F("Good"); securityColor = "#10b981";
+            break;
+        case WIFI_AUTH_WPA2_ENTERPRISE:
+            encIcon = F("🏢"); encDescription = F("WPA2 Enterprise"); 
+            securityLevel = F("Excellent"); securityColor = "#10b981";
+            break;
+        case WIFI_AUTH_WPA3_PSK:
+            encIcon = F("🔐"); encDescription = F("WPA3 Personal"); 
+            securityLevel = F("Excellent"); securityColor = "#10b981";
+            break;
+        case WIFI_AUTH_WPA2_WPA3_PSK:
+            encIcon = F("🔐"); encDescription = F("WPA2/WPA3 Mixed"); 
+            securityLevel = F("Excellent"); securityColor = "#10b981";
+            break;
+        case WIFI_AUTH_WAPI_PSK:
+            encIcon = F("🔒"); encDescription = F("WAPI"); 
+            securityLevel = F("Good"); securityColor = "#10b981";
+            break;
+        default:
+            encIcon = F("❓"); encDescription = F("Unknown"); 
+            securityLevel = F("Unknown"); securityColor = "#666";
+    }
+    
+    html += F("<p><strong>Encryption Type:</strong> ");
+    html += encIcon;
+    html += F(" ");
+    html += encDescription;
+    html += F("</p>");
+    html += F("<p><strong>Security Level:</strong> <span style=\"color:");
+    html += securityColor;
+    html += F(";font-weight:bold\">");
+    html += securityLevel;
+    html += F("</span></p>");
+    
+    // Security warning for open/weak networks
+    if (network.encryptionType == WIFI_AUTH_OPEN) {
+        html += F("<div style=\"background:#fef2f2;border-left:4px solid #ef4444;padding:15px;margin-top:15px;border-radius:5px\">");
+        html += F("<p style=\"color:#ef4444;margin:0\"><strong>⚠️ Security Warning:</strong> This is an open network with no encryption. Your data will be transmitted unencrypted and could be intercepted by others.</p>");
+        html += F("</div>");
+    } else if (network.encryptionType == WIFI_AUTH_WEP) {
+        html += F("<div style=\"background:#fef2f2;border-left:4px solid #f59e0b;padding:15px;margin-top:15px;border-radius:5px\">");
+        html += F("<p style=\"color:#f59e0b;margin:0\"><strong>⚠️ Security Warning:</strong> WEP encryption is deprecated and easily cracked. This network is not secure.</p>");
+        html += F("</div>");
+    }
+    html += F("</div>");
+    
+    // Connection Analysis section
+    html += F("<h2>💡 Connection Analysis</h2>");
+    html += F("<div style=\"background:#f8f9fa;padding:20px;border-radius:10px;margin:20px 0\">");
+    
+    // Signal strength analysis
+    if (network.rssi >= -70) {
+        html += F("<p>✅ <strong>Signal Strength:</strong> Good signal strength for reliable connection</p>");
+    } else if (network.rssi >= -80) {
+        html += F("<p>⚠️ <strong>Signal Strength:</strong> Weak signal may cause connection issues</p>");
+    } else {
+        html += F("<p>❌ <strong>Signal Strength:</strong> Very weak signal, connection not recommended</p>");
+    }
+    
+    // Security analysis
+    if (network.encryptionType == WIFI_AUTH_OPEN) {
+        html += F("<p>❌ <strong>Security:</strong> No encryption - avoid transmitting sensitive data</p>");
+    } else if (network.encryptionType == WIFI_AUTH_WEP) {
+        html += F("<p>⚠️ <strong>Security:</strong> Weak encryption - not recommended</p>");
+    } else if (network.encryptionType >= WIFI_AUTH_WPA3_PSK) {
+        html += F("<p>✅ <strong>Security:</strong> Excellent encryption with modern security standards</p>");
+    } else {
+        html += F("<p>✅ <strong>Security:</strong> Adequate encryption for most purposes</p>");
+    }
+    
+    // Channel congestion analysis
+    if (channelUsage <= 3) {
+        html += F("<p>✅ <strong>Channel Congestion:</strong> Low interference, good performance expected</p>");
+    } else if (channelUsage <= 6) {
+        html += F("<p>⚠️ <strong>Channel Congestion:</strong> Moderate interference, may affect performance</p>");
+    } else {
+        html += F("<p>❌ <strong>Channel Congestion:</strong> Heavy interference, performance may be degraded</p>");
+    }
+    
+    html += F("</div>");
     
     html += generateHtmlFooter();
     webServer->send(200, "text/html", html);
