@@ -63,6 +63,9 @@ void loop() {
 #ifdef USE_WEBSERVER
   // Handle web server requests
   handleWebServerRequests();
+  
+  // Monitor and auto-restart web server based on WiFi state
+  monitorWebServerState();
 #endif
   
   // WiFi scanning logic (only in station mode)

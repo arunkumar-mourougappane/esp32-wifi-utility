@@ -24,6 +24,9 @@ void stopWebServer();
 // Handle web server requests
 void handleWebServerRequests();
 
+// Monitor and auto-restart web server based on WiFi state
+void monitorWebServerState();
+
 // Web server status
 bool isWebServerRunning();
 String getWebServerURL();

@@ -393,6 +393,52 @@ void handleWebServerRequests() {
 }
 
 // ==========================================
+// MONITOR AND AUTO-RESTART WEB SERVER
+// ==========================================
+void monitorWebServerState() {
+    static bool wasConnected = false;
+    static WiFiMode lastMode = MODE_IDLE;
+    
+    bool isConnected = (WiFi.status() == WL_CONNECTED);
+    bool shouldRun = (currentMode == MODE_AP) || isConnected;
+    bool isRunning = isWebServerRunning();
+    
+    // Detect mode change
+    bool modeChanged = (currentMode != lastMode);
+    
+    // Auto-start web server if conditions are met and it's not running
+    if (shouldRun && !isRunning) {
+        // Only auto-start if:
+        // 1. We just switched to AP mode, OR
+        // 2. We just connected to WiFi in Station mode
+        bool justSwitchedToAP = (currentMode == MODE_AP && modeChanged);
+        bool justConnected = (isConnected && !wasConnected && currentMode == MODE_STATION);
+        
+        if (justSwitchedToAP || justConnected) {
+            Serial.println("🔄 Auto-starting web server...");
+            if (startWebServer()) {
+                Serial.println("✅ Web server auto-started at: " + getWebServerURL());
+            }
+        }
+    }
+    
+    // Auto-stop web server if conditions are no longer met
+    if (!shouldRun && isRunning) {
+        // Only auto-stop if we disconnected in Station mode
+        bool disconnectedInStation = (!isConnected && wasConnected && currentMode == MODE_STATION);
+        
+        if (disconnectedInStation) {
+            Serial.println("🔄 Auto-stopping web server (WiFi disconnected)...");
+            stopWebServer();
+        }
+    }
+    
+    // Update state tracking
+    wasConnected = isConnected;
+    lastMode = currentMode;
+}
+
+// ==========================================
 // WEB SERVER STATUS
 // ==========================================
 bool isWebServerRunning() {
