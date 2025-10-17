@@ -16,6 +16,7 @@
 // RTOS Support (v4.1.0)
 #ifdef USE_RTOS
 #include "rtos_manager.h"
+#include "command_task.h"
 #endif
 
 // Global variables are defined in their respective modules
@@ -48,6 +49,15 @@ void setup() {
   Serial.println("[RTOS] Starting legacy modules in compatibility mode...");
   Serial.println("[RTOS] NOTE: Full task migration will occur in future phases");
   Serial.println();
+  
+  // Initialize Command Task (Phase 2)
+  Serial.println("[RTOS] Initializing Command Interface Task...");
+  if (!initializeCommandTask()) {
+    Serial.println("WARNING: Command Task initialization failed!");
+    Serial.println("Falling back to legacy command handling.");
+  } else {
+    Serial.println("[RTOS] Command Task started successfully on Core 1");
+  }
 #endif
 
   // Initialize hardware
@@ -70,13 +80,21 @@ void setup() {
   initializeWebServer();
 #endif
   
-  // Show initial prompt after all initialization is complete
+#ifndef USE_RTOS
+  // Show initial prompt after all initialization is complete (legacy mode only)
+  // In RTOS mode, CommandTask handles the prompt
   showInitialPrompt();
+#endif
 }
 
 void loop() {
-  // Handle serial commands
+#ifndef USE_RTOS
+  // Legacy mode: Handle serial commands directly in loop
   handleSerialCommands();
+#else
+  // RTOS mode: CommandTask handles serial commands asynchronously
+  // Only need to handle background tasks here
+#endif
   
   // Handle iPerf background tasks
   handleIperfTasks();
