@@ -35,6 +35,7 @@ String getWebServerURL();
 void handleRoot();
 void handleStatus();
 void handleScan();
+void handleScanDetails();  // New handler for network details
 void handleNetworkAnalysis();
 void handleChannelAnalysis();
 void handleChannelScan();
