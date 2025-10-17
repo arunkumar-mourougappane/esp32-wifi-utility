@@ -1,12 +1,28 @@
 # 🌐 Web Interface Guide
 
-**ESP32 WiFi Utility v2.1.0** - Comprehensive Web Server Documentation
+**ESP32 WiFi Utility v4.0.0** - Comprehensive Web Server Documentation
 
 ## Overview
 
-The ESP32 WiFi Utility includes a professional web-based interface exclusively available on the
-**Adafruit Feather ESP32-S3 TFT** board. This browser-based dashboard provides full access to all
-device features through an intuitive, mobile-responsive interface.
+The ESP32 WiFi Utility includes a professional web-based interface available on **both ESP32 Development
+Board and Adafruit Feather ESP32-S3 TFT**. This browser-based dashboard provides full access to all
+device features through an intuitive, mobile-responsive interface with interactive network details.
+
+## 🆕 What's New in v4.0.0
+
+### Multi-Platform Support
+- **Web server now available on ESP32dev** in addition to Feather ESP32-S3 TFT
+- Same feature set across both platforms
+- Automatic board detection and configuration
+
+### Clickable Network Details
+- **Click any network** in scan results to view comprehensive information
+- **8-level signal quality assessment** from "Excellent (Very Close)" to "Extremely Weak"
+- **Channel congestion analysis** with Clear/Light/Moderate/Heavy/Severe ratings
+- **Security evaluation** for all 9 WiFi encryption types
+- **Connection recommendations** based on signal strength and channel conditions
+- **Smart caching** stores up to 50 networks for 5 minutes
+- **Visual indicators** with emoji icons and color-coded ratings
 
 ## 🚀 Quick Start
 
@@ -146,22 +162,73 @@ All scan operations display a **professional progress overlay**:
 
 ### 🔍 Scan Networks Page
 
-**Purpose**: Discover and analyze nearby WiFi networks
+**Purpose**: Discover and analyze nearby WiFi networks with interactive details
 
 **Features:**
 
 - **Button-Triggered Scanning**: Click "Start Network Scan" button
 - **Progress Feedback**: Full-screen progress indicator during scan
-- **Network List Display**:
-  - Network name (SSID)
+- **Interactive Network List** (🆕 v4.0.0):
+  - Click any network to view comprehensive details
+  - Network name (SSID) with hidden network detection
   - Signal strength with colored indicators
-  - Channel number
-  - Security type (Open/Secured)
+  - Channel number and frequency
+  - Security type (Open/WEP/WPA/WPA2/WPA3/Enterprise)
   - Signal strength in dBm
 - **Visual Quality Indicators**:
   - 5 colored circles showing signal quality
   - Green (excellent), Yellow (good), Orange (fair), Red (poor)
 - **Summary Statistics**: Total networks found
+- **Smart Caching**: Results cached for 5 minutes to reduce re-scanning
+
+**Network Details View** (🆕 v4.0.0):
+
+When you click on any network, you'll see:
+
+1. **Basic Information**:
+   - Network Name (SSID)
+   - MAC Address (BSSID) in XX:XX:XX:XX:XX:XX format
+   - Back button to return to scan results
+
+2. **Signal Strength Analysis**:
+   - RSSI value in dBm
+   - 8-level quality scale with percentage:
+     - 100% Excellent (Very Close) ≥ -30 dBm
+     - 90% Excellent ≥ -50 dBm
+     - 80% Very Good ≥ -60 dBm
+     - 70% Good ≥ -67 dBm
+     - 60% Fair ≥ -70 dBm
+     - 50% Weak ≥ -80 dBm
+     - 30% Very Weak ≥ -90 dBm
+     - 10% Extremely Weak < -90 dBm
+   - Visual signal quality bars (color-coded)
+   - Emoji indicators (📶📡)
+
+3. **Channel Information**:
+   - Channel number with frequency (2.4GHz/5GHz)
+   - Congestion analysis with 5-level scale:
+     - Clear (0-2 networks) - Green
+     - Light (3-5 networks) - Yellow-Green
+     - Moderate (6-10 networks) - Yellow
+     - Heavy (11-15 networks) - Orange
+     - Severe (16+ networks) - Red
+   - Network count on same channel
+
+4. **Security Assessment**:
+   - Encryption type with icon (🔓 🔒 🔐 🏢)
+   - Security level rating:
+     - None (Open networks) - Red warning
+     - Weak (WEP) - Orange warning
+     - Moderate (WPA-PSK) - Yellow
+     - Good (WPA2-PSK) - Light green
+     - Excellent (WPA3-PSK) - Green
+   - Security warnings for vulnerable networks
+
+5. **Connection Recommendations**:
+   - Signal strength assessment
+   - Security evaluation
+   - Channel congestion impact
+   - Overall connection quality (✅/⚠️/❌)
 
 **Usage:**
 
@@ -169,8 +236,10 @@ All scan operations display a **professional progress overlay**:
 2. Click "Start Network Scan" button
 3. Wait for progress indicator (1-3 seconds)
 4. View results with signal strength analysis
+5. **Click any network** to see detailed information
+6. Use back button to return to scan list
 
-**Best For**: Finding available networks and checking signal quality
+**Best For**: Finding available networks, checking signal quality, and making informed connection decisions
 
 ---
 
@@ -488,7 +557,18 @@ ESP32> webserver start
 
 ## 🔄 Version History
 
-### Version 2.1.0 (Current)
+### Version 4.0.0 (Current)
+
+- ✅ **Interactive Network Details**: Clickable network list with comprehensive information
+- ✅ **Multi-Platform Support**: Web server now available on both ESP32dev and Feather ESP32-S3 TFT
+- ✅ **Enhanced Signal Analysis**: 8-level signal quality assessment
+- ✅ **Channel Congestion Analysis**: 5-level congestion rating with color coding
+- ✅ **Security Assessment**: Comprehensive security evaluation for all encryption types
+- ✅ **Connection Recommendations**: Smart analysis combining signal, channel, and security
+- ✅ **Smart Caching**: Scan results cached for 5 minutes (50 network capacity)
+- ✅ **Memory Optimization**: Reduced flash usage by 27.7KB on ESP32dev
+
+### Version 2.1.0
 
 - ✅ Added dropdown menu navigation system
 - ✅ Implemented progress indicators with backdrop overlay
@@ -498,7 +578,7 @@ ESP32> webserver start
 
 ### Version 2.0.0
 
-- ✅ Initial web server implementation
+- ✅ Initial web server implementation (Feather only)
 - ✅ Home, Status, Scan, Channel pages
 - ✅ iPerf and Latency testing interfaces
 - ✅ Mobile-responsive design

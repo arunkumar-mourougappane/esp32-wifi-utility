@@ -75,7 +75,7 @@ pio test -e test_feather -f test_channel_analyzer_comprehensive
 
 ### Environment Variables
 - `USE_NEOPIXEL=1`: Enables NeoPixel-specific code and tests
-- `VERSION="2.0.0"`: Sets version information for tests
+- `VERSION="4.0.0"`: Sets version information for tests
 
 ### Test Constants (test_config.h)
 ```cpp

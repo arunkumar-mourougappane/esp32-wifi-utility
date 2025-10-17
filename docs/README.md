@@ -9,7 +9,7 @@ Comprehensive guides for using all features of the ESP32 WiFi Utility:
 - **[Latency Testing Guide](user-guides/LATENCY_GUIDE.md)** - Network performance and jitter analysis
 - **[Enhanced WiFi Scanning](user-guides/ENHANCED_SCANNING.md)** - Advanced network discovery and analysis
 - **[iPerf Network Testing](user-guides/IPERF_GUIDE.md)** - Comprehensive throughput and performance testing
-- **[Web Interface Guide](user-guides/WEB_INTERFACE.md)** - 🆕 Complete web-based dashboard documentation (Feather ESP32-S3 TFT only)
+- **[Web Interface Guide](user-guides/WEB_INTERFACE.md)** - 🆕 Complete web-based dashboard documentation (Available on both boards!)
 - **[NeoPixel Status Display](user-guides/NEOPIXEL_GUIDE.md)** - RGB LED status indicators (Feather ESP32-S3 TFT only)
 
 ## 🔧 Technical Documentation
@@ -36,12 +36,23 @@ New to the ESP32 WiFi Utility? Start here:
 
 ## 🎯 Feature Highlights
 
-### 🆕 v2.1.0: Web-Based Interface
-- Browser-accessible dashboard for all features (Feather ESP32-S3 TFT only)
+### 🆕 v4.0.0: Interactive Network Details & Multi-Platform Web Server
+- **Clickable Network Details**: Click any scanned network to view comprehensive information
+  - 8-level signal quality scale with visual indicators
+  - Channel congestion analysis (Clear to Severe ratings)
+  - Security assessment for all 9 WiFi encryption types
+  - Connection recommendations based on signal and channel conditions
+- **Web Server on Both Boards**: Now available on ESP32dev and Feather ESP32-S3 TFT
+- **Memory Optimization**: 27KB flash savings through compiler optimizations
+- **Comprehensive Testing**: 19 automated test cases with 100% pass rate
+
+### 🌐 Web-Based Interface
+- Browser-accessible dashboard for all features (Both boards supported!)
 - Hierarchical dropdown navigation with professional UI/UX
 - Real-time progress indicators with backdrop overlays
 - Mobile-responsive design with touch-friendly controls
 - Unified Analysis Dashboard for network testing tools
+- Interactive scan results with clickable network details
 
 ### 🆕 Professional Channel Analysis
 - Real-time 2.4GHz spectrum scanning with AI-powered recommendations
@@ -83,10 +94,11 @@ docs/
 
 ## 🌐 Web Interface Quick Reference
 
-**For Feather ESP32-S3 TFT users:**
+**For both ESP32dev and Feather ESP32-S3 TFT users:**
 - Start: `webserver start`
 - Access: `http://<device-ip>` (displayed after start)
 - Features: All network analysis tools via browser
+- New in v4.0.0: Clickable network details with comprehensive information
 - Guide: [Complete Web Interface Documentation](user-guides/WEB_INTERFACE.md)
 
 ## 🤝 Contributing

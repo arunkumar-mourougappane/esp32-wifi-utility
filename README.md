@@ -1,7 +1,7 @@
 # ESP32 WiFi Utility Suite
 
 ![Build Status](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/actions/workflows/build.yml/badge.svg)
-![Version](https://img.shields.io/badge/version-3.1.0--dev-blue.svg)
+![Version](https://img.shields.io/badge/version-4.0.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-ESP32-blue.svg)
 ![Framework](https://img.shields.io/badge/framework-Arduino-green.svg)
 ![PlatformIO](https://img.shields.io/badge/build-PlatformIO-orange.svg)
@@ -9,15 +9,18 @@
 ![Boards](https://img.shields.io/badge/boards-ESP32dev%20|%20Feather%20ESP32--S3-brightgreen.svg)
 [![Changelog](https://img.shields.io/badge/changelog-available-brightgreen.svg)](CHANGELOG.md)
 
-A professional-grade ESP32 WiFi analysis and management suite featuring comprehensive network scanning, spectrum analysis, performance testing, and dual-board support with advanced channel congestion analysis.
+A professional-grade ESP32 WiFi analysis and management suite featuring comprehensive network scanning, spectrum analysis,
+performance testing, and dual-board support with advanced channel congestion analysis.
 
-## � What's New in v3.1.0
+## � What's New in v4.0.0
 
 ### 🌐 Web Server Now Available on Both Boards!
 
-The comprehensive web interface is now available on **both ESP32 Development Board and Feather ESP32-S3 TFT**! Previously exclusive to the Feather board, you can now access all network analysis features via browser on any ESP32 device.
+The comprehensive web interface is now available on **both ESP32 Development Board and Feather ESP32-S3 TFT**! Previously
+exclusive to the Feather board, you can now access all network analysis features via browser on any ESP32 device.
 
 **Access the web interface:**
+
 - In **AP Mode**: Connect to the ESP32's WiFi hotspot and navigate to the displayed URL
 - In **Station Mode**: Access via the device's IP address on your local network
 - Use commands: `webserver start`, `webserver stop`, `webserver status`
@@ -153,7 +156,7 @@ The web server now **automatically restarts** when switching between AP and Stat
 - **Professional Dashboard Pages**:
   - 🏠 **Home** - Quick stats and system overview with unified metrics
   - 📊 **Status** - Detailed system information and configuration
-  - 🔍 **Scan Networks** - Interactive WiFi scanning with clickable network details (v3.1.0+)
+  - 🔍 **Scan Networks** - Interactive WiFi scanning with clickable network details (v4.0.0)
     - Click any network to view comprehensive information
     - Signal quality assessment with 8-level scale
     - Channel congestion analysis and recommendations
@@ -375,12 +378,12 @@ See our [Automated Release Documentation](docs/technical/AUTOMATED_RELEASES.md) 
 
 ### 1. Hardware Setup
 
-#### For ESP32 Development Board:
+#### ESP32 Development Board Setup:
 
 1. Connect your ESP32dev to your computer via USB
 2. Ensure the built-in LED is available (GPIO 2)
 
-#### For Adafruit Feather ESP32-S3 TFT:
+#### Adafruit Feather ESP32-S3 TFT Setup:
 
 1. Connect your Feather board to your computer via USB
 2. The NeoPixel LED will provide enhanced RGB status indication
@@ -393,7 +396,7 @@ See our [Automated Release Documentation](docs/technical/AUTOMATED_RELEASES.md) 
 
 ### 3. Build and Upload (Dual-Board Support)
 
-#### For ESP32 Development Board:
+#### Building for ESP32 Development Board:
 
 ```bash
 # Using PlatformIO (recommended)
@@ -453,6 +456,7 @@ pio test --environment test_feather --without-uploading
 ```
 
 **Test Coverage**: 19 test cases covering:
+
 - Cache management and validation
 - Network details and signal quality
 - WiFi fundamentals (RSSI, channels, encryption)
@@ -556,7 +560,7 @@ options, and examples.
 💡 **Web Interface Access**: Once started, access the web interface at the displayed IP address
 (e.g., `http://192.168.4.1` in AP mode or your device IP in Station mode). The web interface
 provides real-time monitoring, interactive WiFi scanning with clickable network details, and comprehensive
-channel analysis through a beautiful mobile-responsive dashboard. **Now available on both ESP32dev and 
+channel analysis through a beautiful mobile-responsive dashboard. **Now available on both ESP32dev and
 Feather ESP32-S3 TFT boards!** (v3.0.0+)
 
 ### Client Management Commands (AP Mode Only)
@@ -1186,7 +1190,7 @@ esp32-wifi-utility/
 - **Background Monitoring**: Configurable 1-60 second intervals
 - **AI Recommendations**: <2 seconds for optimal channel calculation
 - **Memory Efficiency**: <8KB RAM usage for full channel analysis functionality
-- **Memory Optimization**: Flash usage reduced by ~27KB through compiler optimizations (v3.1.0+)
+- **Memory Optimization**: Flash usage reduced by ~27KB through compiler optimizations (v4.0.0)
 - **Web Server Caching**: 50 networks cached for 5 minutes with minimal RAM impact
 - **Accuracy**: ±1 dBm RSSI measurement precision
 - **Reliability**: 99.5%+ successful scan completion rate
@@ -1222,10 +1226,10 @@ esp32-wifi-utility/
   - Professional spectrum analysis engine (570+ lines)
   - Advanced latency analysis with statistical processing
   - Comprehensive WiFi scanning with AI recommendations
-  - Interactive web interface with clickable network details (336+ lines added in v3.1.0)
+  - Interactive web interface with clickable network details (336+ lines added in v4.0.0)
   - iPerf performance testing suite
   - Dual-board hardware abstraction layer
-- **Memory Efficient**: 
+- **Memory Efficient**:
   - Optimized global state management with proper extern declarations
   - PROGMEM storage for HTML/CSS (4KB+ moved to flash)
   - F() macro for 200+ string literals (~3KB RAM saved)
@@ -1248,8 +1252,8 @@ esp32-wifi-utility/
 ### 🔧 Core Features
 
 - [ ] **Power Management**: Sleep mode for battery operation
-- [x] **Web Interface**: ✅ Implemented! Browser-based control available on both boards (v3.0.0+)
-- [x] **Clickable Network Details**: ✅ Implemented! Interactive scan results with detailed analysis (v3.1.0+)
+- [x] **Web Interface**: ✅ Implemented! Browser-based control available on both boards (v3.0.0)
+- [x] **Clickable Network Details**: ✅ Implemented! Interactive scan results with detailed analysis (v4.0.0)
 - [ ] **Network Storage**: Save and auto-connect to known networks
 - [ ] **Signal Analysis**: Real-time signal strength graphing
 - [ ] **Multi-AP Support**: Multiple AP configurations and switching
