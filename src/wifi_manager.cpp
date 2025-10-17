@@ -9,6 +9,13 @@
 #include "web_server.h"
 #endif
 
+// Helper macro for prompt handling
+#ifndef USE_RTOS
+#define RESET_PROMPT() promptShown = false
+#else
+#define RESET_PROMPT() do {} while(0)
+#endif
+
 // ==========================================
 // GLOBAL STATE VARIABLES
 // ==========================================
@@ -49,7 +56,7 @@ void startStationMode() {
   Serial.println("  Use 'scan on' to start scanning");
   Serial.println("  Web server will auto-start upon WiFi connection");
   
-  promptShown = false;
+  RESET_PROMPT();
 }
 
 void startAccessPoint() {
@@ -78,11 +85,11 @@ void startAccessPoint() {
     // Web server will be auto-started by monitorWebServerState()
     Serial.println("  Web server will auto-start momentarily");
     
-    promptShown = false;
+    RESET_PROMPT();
   } else {
     currentMode = MODE_OFF;
     Serial.println("✗ Failed to start Access Point");
-    promptShown = false;
+    RESET_PROMPT();
   }
 }
 
@@ -128,7 +135,7 @@ void startAccessPoint(const String& ssid, const String& password) {
     // Web server will be auto-started by monitorWebServerState()
     Serial.println("  Web server will auto-start momentarily");
     
-    promptShown = false;
+    RESET_PROMPT();
   } else {
     currentMode = MODE_OFF;
     Serial.println("✗ Failed to start custom Access Point");
@@ -138,7 +145,7 @@ void startAccessPoint(const String& ssid, const String& password) {
     currentAPSSID = AP_SSID;
     currentAPPassword = AP_PASSWORD;
     
-    promptShown = false;
+    RESET_PROMPT();
   }
 }
 
@@ -350,7 +357,7 @@ void performWiFiScan() {
   
   // Clean up
   WiFi.scanDelete();
-  promptShown = false; // Show prompt after scan results
+  RESET_PROMPT(); // Show prompt after scan results
 }
 
 void showNetworkDetails(int networkId) {
@@ -553,7 +560,7 @@ void showNetworkDetails(int networkId) {
   
   // Cleanup
   WiFi.scanDelete();
-  promptShown = false;
+  RESET_PROMPT();
 }
 
 // ==========================================
@@ -639,7 +646,7 @@ void connectToNetwork(String ssid, String password) {
 #endif
   }
   
-  promptShown = false;
+  RESET_PROMPT();
 }
 
 /**
@@ -671,7 +678,7 @@ void disconnectFromNetwork() {
     Serial.println("ℹ Not connected to any network");
   }
   
-  promptShown = false;
+  RESET_PROMPT();
 }
 
 

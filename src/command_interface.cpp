@@ -11,12 +11,19 @@
 #include "web_server.h"
 #endif
 
+#ifdef USE_RTOS
+#include "mutex_manager.h"
+#endif
+
 // ==========================================
 // COMMAND INTERFACE VARIABLES
 // ==========================================
+#ifndef USE_RTOS
+// Legacy mode variables
 String currentInput = "";
 bool promptShown = false;
 unsigned long lastActivity = 0;
+#endif
 
 // ==========================================
 // SERIAL INITIALIZATION
@@ -25,15 +32,18 @@ void initializeSerial() {
   Serial.begin(115200);
   delay(1000); // Wait for serial to initialize
   
-  // Print startup message
+#ifndef USE_RTOS
+  // Legacy mode startup message
   Serial.println("\n==========================================");
   Serial.println("       ESP32 WiFi Scanner & AP");
   Serial.println("==========================================");
   Serial.println("🟡 Device initialization starting...");
   Serial.println("==========================================\n");
+#endif
 }
 
-// Show initial prompt after all initialization is complete
+#ifndef USE_RTOS
+// Show initial prompt after all initialization is complete (legacy mode)
 void showInitialPrompt() {
   Serial.println("\n==========================================");
   Serial.println("🟡 Device in IDLE mode - Ready for commands");
@@ -45,7 +55,7 @@ void showInitialPrompt() {
 }
 
 // ==========================================
-// SERIAL COMMAND HANDLING
+// SERIAL COMMAND HANDLING (LEGACY MODE)
 // ==========================================
 void handleSerialCommands() {
   while (Serial.available()) {
@@ -80,15 +90,24 @@ void processCharacter(char c) {
     Serial.print(c); // Echo character
   }
 }
+#endif // USE_RTOS
 
 // ==========================================
 // COMMAND EXECUTION
 // ==========================================
 void executeCommand(String command) {
+#ifdef USE_RTOS
+  // Protect serial output with mutex in RTOS mode
+  MutexLock lock(serialMutex, "executeCommand");
+#endif
+
   command.trim();
   String originalCommand = command; // Preserve original case for SSID/password extraction
   command.toLowerCase();
-  promptShown = false; // Reset prompt flag
+  
+#ifndef USE_RTOS
+  promptShown = false; // Reset prompt flag (legacy mode only)
+#endif
   
   if (command == "scan on") {
     if (currentMode == MODE_STATION) {
@@ -334,6 +353,7 @@ void executeResetCommand() {
 // ==========================================
 // DISPLAY FUNCTIONS
 // ==========================================
+#ifndef USE_RTOS
 void showPrompt() {
   String modeIcon;
   switch (currentMode) {
@@ -354,6 +374,7 @@ void showPrompt() {
   Serial.print(modeIcon + " ESP32> ");
   promptShown = true;
 }
+#endif
 
 void clearConsole() {
   // Send ANSI escape codes to clear screen and move cursor to top-left
@@ -384,7 +405,9 @@ void clearConsole() {
   Serial.println(modeText);
   Serial.println("==========================================\n");
   
-  promptShown = false; // Will trigger new prompt display
+#ifndef USE_RTOS
+  promptShown = false; // Will trigger new prompt display (legacy mode)
+#endif
 }
 
 void printHelp() {

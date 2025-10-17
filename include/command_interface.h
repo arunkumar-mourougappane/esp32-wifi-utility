@@ -5,17 +5,27 @@
 // ==========================================
 // COMMAND INTERFACE
 // ==========================================
+
+// Legacy mode variables (not used in RTOS mode)
+#ifndef USE_RTOS
 extern String currentInput;
 extern bool promptShown;
 extern unsigned long lastActivity;
+#endif
 
 void initializeSerial();
+
+#ifndef USE_RTOS
+// Legacy mode functions
 void showInitialPrompt();
 void handleSerialCommands();
 void processCharacter(char c);
+void showPrompt();
+#endif
+
+// Command execution (used by both legacy and RTOS modes)
 void executeCommand(String command);
 void executeResetCommand();
-void showPrompt();
 void clearConsole();
 void printHelp();
 void printStatus();
