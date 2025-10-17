@@ -13,6 +13,34 @@
 WebServer* webServer = nullptr;
 bool webServerEnabled = false;
 
+// ==========================================
+// HELPER FUNCTIONS
+// ==========================================
+String getDeviceName() {
+    // Get chip model (e.g., "ESP32", "ESP32-S3", "ESP32-C3")
+    String chipModel = String(ESP.getChipModel());
+    
+    // Check for specific board types
+    #ifdef ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT
+        return "Feather " + chipModel + " TFT";
+    #elif defined(ARDUINO_FEATHER_ESP32)
+        return "Feather " + chipModel;
+    #else
+        return chipModel + " Dev Module";
+    #endif
+}
+
+String getVersionString() {
+    #ifdef VERSION
+        // VERSION is defined as a string literal in build flags
+        #define STRINGIFY(x) #x
+        #define TOSTRING(x) STRINGIFY(x)
+        return String(TOSTRING(VERSION));
+    #else
+        return "3.0.0";
+    #endif
+}
+
 // HTML page styling
 const char* HTML_HEADER = R"rawliteral(
 <!DOCTYPE html>
@@ -304,15 +332,23 @@ const char* HTML_HEADER = R"rawliteral(
 <div class="container">
 )rawliteral";
 
-const char* HTML_FOOTER = R"rawliteral(
+// Generate dynamic HTML footer
+String generateHtmlFooter() {
+    String footer = R"rawliteral(
     <div class="footer">
-        <p>🚀 ESP32 WiFi Utility v2.1.0 | Feather ESP32-S3 TFT</p>
+        <p>🚀 ESP32 WiFi Utility v)rawliteral";
+    footer += getVersionString();
+    footer += " | ";
+    footer += getDeviceName();
+    footer += R"rawliteral(</p>
         <p>Professional Network Analysis & Performance Testing</p>
     </div>
 </div>
 </body>
 </html>
 )rawliteral";
+    return footer;
+}
 
 // ==========================================
 // INITIALIZATION
@@ -497,7 +533,9 @@ void handleRoot() {
         <h1>🚀 ESP32 WiFi Utility</h1>
         <p>Professional Network Analysis & Performance Testing</p>
         <div>
-            <span class="badge info">Feather ESP32-S3 TFT</span>
+            <span class="badge info">)rawliteral";
+    html += getDeviceName();
+    html += R"rawliteral(</span>
     )rawliteral";
     
     if (currentMode == MODE_AP) {
@@ -635,7 +673,7 @@ void handleRoot() {
     </ul>
     )rawliteral";
     
-    html += HTML_FOOTER;
+    html += generateHtmlFooter();
     webServer->send(200, "text/html", html);
 }
 
@@ -744,7 +782,7 @@ void handleStatus() {
         )rawliteral";
     }
     
-    html += HTML_FOOTER;
+    html += generateHtmlFooter();
     webServer->send(200, "text/html", html);
 }
 
@@ -848,7 +886,7 @@ void handleScan() {
         html += "<p style='text-align: center; padding: 40px; color: #999;'>Click the button above to scan for available WiFi networks.</p>";
     }
     
-    html += HTML_FOOTER;
+    html += generateHtmlFooter();
     webServer->send(200, "text/html", html);
 }
 
@@ -1086,7 +1124,7 @@ void handleNetworkAnalysis() {
     </div>
     )rawliteral";
     
-    html += HTML_FOOTER;
+    html += generateHtmlFooter();
     webServer->send(200, "text/html", html);
 }
 
@@ -1216,7 +1254,7 @@ void handleChannelAnalysis() {
     </div>
     )rawliteral";
     
-    html += HTML_FOOTER;
+    html += generateHtmlFooter();
     webServer->send(200, "text/html", html);
 }
 
@@ -1254,7 +1292,7 @@ void handleNotFound() {
     </div>
     )rawliteral";
     
-    html += HTML_FOOTER;
+    html += generateHtmlFooter();
     webServer->send(404, "text/html", html);
 }
 
@@ -1442,7 +1480,7 @@ void handleIperf() {
     </div>
     )rawliteral";
     
-    html += HTML_FOOTER;
+    html += generateHtmlFooter();
     webServer->send(200, "text/html", html);
 }
 
@@ -1648,7 +1686,7 @@ void handleIperfStart() {
     </script>
     )rawliteral";
     
-    html += HTML_FOOTER;
+    html += generateHtmlFooter();
     webServer->send(200, "text/html", html);
 }
 
@@ -1873,7 +1911,7 @@ void handleLatency() {
     </div>
     )rawliteral";
     
-    html += HTML_FOOTER;
+    html += generateHtmlFooter();
     webServer->send(200, "text/html", html);
 }
 
@@ -2061,7 +2099,7 @@ void handleLatencyStart() {
     </form>
     )rawliteral";
     
-    html += HTML_FOOTER;
+    html += generateHtmlFooter();
     webServer->send(200, "text/html", html);
 }
 
