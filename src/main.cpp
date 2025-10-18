@@ -17,6 +17,7 @@
 #ifdef USE_RTOS
 #include "rtos_manager.h"
 #include "command_task.h"
+#include "wifi_task.h"
 #endif
 
 // Global variables are defined in their respective modules
@@ -57,6 +58,15 @@ void setup() {
     Serial.println("Falling back to legacy command handling.");
   } else {
     Serial.println("[RTOS] Command Task started successfully on Core 1");
+  }
+  
+  // Initialize WiFi Task (Phase 3)
+  Serial.println("[RTOS] Initializing WiFi Manager Task...");
+  if (!initializeWiFiTask()) {
+    Serial.println("WARNING: WiFi Task initialization failed!");
+    Serial.println("Falling back to legacy WiFi handling.");
+  } else {
+    Serial.println("[RTOS] WiFi Task started successfully on Core 0 (WiFi Core)");
   }
 #endif
 
