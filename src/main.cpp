@@ -18,6 +18,9 @@
 #include "rtos_manager.h"
 #include "command_task.h"
 #include "wifi_task.h"
+#ifdef USE_WEBSERVER
+#include "web_task.h"
+#endif
 #endif
 
 // Global variables are defined in their respective modules
@@ -25,10 +28,6 @@
 void setup() {
   // Initialize serial interface first
   initializeSerial();
-  // Wait for serial to initialize (Feather boards only)
-#ifdef ARDUINO_FEATHER_ESP32
-  sleep(3); 
-#endif
 
 #ifdef USE_RTOS
   // Initialize RTOS infrastructure (v4.1.0)
@@ -68,6 +67,17 @@ void setup() {
   } else {
     Serial.println("[RTOS] WiFi Task started successfully on Core 0 (WiFi Core)");
   }
+  
+#ifdef USE_WEBSERVER
+  // Initialize Web Server Task (Phase 4)
+  Serial.println("[RTOS] Initializing Web Server Task...");
+  if (!initializeWebTask()) {
+    Serial.println("WARNING: Web Server Task initialization failed!");
+    Serial.println("Falling back to legacy web server handling.");
+  } else {
+    Serial.println("[RTOS] Web Server Task started successfully on Core 0 (WiFi Core)");
+  }
+#endif
 #endif
 
   // Initialize hardware
