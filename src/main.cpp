@@ -22,6 +22,7 @@
 #include "web_task.h"
 #endif
 #include "analysis_task.h"
+#include "led_task.h"
 #endif
 
 // Global variables are defined in their respective modules
@@ -88,10 +89,21 @@ void setup() {
   } else {
     Serial.println("[RTOS] Analysis Task started successfully on Core 0 (WiFi Core)");
   }
+  
+  // Initialize LED Controller Task (Phase 6)
+  Serial.println("[RTOS] Initializing LED Controller Task...");
+  if (!initializeLEDTask()) {
+    Serial.println("WARNING: LED Task initialization failed!");
+    Serial.println("Falling back to legacy LED handling.");
+  } else {
+    Serial.println("[RTOS] LED Task started successfully on Core 1 (Application Core)");
+  }
+#else
+  // Non-RTOS mode - initialize hardware directly
+  initializeLED();
 #endif
 
-  // Initialize hardware
-  initializeLED();
+  // Initialize hardware (shared between RTOS and non-RTOS modes)
   
   // Initialize WiFi (will be configured by user commands)
   initializeWiFi();
