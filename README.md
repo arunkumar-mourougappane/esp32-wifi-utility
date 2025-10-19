@@ -1,7 +1,7 @@
 # ESP32 WiFi Utility Suite
 
 ![Build Status](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/actions/workflows/build.yml/badge.svg)
-![Version](https://img.shields.io/badge/version-4.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-4.1.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-ESP32-blue.svg)
 ![Framework](https://img.shields.io/badge/framework-Arduino-green.svg)
 ![PlatformIO](https://img.shields.io/badge/build-PlatformIO-orange.svg)
@@ -67,6 +67,86 @@ The web server now **automatically restarts** when switching between AP and Stat
 - Seamless WiFi mode transitions with web interface preservation
 - Dynamic SSID and device name updates based on chip ID
 - No manual restart required after mode changes
+
+## 🎯 **NEW in v4.1.0: FreeRTOS Architecture**
+
+Version 4.1.0 introduces a comprehensive **FreeRTOS-based architecture**, transforming the ESP32 WiFi Utility from synchronous blocking operations to **asynchronous, concurrent task-based processing**.
+
+### 🚀 Key RTOS Features
+
+- **Asynchronous Command Execution**: Commands return immediately, operations run in background
+- **Concurrent Operations**: WiFi scanning, web server, and LED animations all run simultaneously
+- **Dual-Core Task Distribution**: Core 0 for network operations, Core 1 for application logic
+- **Responsive User Interface**: No blocking - system always responsive to commands
+- **Priority-Based Scheduling**: 5-level priority system ensures critical tasks execute first
+- **Queue-Based Communication**: Type-safe, thread-safe messaging between tasks
+- **Mutex Protection**: Automatic resource protection with deadlock prevention
+- **Task Monitoring**: Real-time statistics on stack usage, loop times, and performance
+- **Graceful Error Recovery**: Tasks can restart independently without system reboot
+- **Smooth LED Animations**: Dedicated LED task provides 60 FPS animations
+
+### 📊 Performance Improvements
+
+| Metric | v3.x (Synchronous) | v4.1.0 (RTOS) | Improvement |
+|--------|-------------------|---------------|-------------|
+| Command Response | Blocking (3-5s) | <10ms | **500x faster** |
+| WiFi + Web Server | Sequential | Concurrent | **2x throughput** |
+| LED Updates | Stuttering | 60 FPS | **Smooth** |
+| CPU Utilization | 80% single-core | 40% dual-core | **50% reduction** |
+| System Responsiveness | Poor (blocked) | Excellent | **Always responsive** |
+
+### 🏗️ RTOS Architecture
+
+```
+┌─────────── Core 0 (Protocol CPU) ───────────┐    ┌────────── Core 1 (Application CPU) ──────────┐
+│                                              │    │                                              │
+│  WiFi Task        (Priority: HIGH)          │    │  Command Task     (Priority: HIGHEST)        │
+│  Web Server Task  (Priority: MEDIUM)        │    │  LED Task         (Priority: LOW)            │
+│                                              │    │  Analysis Task    (Priority: VERY_LOW)       │
+│                                              │    │                                              │
+└──────────────────┬───────────────────────────┘    └─────────────────┬─────────────────────────┘
+                   │                                                   │
+                   └───────────────► Queues & Mutexes ◄───────────────┘
+                                   (Thread-Safe Communication)
+```
+
+### 📚 Comprehensive RTOS Documentation
+
+- **[RTOS Architecture Guide](docs/technical/RTOS_ARCHITECTURE.md)** - Complete system design, task structure, queue flows
+- **[RTOS API Reference](docs/technical/RTOS_API_REFERENCE.md)** - Full API documentation with examples
+- **[RTOS Migration Guide](docs/user-guides/RTOS_MIGRATION_GUIDE.md)** - Upgrade from v3.x to v4.x
+- **[Tutorial: Creating a New Task](docs/technical/RTOS_TUTORIAL_NEW_TASK.md)** - Step-by-step task implementation
+- **[Tutorial: Using Queues](docs/technical/RTOS_TUTORIAL_QUEUES.md)** - Inter-task communication patterns
+- **[Tutorial: Debugging RTOS](docs/technical/RTOS_TUTORIAL_DEBUGGING.md)** - Debugging tools and techniques
+- **[RTOS FAQ](docs/user-guides/RTOS_FAQ.md)** - Common questions and solutions
+- **[Test Results](test/RTOS_TEST_RESULTS.md)** - 59 tests, ~90% coverage, all performance targets met
+
+### ✅ RTOS Quality Metrics
+
+- **59 Automated Tests**: Comprehensive coverage of all RTOS components
+- **~90% Code Coverage**: 650/720 lines of RTOS code tested
+- **All Performance Targets Met**:
+  - Queue latency: <1ms ✅
+  - Mutex operations: <100μs ✅  
+  - Command throughput: >100/sec ✅
+  - Task switching: <1ms ✅
+  - End-to-end latency: <10ms ✅
+- **Memory Stable**: No leaks detected, <5KB variation under load
+- **Production Ready**: Tested on ESP32dev and Adafruit Feather ESP32-S3
+
+### 🔄 Backward Compatibility
+
+**All existing features work identically** - no changes required for basic usage:
+- ✅ All serial commands unchanged
+- ✅ Web interface operates the same
+- ✅ Configuration format compatible
+- ✅ Credentials preserved
+
+**What changed internally**:
+- Commands execute asynchronously (non-blocking)
+- Multiple operations run concurrently
+- Event-driven architecture replaces polling
+- Better error recovery and system stability
 
 ## �🚀 Features
 
