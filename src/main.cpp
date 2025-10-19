@@ -21,6 +21,7 @@
 #ifdef USE_WEBSERVER
 #include "web_task.h"
 #endif
+#include "analysis_task.h"
 #endif
 
 // Global variables are defined in their respective modules
@@ -78,6 +79,15 @@ void setup() {
     Serial.println("[RTOS] Web Server Task started successfully on Core 0 (WiFi Core)");
   }
 #endif
+  
+  // Initialize Analysis Task (Phase 5)
+  Serial.println("[RTOS] Initializing Analysis Task...");
+  if (!initializeAnalysisTask()) {
+    Serial.println("WARNING: Analysis Task initialization failed!");
+    Serial.println("Falling back to legacy analysis handling.");
+  } else {
+    Serial.println("[RTOS] Analysis Task started successfully on Core 0 (WiFi Core)");
+  }
 #endif
 
   // Initialize hardware
