@@ -12,65 +12,151 @@
 A professional-grade ESP32 WiFi analysis and management suite featuring comprehensive network scanning, spectrum analysis,
 performance testing, and dual-board support with advanced channel congestion analysis.
 
-## � What's New in v4.0.0
+## 🎉 What's New in v4.1.0
 
-### 🌐 Web Server Now Available on Both Boards!
+Version 4.1.0 represents a **major architectural transformation** with the introduction of FreeRTOS, delivering unprecedented
+performance, responsiveness, and reliability.
 
-The comprehensive web interface is now available on **both ESP32 Development Board and Feather ESP32-S3 TFT**! Previously
-exclusive to the Feather board, you can now access all network analysis features via browser on any ESP32 device.
+### 🚀 **MAJOR: FreeRTOS-Based Architecture** (Issues #12-#20)
 
-**Access the web interface:**
+Complete reimplementation with **professional FreeRTOS task-based architecture**:
 
-- In **AP Mode**: Connect to the ESP32's WiFi hotspot and navigate to the displayed URL
-- In **Station Mode**: Access via the device's IP address on your local network
-- Use commands: `webserver start`, `webserver stop`, `webserver status`
+#### Core RTOS Infrastructure (#13)
 
-### 📱 Clickable Network Details View (Issue #10)
+- **Dual-Core Task Distribution**: Core 0 for network (WiFi, Web Server), Core 1 for application (Commands, LED, Analysis)
+- **5-Level Priority System**: HIGHEST (Commands) → HIGH (WiFi) → MEDIUM (Web) → LOW (LED) → VERY_LOW (Analysis)
+- **Queue-Based Communication**: Type-safe, thread-safe messaging with 4 system queues (Command, WiFi Event, Status, Analysis)
+- **Mutex Protection**: Automatic resource protection with deadlock prevention (WiFi, WebServer, ScanResults, Serial mutexes)
+- **Task Monitoring**: Real-time statistics on stack usage, loop times, CPU utilization
+- **Graceful Error Recovery**: Tasks restart independently without system reboot
 
-**Interactive WiFi scanning** has been enhanced with a detailed information page for each network:
+#### Performance Improvements
 
-- **Click any network** in scan results to view comprehensive details
-- **8-level signal quality scale** from "Excellent (Very Close)" to "Extremely Weak"
-- **Channel congestion analysis** with Clear/Light/Moderate/Heavy/Severe ratings
-- **Security assessment** with recommendations for all 9 WiFi encryption types
-- **Connection recommendations** based on signal strength and channel conditions
-- **Visual indicators** throughout with emoji icons and color-coded ratings
-- **Smart caching** stores up to 50 networks for 5 minutes, reducing re-scans
-- **Mobile-friendly** responsive design with touch-optimized interface
+| Metric                    | v3.x (Synchronous) | v4.1.0 (RTOS)     | Improvement           |
+| ------------------------- | ------------------ | ----------------- | --------------------- |
+| **Command Response**      | Blocking (3-5s)    | **<10ms**         | **500× faster**       |
+| **WiFi + Web Server**     | Sequential         | **Concurrent**    | **2× throughput**     |
+| **LED Updates**           | Stuttering         | **60 FPS**        | **Smooth animation**  |
+| **CPU Utilization**       | 80% single-core    | **40% dual-core** | **50% reduction**     |
+| **System Responsiveness** | Poor (blocked)     | **Excellent**     | **Always responsive** |
+
+#### Task Implementation
+
+- **Command Task** (#14): Asynchronous command processing on Core 1, Priority HIGHEST
+- **WiFi Task** (#15): Network operations on Core 0, Priority HIGH, event-driven architecture
+- **Web Server Task** (#16): Concurrent HTTP handling on Core 0, Priority MEDIUM
+- **Analysis Task** (#17): Background diagnostics on Core 1, Priority VERY_LOW
+- **LED Task** (#18): Smooth 60 FPS animations on Core 1, Priority LOW
+
+### 💡 **LED Controller Task Enhancement** (#18)
+
+Professional LED control with smooth animations and multiple states:
+
+- **60 FPS Smooth Animations**: Dedicated task ensures consistent, jitter-free updates
+- **10 LED States**: Idle, Scanning, Connecting, Connected, Disconnected, AP Mode, Error, Analysis, Custom, Off
+- **5 Animation Patterns**: Solid, Pulse (sine wave), Blink, Fade, Flash
+- **Priority-Based State Changes**: Errors override normal states, smooth transitions
+- **Dual Hardware Support**: Standard LED (ESP32dev) and NeoPixel RGB (Feather ESP32-S3)
+- **Queue-Based Updates**: Non-blocking state changes from any task
+- **Customizable Colors**: Full RGB control for NeoPixel boards
+
+### 🧪 **RTOS Testing Suite** (#19)
+
+Comprehensive test coverage ensuring reliability and performance:
+
+- **59 Automated Tests**: Unit, integration, performance, and stress tests
+- **~90% Code Coverage**: 650/720 lines of RTOS code tested
+- **6 Test Categories**:
+  - Queue Operations (12 tests): Creation, send/receive, overflow, FIFO, timeout, concurrent access
+  - Task Management (11 tests): Lifecycle, priorities, core affinity, stack monitoring
+  - Mutex Operations (11 tests): Lock/unlock, timeout, contention, fairness
+  - Integration Tests (9 tests): Inter-task communication, queue chaining, error handling
+  - Performance Tests (8 tests): Latency, throughput, timing benchmarks
+  - Stress Tests (8 tests): Queue flooding, high load, memory pressure, long-running stability
+- **All Performance Targets Met**:
+  - Queue latency: <1ms ✅
+  - Mutex operations: <100μs ✅
+  - Command throughput: >100/sec ✅
+  - Task switching: <1ms ✅
+  - End-to-end latency: <10ms ✅
+- **Memory Stable**: No leaks detected, <5KB variation under load
+- **Test Documentation**: Complete results in `test/RTOS_TEST_RESULTS.md`
+
+### 📚 **Comprehensive RTOS Documentation** (#20)
+
+Professional documentation suite (~5000 lines) for developers:
+
+- **[RTOS Architecture Guide](docs/technical/RTOS_ARCHITECTURE.md)** (~800 lines): Complete system design, task structure,
+queue flows with diagrams, synchronization primitives, CPU core assignments, memory management
+- **[RTOS API Reference](docs/technical/RTOS_API_REFERENCE.md)** (~1400 lines): 100% API coverage with examples for
+RTOSManager, QueueManager, MutexManager, TaskBase, and all task classes
+- **[RTOS Migration Guide](docs/user-guides/RTOS_MIGRATION_GUIDE.md)** (~850 lines): v3.x to v4.x upgrade guide with
+behavioral changes, API changes, step-by-step migration, troubleshooting
+- **[Tutorial: Creating a New Task](docs/technical/RTOS_TUTORIAL_NEW_TASK.md)** (~500 lines): Step-by-step
+task implementation with complete example
+- **[Tutorial: Using Queues](docs/technical/RTOS_TUTORIAL_QUEUES.md)** (~450 lines): Inter-task communication patterns
+and best practices
+- **[Tutorial: Debugging RTOS](docs/technical/RTOS_TUTORIAL_DEBUGGING.md)** (~400 lines): Tools, techniques,
+and common issue resolution
+- **[RTOS FAQ](docs/user-guides/RTOS_FAQ.md)** (~550 lines): 40+ common questions answered
+
+### ✅ **Backward Compatibility**
+
+All existing features work identically - **no changes required** for basic usage:
+
+- ✅ All serial commands unchanged
+- ✅ Web interface operates the same
+- ✅ Configuration format compatible
+- ✅ Saved credentials preserved
+
+**What changed internally**:
+
+- Commands execute asynchronously (non-blocking)
+- Multiple operations run concurrently
+- Event-driven architecture replaces polling
+- Better error recovery and system stability
+
+### 🎯 Build Results
+
+**All configurations build successfully**:
+
+- **ESP32dev (RTOS)**: RAM 16.5%, Flash 86.2% ✅
+- **Adafruit Feather (RTOS)**: RAM 16.1%, Flash 74.8% ✅
+- **ESP32dev (Legacy)**: RAM 15.8%, Flash 83.1% ✅
+
+---
+
+## 📋 What Was New in v4.0.0
+
+### 🌐 Web Server on Both Boards
+
+Web interface available on **both ESP32 Development Board and Feather ESP32-S3 TFT**
+
+### 📱 Clickable Network Details (Issue #10)
+
+Interactive WiFi scanning with detailed network information pages:
+
+- 8-level signal quality scale
+- Channel congestion analysis
+- Security assessment with recommendations
+- Smart caching (50 networks, 5 minutes)
 
 ### ⚡ Memory Optimization
 
-**Significant flash and RAM savings** achieved through compiler optimizations:
+Flash and RAM savings through compiler optimizations:
 
-- **ESP32dev**: Flash reduced from 84.5% to 82.4% (**-27.7 KB saved**)
-- **Feather ESP32-S3**: Flash reduced from 73.1% to 71.3% (**-25.4 KB saved**)
-- **Compiler flags**: `-Os` size optimization, dead code elimination
-- **PROGMEM storage**: HTML and constants moved to flash memory (~4KB RAM saved)
-- **F() macro**: 200+ string literals kept in flash instead of RAM (~3KB saved)
-- **String pre-allocation**: Reduced heap fragmentation and reallocation overhead
+- ESP32dev: -27.7 KB flash saved
+- Feather ESP32-S3: -25.4 KB flash saved
+- PROGMEM storage and F() macros
 
-### 🧪 Comprehensive Test Coverage
+### 🧪 Test Coverage
 
-**19 automated test cases** covering all new functionality:
-
-- **Cache management tests**: Validity, timeout, capacity limits
-- **Network details tests**: Signal quality, encryption types, channel frequencies
-- **WiFi fundamentals**: RSSI ranges, channel validation, BSSID format
-- **System integration**: Board identification, heap availability, configuration
-- **All tests passing** on both ESP32dev and Feather ESP32-S3 TFT
-- **Test documentation**: Complete guide in `test/TEST_DOCUMENTATION.md`
-
-### 🔄 Auto-Restart Web Server
-
-The web server now **automatically restarts** when switching between AP and Station modes:
-
-- Seamless WiFi mode transitions with web interface preservation
-- Dynamic SSID and device name updates based on chip ID
-- No manual restart required after mode changes
+19 automated test cases for v4.0.0 features
 
 ## 🎯 **NEW in v4.1.0: FreeRTOS Architecture**
 
-Version 4.1.0 introduces a comprehensive **FreeRTOS-based architecture**, transforming the ESP32 WiFi Utility from synchronous blocking operations to **asynchronous, concurrent task-based processing**.
+Version 4.1.0 introduces a comprehensive **FreeRTOS-based architecture**, transforming the ESP32 WiFi Utility from synchronous
+blocking operations to **asynchronous, concurrent task-based processing**.
 
 ### 🚀 Key RTOS Features
 
@@ -87,13 +173,13 @@ Version 4.1.0 introduces a comprehensive **FreeRTOS-based architecture**, transf
 
 ### 📊 Performance Improvements
 
-| Metric | v3.x (Synchronous) | v4.1.0 (RTOS) | Improvement |
-|--------|-------------------|---------------|-------------|
-| Command Response | Blocking (3-5s) | <10ms | **500x faster** |
-| WiFi + Web Server | Sequential | Concurrent | **2x throughput** |
-| LED Updates | Stuttering | 60 FPS | **Smooth** |
-| CPU Utilization | 80% single-core | 40% dual-core | **50% reduction** |
-| System Responsiveness | Poor (blocked) | Excellent | **Always responsive** |
+| Metric                | v3.x (Synchronous) | v4.1.0 (RTOS) | Improvement           |
+| --------------------- | ------------------ | ------------- | --------------------- |
+| Command Response      | Blocking (3-5s)    | <10ms         | **500x faster**       |
+| WiFi + Web Server     | Sequential         | Concurrent    | **2x throughput**     |
+| LED Updates           | Stuttering         | 60 FPS        | **Smooth**            |
+| CPU Utilization       | 80% single-core    | 40% dual-core | **50% reduction**     |
+| System Responsiveness | Poor (blocked)     | Excellent     | **Always responsive** |
 
 ### 🏗️ RTOS Architecture
 
@@ -127,7 +213,7 @@ Version 4.1.0 introduces a comprehensive **FreeRTOS-based architecture**, transf
 - **~90% Code Coverage**: 650/720 lines of RTOS code tested
 - **All Performance Targets Met**:
   - Queue latency: <1ms ✅
-  - Mutex operations: <100μs ✅  
+  - Mutex operations: <100μs ✅
   - Command throughput: >100/sec ✅
   - Task switching: <1ms ✅
   - End-to-end latency: <10ms ✅
@@ -137,12 +223,14 @@ Version 4.1.0 introduces a comprehensive **FreeRTOS-based architecture**, transf
 ### 🔄 Backward Compatibility
 
 **All existing features work identically** - no changes required for basic usage:
+
 - ✅ All serial commands unchanged
 - ✅ Web interface operates the same
 - ✅ Configuration format compatible
 - ✅ Credentials preserved
 
 **What changed internally**:
+
 - Commands execute asynchronously (non-blocking)
 - Multiple operations run concurrently
 - Event-driven architecture replaces polling
@@ -349,7 +437,8 @@ This project includes professional-grade documentation covering all features and
 ### 🎯 Quick Start Guides
 
 - **[📚 Documentation Portal](docs/README.md)** - **Central hub for all documentation**
-- **[Channel Analysis Quick Start](docs/user-guides/CHANNEL_GUIDE.md#quick-start)** - `channel scan`, `channel recommend` with AI-powered analysis
+- **[Channel Analysis Quick Start](docs/user-guides/CHANNEL_GUIDE.md#quick-start)** - `channel scan`, `channel recommend`
+with AI-powered analysis
 - **[Latency Testing Quick Start](docs/user-guides/LATENCY_GUIDE.md#basic-usage)** - Network performance and jitter measurement
 - **[Dual-Board Setup](docs/technical/TEST_INFRASTRUCTURE.md#dual-board-support)** - ESP32dev and Feather ESP32-S3 TFT configuration
 - **[Test Suite Execution](docs/technical/TEST_INFRASTRUCTURE.md#running-tests)** - Automated testing and validation procedures
