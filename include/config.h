@@ -48,6 +48,26 @@ enum WiFiMode {
 // in legacy synchronous mode for backward compatibility.
 //
 // See docs/technical/RTOS_REQUIREMENTS.md for details
+
+#ifdef USE_RTOS
+// Stack sizes for RTOS tasks (in words, not bytes)
+#define COMMAND_TASK_STACK_SIZE 4096   // 16KB for command processing
+#define WIFI_TASK_STACK_SIZE 6144      // 24KB for WiFi operations (larger for heap safety)
+#define ANALYSIS_TASK_STACK_SIZE 4096  // 16KB for analysis
+#define LED_TASK_STACK_SIZE 2048       // 8KB for LED control
+#define WEB_TASK_STACK_SIZE 8192       // 32KB for web server operations
+
+// Task priorities (higher number = higher priority)
+#define COMMAND_TASK_PRIORITY 3        // High priority for user commands
+#define WIFI_TASK_PRIORITY 2           // Medium-high for WiFi operations
+#define ANALYSIS_TASK_PRIORITY 2       // Medium-high for analysis
+#define LED_TASK_PRIORITY 1            // Low priority for LED updates
+#define WEB_TASK_PRIORITY 2            // Medium-high for web requests
+
+// Memory safety thresholds
+#define MIN_HEAP_SIZE 8192             // Minimum heap before warnings
+#define STACK_WARNING_THRESHOLD 512   // Stack high water mark warning
+#endif
 // ==========================================
 
 #ifdef USE_RTOS

@@ -9,6 +9,7 @@
 #include "web_server.h"
 #include "wifi_manager.h"
 #include "ap_manager.h"
+#include "config.h"
 #include "iperf_manager.h"
 #include "latency_analyzer.h"
 #include "channel_analyzer.h"
@@ -483,7 +484,7 @@ bool initializeWebTask() {
     
     // Create WebTask instance with HIGH priority on Core 0 (WiFi Core)
     // Note: Using static_cast to avoid HIGH macro conflict
-    webTask = new WebTask("WebTask", 8192, static_cast<TaskPriority>(0x1), 0);
+    webTask = new WebTask("WebTask", WEB_TASK_STACK_SIZE * sizeof(StackType_t), static_cast<TaskPriority>(0x1), 0);
     if (webTask == nullptr) {
         Serial.println("[WebTask] ERROR: Failed to create WebTask instance");
         return false;

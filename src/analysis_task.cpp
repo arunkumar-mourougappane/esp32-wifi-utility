@@ -2,8 +2,11 @@
 
 #ifdef USE_RTOS
 
-#include "rtos_manager.h"
 #include "mutex_manager.h"
+#include "queue_manager.h"
+#include "rtos_manager.h"
+#include "channel_analyzer.h"
+#include "config.h"
 
 // ==========================================
 // GLOBAL ANALYSIS TASK INSTANCE
@@ -533,7 +536,7 @@ bool initializeAnalysisTask() {
     }
     
     // Create AnalysisTask instance with MEDIUM priority on Core 0 (WiFi Core)
-    analysisTask = new AnalysisTask("AnalysisTask", 12288, static_cast<TaskPriority>(2), 0);
+    analysisTask = new AnalysisTask("AnalysisTask", ANALYSIS_TASK_STACK_SIZE * sizeof(StackType_t), static_cast<TaskPriority>(2), 0);
     if (analysisTask == nullptr) {
         Serial.println("[AnalysisTask] ERROR: Failed to create AnalysisTask instance");
         return false;

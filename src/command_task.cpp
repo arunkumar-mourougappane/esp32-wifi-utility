@@ -5,6 +5,7 @@
 #include "command_interface.h"
 #include "mutex_manager.h"
 #include "rtos_manager.h"
+#include "config.h"
 #include <stdarg.h>
 
 // ==========================================
@@ -215,7 +216,7 @@ void CommandHistory::print() {
 // COMMAND TASK IMPLEMENTATION
 // ==========================================
 CommandTask::CommandTask() 
-    : TaskBase("CommandTask", 4096, TaskPriority::PRIORITY_HIGH, 1), // Pin to Core 1 (Application Core)
+    : TaskBase("CommandTask", COMMAND_TASK_STACK_SIZE * sizeof(StackType_t), TaskPriority::PRIORITY_HIGH, 1), // Pin to Core 1 (Application Core)
       promptShown(false),
       lastActivity(0),
       commandStartTime(0),
@@ -239,6 +240,21 @@ void CommandTask::setup() {
 }
 
 void CommandTask::loop() {
+    // Check task stack health
+    UBaseType_t stackHighWater = uxTaskGetStackHighWaterMark(NULL);
+    if (stackHighWater < 500) {  // Less than 500 bytes remaining
+        Serial.printf("[WARN] Command task stack low: %u bytes remaining\n", stackHighWater * sizeof(StackType_t));
+    }
+    
+    // Monitor heap regularly
+    static unsigned long lastHeapCheck = 0;
+    if (millis() - lastHeapCheck > 30000) {  // Every 30 seconds
+        lastHeapCheck = millis();
+        size_t freeHeap = ESP.getFreeHeap();
+        size_t minFreeHeap = ESP.getMinFreeHeap();
+        Serial.printf("[HEAP] Free: %u bytes, Min Free: %u bytes\n", freeHeap, minFreeHeap);
+    }
+    
     // Process serial input (non-blocking)
     processSerialInput();
     

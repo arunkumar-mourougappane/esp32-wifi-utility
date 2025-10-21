@@ -641,7 +641,11 @@ void connectToNetwork(String ssid, String password) {
   
   int attempts = 0;
   while (WiFi.status() != WL_CONNECTED && attempts < 20) {  // 10 seconds timeout
+#ifdef USE_RTOS
+    vTaskDelay(pdMS_TO_TICKS(500)); // Non-blocking delay in RTOS mode
+#else
     delay(500);
+#endif
     Serial.print(".");
 #ifdef USE_NEOPIXEL
     // Blink yellow during connection attempts
@@ -652,6 +656,11 @@ void connectToNetwork(String ssid, String password) {
     }
 #endif
     attempts++;
+    
+    // Check heap during connection attempts
+    if (attempts % 5 == 0) {
+      Serial.printf("\n[HEAP] Free heap during connect: %u bytes\n", ESP.getFreeHeap());
+    }
   }
   
   if (WiFi.status() == WL_CONNECTED) {

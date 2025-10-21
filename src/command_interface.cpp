@@ -260,13 +260,32 @@ void executeCommand(String command) {
     String params = originalCommand.substring(8); // Use originalCommand to preserve case
     params.trim();
     
+    // Check heap before processing
+    uint32_t heapBefore = ESP.getFreeHeap();
+    Serial.printf("[HEAP] Free heap before connect: %u bytes\n", heapBefore);
+    
     int spaceIndex = params.indexOf(' ');
     if (spaceIndex > 0) {
       String ssid = params.substring(0, spaceIndex);
       String password = params.substring(spaceIndex + 1);
       ssid.trim();
       password.trim();
+      
+      // Validate string lengths to prevent buffer overflows
+      if (ssid.length() > 32) {
+        Serial.printf("✗ Error: SSID too long (%d chars, max 32)\n", ssid.length());
+        return;
+      }
+      if (password.length() > 63) {
+        Serial.printf("✗ Error: Password too long (%d chars, max 63)\n", password.length());
+        return;
+      }
+      
       connectToNetwork(ssid, password);
+      
+      // Check heap after processing
+      uint32_t heapAfter = ESP.getFreeHeap();
+      Serial.printf("[HEAP] Free heap after connect: %u bytes (diff: %d)\n", heapAfter, (int32_t)heapAfter - (int32_t)heapBefore);
     } else {
       Serial.println("✗ Error: Usage: connect <ssid> <password>");
     }

@@ -4,6 +4,7 @@
 
 #include "mutex_manager.h"
 #include "rtos_manager.h"
+#include "config.h"
 #include <WiFi.h>
 
 // ==========================================
@@ -15,8 +16,8 @@ WiFiTask* wifiTask = nullptr;
 // WIFI TASK IMPLEMENTATION
 // ==========================================
 
-WiFiTask::WiFiTask()
-    : TaskBase("WiFiTask", 8192, TaskPriority::PRIORITY_HIGH, 0),  // Pin to Core 0 (WiFi Core)
+WiFiTask::WiFiTask() 
+    : TaskBase("WiFiTask", WIFI_TASK_STACK_SIZE * sizeof(StackType_t), TaskPriority::PRIORITY_HIGH, 0),  // Pin to Core 0 (WiFi Core)
       currentState(WiFiState::UNINITIALIZED),
       previousState(WiFiState::UNINITIALIZED),
       operationStartTime(0),

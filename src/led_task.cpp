@@ -2,6 +2,8 @@
 
 #ifdef USE_RTOS
 
+#include "config.h"
+
 // ==========================================
 // GLOBAL INSTANCE
 // ==========================================
@@ -12,7 +14,7 @@ static LEDTask* ledTask = nullptr;
 // ==========================================
 
 LEDTask::LEDTask() 
-    : TaskBase("LED", 4096, TaskPriority::PRIORITY_LOW, 1),  // Core 1, Low priority
+    : TaskBase("LED", LED_TASK_STACK_SIZE * sizeof(StackType_t), TaskPriority::PRIORITY_LOW, 1),  // Core 1, Low priority
       currentState(LEDState::OFF),
       targetState(LEDState::OFF),
       currentPattern(LEDPattern::SOLID),
