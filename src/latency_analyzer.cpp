@@ -57,9 +57,14 @@ void shutdownLatencyAnalysis() {
 // TEST EXECUTION FUNCTIONS
 // ==========================================
 bool startLatencyTest(const LatencyConfig& config) {
-  if (currentLatencyState != LATENCY_IDLE) {
+  if (currentLatencyState == LATENCY_RUNNING) {
     Serial.println("❌ Latency test already running. Stop current test first.");
     return false;
+  }
+  
+  // Reset state if previous test was completed or had an error
+  if (currentLatencyState == LATENCY_COMPLETED || currentLatencyState == LATENCY_ERROR) {
+    currentLatencyState = LATENCY_IDLE;
   }
   
   if (WiFi.status() != WL_CONNECTED) {
@@ -71,6 +76,10 @@ bool startLatencyTest(const LatencyConfig& config) {
     Serial.println("❌ Invalid latency test configuration");
     return false;
   }
+  
+  // Ensure clean state - stop any existing UDP connections
+  latencyUdp.stop();
+  asyncUdp.close();
   
   activeLatencyConfig = config;
   currentLatencyState = LATENCY_RUNNING;
@@ -121,6 +130,7 @@ bool startLatencyTest(const LatencyConfig& config) {
     currentLatencyState = LATENCY_ERROR;
     lastLatencyResults.state = LATENCY_ERROR;
     lastLatencyResults.error_message = "Failed to start test";
+    Serial.println("❌ Error: Failed to start latency test. Check configuration and network connection.");
   }
   
   return result;
@@ -128,6 +138,10 @@ bool startLatencyTest(const LatencyConfig& config) {
 
 bool executeUdpEchoTest(const LatencyConfig& config) {
   Serial.printf("🔍 Starting UDP Echo test to %s:%d\n", config.target_host.c_str(), config.target_port);
+  
+  // Ensure UDP is properly stopped first
+  latencyUdp.stop();
+  delay(100);  // Small delay to ensure socket is released
   
   if (!latencyUdp.begin(0)) {  // Use any available port
     Serial.println("❌ Failed to initialize UDP socket");
@@ -170,8 +184,16 @@ void stopLatencyTest() {
 #endif
   }
   
+  // Always clean up resources
   latencyUdp.stop();
   asyncUdp.close();
+  
+  // Auto-reset to IDLE after showing results to allow new tests
+  if (currentLatencyState == LATENCY_COMPLETED) {
+    delay(500);  // Brief delay before reset
+    currentLatencyState = LATENCY_IDLE;
+    Serial.println("🔄 Ready for new latency test");
+  }
 }
 
 // ==========================================

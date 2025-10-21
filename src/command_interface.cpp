@@ -32,6 +32,9 @@ void initializeSerial() {
   Serial.begin(115200);
   delay(1000); // Wait for serial to initialize
   
+  // Ensure proper line ending handling
+  Serial.setTimeout(100);
+  
 #ifndef USE_RTOS
   // Legacy mode startup message
   Serial.println("\n==========================================");
@@ -39,6 +42,7 @@ void initializeSerial() {
   Serial.println("==========================================");
   Serial.println("🟡 Device initialization starting...");
   Serial.println("==========================================\n");
+  Serial.flush(); // Ensure all data is sent
 #endif
 }
 
@@ -108,6 +112,10 @@ void executeCommand(String command) {
 #ifndef USE_RTOS
   promptShown = false; // Reset prompt flag (legacy mode only)
 #endif
+
+  // Add command execution logging for debugging
+  Serial.printf("Executing command: %s\n", originalCommand.c_str());
+  Serial.flush(); // Ensure command echo is sent immediately
   
   if (command == "scan on") {
     if (currentMode == MODE_STATION) {
@@ -146,10 +154,18 @@ void executeCommand(String command) {
     showNetworkDetails(networkId.toInt());
   }
   else if (command == "mode station") {
+    Serial.println("[CMD] Switching to station mode...");
+    Serial.flush();
     startStationMode();
+    Serial.println("[CMD] Station mode switch completed");
+    Serial.flush();
   }
   else if (command == "mode ap") {
+    Serial.println("[CMD] Switching to AP mode...");
+    Serial.flush();
     startAccessPoint();
+    Serial.println("[CMD] AP mode switch completed");
+    Serial.flush();
   }
   else if (command.startsWith("mode ap ")) {
     String params = originalCommand.substring(8); // Use originalCommand to preserve case
@@ -173,6 +189,8 @@ void executeCommand(String command) {
       }
       
       startAccessPoint(ssid, password);
+      Serial.println("[CMD] Custom AP mode switch completed");
+      Serial.flush();
     } else {
       Serial.println("✗ Error: Usage: mode ap <ssid> <password>");
       Serial.println("  Examples:");
@@ -195,6 +213,29 @@ void executeCommand(String command) {
   }
   else if (command == "clear") {
     clearConsole();
+  }
+  else if (command == "debug reset") {
+    // Debug command to reset command task state
+#ifdef USE_RTOS
+    Serial.println("[DEBUG] Resetting command task state...");
+    // Note: promptShown is managed by CommandTask, not directly accessible here
+    Serial.println("[DEBUG] Command task state reset complete");
+#else
+    promptShown = false;
+    Serial.println("[DEBUG] Legacy mode prompt state reset");
+#endif
+  }
+  else if (command == "debug tasks") {
+    // Debug command to show RTOS task states
+#ifdef USE_RTOS
+    Serial.println("[DEBUG] RTOS Task Information:");
+    Serial.printf("Free heap: %d bytes\n", ESP.getFreeHeap());
+    Serial.printf("CPU frequency: %d MHz\n", ESP.getCpuFreqMHz());
+    Serial.printf("Core 0 tasks running on: %d\n", xPortGetCoreID());
+    Serial.flush();
+#else
+    Serial.println("[DEBUG] Not in RTOS mode");
+#endif
   }
   else if (command == "ap info" && currentMode == MODE_AP) {
     printAPInfo();
@@ -292,6 +333,13 @@ void executeCommand(String command) {
   else if (command.length() > 0) {
     Serial.println("✗ Unknown command. Type 'help' for available commands.");
   }
+  
+  // Ensure command execution completion is logged and flushed
+  Serial.flush(); // Force all output to be sent
+#ifdef USE_RTOS
+  // Give other tasks a chance to run
+  vTaskDelay(pdMS_TO_TICKS(1));
+#endif
 }
 
 // ==========================================
@@ -554,6 +602,12 @@ void executeLatencyCommand(String command) {
   else if (subCommand == "stop") {
     stopLatencyTest();
   }
+  else if (subCommand == "reset") {
+    // Force reset latency state to IDLE
+    shutdownLatencyAnalysis();
+    initializeLatencyAnalysis();
+    Serial.println("✅ Latency analyzer reset to idle state");
+  }
   else if (subCommand == "status") {
     Serial.println(getLatencyStatus());
     if (getLatencyTestState() == LATENCY_COMPLETED) {
@@ -600,6 +654,7 @@ void printLatencyHelp() {
   Serial.println("│ latency test http│ Start HTTP request latency test      │");
   Serial.println("│ latency test <ip>│ Test latency to specific host/IP     │");
   Serial.println("│ latency stop     │ Stop current latency test            │");
+  Serial.println("│ latency reset    │ Reset latency analyzer to idle       │");
   Serial.println("│ latency status   │ Show current test status             │");
   Serial.println("│ latency results  │ Show last test results               │");
   Serial.println("│ jitter           │ Quick jitter analysis (20 packets)   │");

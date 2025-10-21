@@ -34,7 +34,15 @@ bool SerialInputBuffer::readAvailable() {
 }
 
 void SerialInputBuffer::processCharacter(char c) {
+    // Handle different newline characters consistently
     if (c == '\n' || c == '\r') {
+        // Skip duplicate newlines (e.g., \r\n sequences)
+        static char lastChar = 0;
+        if ((c == '\n' && lastChar == '\r') || (c == '\r' && lastChar == '\n')) {
+            lastChar = c;
+            return;
+        }
+        lastChar = c;
         handleEnter();
     } else if (c == 127 || c == 8) { // Backspace or DEL
         handleBackspace();
@@ -49,6 +57,7 @@ void SerialInputBuffer::processCharacter(char c) {
             Serial.print(c); // Echo character
         }
     }
+    // Ignore other control characters
 }
 
 void SerialInputBuffer::handleBackspace() {
@@ -61,6 +70,16 @@ void SerialInputBuffer::handleBackspace() {
 
 void SerialInputBuffer::handleEnter() {
     Serial.println(); // Move to new line
+    
+    // Use a timeout-protected flush
+    unsigned long flushStart = millis();
+    Serial.flush(); // Ensure line is sent immediately
+    unsigned long flushTime = millis() - flushStart;
+    
+    if (flushTime > 100) {
+        // Log if flush took too long
+        Serial.printf("[DEBUG] Serial flush took %lu ms\n", flushTime);
+    }
     
     // Extract the line
     uint16_t idx = lineStartIndex;
@@ -252,6 +271,9 @@ void CommandTask::processSerialInput() {
             String command = String(lineBuffer);
             command.trim();
             
+            Serial.printf("[CMD] Received input: '%s'\n", command.c_str());
+            Serial.flush();
+            
             if (command.length() > 0) {
                 // Add to history
                 commandHistory.add(command);
@@ -265,10 +287,15 @@ void CommandTask::processSerialInput() {
                 request.requestId = millis();
                 request.timestamp = millis();
                 
+                Serial.printf("[CMD] Sending to queue: %s\n", command.c_str());
+                Serial.flush();
+                
                 if (sendCommand(request, 100)) {
                     commandInProgress = true;
                     commandStartTime = millis();
                     currentCommandText = command;
+                    Serial.println("[CMD] Command queued successfully");
+                    Serial.flush();
                 } else {
                     MutexLock lock(serialMutex, "CommandTask::processSerialInput");
                     Serial.println("✗ Command queue full, please wait...");
@@ -288,6 +315,9 @@ void CommandTask::processCommandQueue() {
     
     // Non-blocking check for commands
     if (receiveCommand(request, 0)) {
+        Serial.printf("[CMD] Processing command from queue: %s\n", request.commandString.c_str());
+        Serial.flush();
+        
         commandInProgress = true;
         commandStartTime = millis();
         
@@ -296,13 +326,23 @@ void CommandTask::processCommandQueue() {
         executeCommand(cmdStr);
         
         commandInProgress = false;
+        Serial.println("[CMD] Command execution completed, showing prompt");
+        Serial.flush();
         showPrompt();
     }
 }
 
 void CommandTask::executeCommand(const String& command) {
+    // Add debugging information
+    Serial.printf("[CMD] Executing: %s\n", command.c_str());
+    Serial.flush();
+    
     // Delegate to existing command parser
     parseAndExecute(command);
+    
+    // Log completion
+    Serial.printf("[CMD] Completed: %s\n", command.c_str());
+    Serial.flush();
 }
 
 void CommandTask::parseAndExecute(const String& command) {
@@ -315,7 +355,18 @@ void CommandTask::showPrompt() {
     if (!promptShown && !commandInProgress) {
         MutexLock lock(serialMutex, "CommandTask::showPrompt");
         Serial.print("> ");
+        
+        // Use timeout-protected flush
+        unsigned long flushStart = millis();
+        Serial.flush();
+        unsigned long flushTime = millis() - flushStart;
+        
         promptShown = true;
+        
+        // Only log if flush was problematic
+        if (flushTime > 50) {
+            Serial.printf("[WARN] Prompt flush took %lu ms\n", flushTime);
+        }
     }
 }
 
@@ -324,6 +375,7 @@ void CommandTask::showInitialPrompt() {
     Serial.println("🟡 Device in IDLE mode - Ready for commands");
     Serial.println("Type 'help' for available commands");
     Serial.println("==========================================\n");
+    Serial.flush(); // Ensure startup message is sent
     
     showPrompt();
 }

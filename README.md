@@ -6,11 +6,11 @@
 ![Framework](https://img.shields.io/badge/framework-Arduino-green.svg)
 ![PlatformIO](https://img.shields.io/badge/build-PlatformIO-orange.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Boards](https://img.shields.io/badge/boards-ESP32dev%20|%20Feather%20ESP32--S3-brightgreen.svg)
+![Boards](https://img.shields.io/badge/boards-ESP32dev%20|%20Feather%20ESP32--S3%20|%20Reverse%20TFT-brightgreen.svg)
 [![Changelog](https://img.shields.io/badge/changelog-available-brightgreen.svg)](CHANGELOG.md)
 
 A professional-grade ESP32 WiFi analysis and management suite featuring comprehensive network scanning, spectrum analysis,
-performance testing, and dual-board support with advanced channel congestion analysis.
+performance testing, and tri-board support with advanced channel congestion analysis.
 
 ## 🎉 What's New in v4.1.0
 
@@ -56,7 +56,7 @@ Professional LED control with smooth animations and multiple states:
 - **10 LED States**: Idle, Scanning, Connecting, Connected, Disconnected, AP Mode, Error, Analysis, Custom, Off
 - **5 Animation Patterns**: Solid, Pulse (sine wave), Blink, Fade, Flash
 - **Priority-Based State Changes**: Errors override normal states, smooth transitions
-- **Dual Hardware Support**: Standard LED (ESP32dev) and NeoPixel RGB (Feather ESP32-S3)
+- **Multi-Hardware Support**: Standard LED (ESP32dev) and NeoPixel RGB (Feather ESP32-S3 TFT/Reverse TFT)
 - **Queue-Based Updates**: Non-blocking state changes from any task
 - **Customizable Colors**: Full RGB control for NeoPixel boards
 
@@ -447,7 +447,7 @@ with AI-powered analysis
 
 - **🎯 Professional Spectrum Analysis**: AI-powered channel recommendations with 0-100% congestion scoring
 - **� Advanced Performance Testing**: Comprehensive latency analysis with jitter calculations and statistical reporting
-- **🔧 Dual-Board Support**: ESP32dev and Adafruit Feather ESP32-S3 TFT with hardware-specific optimizations
+- **🔧 Tri-Board Support**: ESP32dev, Adafruit Feather ESP32-S3 TFT, and Reverse TFT with hardware-specific optimizations
 - **🧪 Enterprise Testing**: Unity framework with comprehensive test coverage for both platforms
 - **📱 Visual Feedback**: Smart LED/NeoPixel status indication with real-time analysis progress
 
@@ -497,7 +497,7 @@ main.cpp
     └── command_interface (user interaction & iPerf integration)
 ```
 
-## 🛠️ Hardware Requirements & Dual-Board Support
+## 🛠️ Hardware Requirements & Tri-Board Support
 
 ### Supported Boards
 
@@ -516,6 +516,14 @@ main.cpp
 - **Features**: Enhanced visual feedback with RGB color coding for analysis status
 - **Memory**: 8MB PSRAM, enhanced performance for complex analysis
 
+#### Option 3: Adafruit Feather ESP32-S3 Reverse TFT (Enhanced) 🆕
+
+- **Board**: Adafruit Feather ESP32-S3 Reverse TFT with 4MB Flash
+- **LED**: NeoPixel RGB LED on GPIO 48 (enhanced color status indication)
+- **Display**: 1.14" Color TFT Display (240x135) with reverse orientation - _Future enhancement planned_
+- **Features**: Enhanced visual feedback with RGB color coding for analysis status, optimized for reverse TFT layout
+- **Memory**: 8MB PSRAM, enhanced performance for complex analysis
+
 ### Universal Requirements
 
 - **USB Cable** for programming and serial communication
@@ -528,6 +536,8 @@ main.cpp
 
 - **ESP32dev**: `esp32-wifi-utility-esp32dev-v{version}.bin` - Standard ESP32 development board
 - **Feather ESP32-S3 TFT**: `esp32-wifi-utility-feather-s3-tft-v{version}.bin` - Enhanced with NeoPixel support
+- **Feather ESP32-S3 Reverse TFT**: `esp32-wifi-utility-feather-s3-reversetft-v{version}.bin` - Enhanced with NeoPixel  
+  support and reverse TFT layout
 
 ### Flash Pre-Built Firmware
 
@@ -540,7 +550,7 @@ esptool.py --port /dev/ttyUSB0 write_flash 0x10000 firmware.bin
 
 ### 🤖 Automated Releases
 
-Every version bump in `platformio.ini` automatically triggers a new release with fresh firmware builds for both boards.
+Every version bump in `platformio.ini` automatically triggers a new release with fresh firmware builds for all boards.
 See our [Automated Release Documentation](docs/technical/AUTOMATED_RELEASES.md) for details.
 
 ## ⚡ Quick Start
@@ -563,7 +573,7 @@ See our [Automated Release Documentation](docs/technical/AUTOMATED_RELEASES.md) 
 2. Clone or download this project
 3. Open the project in your IDE
 
-### 3. Build and Upload (Dual-Board Support)
+### 3. Build and Upload (Tri-Board Support)
 
 #### Building for ESP32 Development Board:
 
@@ -591,10 +601,23 @@ pio run -e adafruit_feather_esp32s3_tft
 pio device monitor
 ```
 
+#### For Adafruit Feather ESP32-S3 Reverse TFT:
+
+```bash
+# Using PlatformIO with NeoPixel support
+pio run -e adafruit_feather_esp32s3_reversetft -t upload
+
+# Build only to check compilation
+pio run -e adafruit_feather_esp32s3_reversetft
+
+# Monitor serial output
+pio device monitor
+```
+
 #### Build All Configurations:
 
 ```bash
-# Build both board configurations
+# Build all board configurations
 pio run
 
 # Run comprehensive test suite

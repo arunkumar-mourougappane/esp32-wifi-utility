@@ -8,6 +8,10 @@
 #ifdef USE_NEOPIXEL
 #include "web_server.h"
 #endif
+#ifdef USE_RTOS
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#endif
 
 // Helper macro for prompt handling
 #ifndef USE_RTOS
@@ -43,11 +47,22 @@ void initializeWiFi() {
 // ==========================================
 void startStationMode() {
   stopWiFi();
+  
+#ifdef USE_RTOS
+  // Use task delay instead of blocking delay in RTOS mode
+  vTaskDelay(pdMS_TO_TICKS(100));
+#else
   delay(100);
+#endif
   
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
+  
+#ifdef USE_RTOS
+  vTaskDelay(pdMS_TO_TICKS(100));
+#else
   delay(100);
+#endif
   
   currentMode = MODE_STATION;
   scanningEnabled = false;
@@ -55,13 +70,19 @@ void startStationMode() {
   Serial.println("✓ Station mode activated - Ready to scan for networks");
   Serial.println("  Use 'scan on' to start scanning");
   Serial.println("  Web server will auto-start upon WiFi connection");
+  Serial.flush(); // Ensure output is sent immediately
   
   RESET_PROMPT();
 }
 
 void startAccessPoint() {
   stopWiFi();
+  
+#ifdef USE_RTOS
+  vTaskDelay(pdMS_TO_TICKS(100));
+#else
   delay(100);
+#endif
   
   WiFi.mode(WIFI_AP);
   bool apStarted = WiFi.softAP(currentAPSSID, currentAPPassword);
@@ -84,11 +105,13 @@ void startAccessPoint() {
     
     // Web server will be auto-started by monitorWebServerState()
     Serial.println("  Web server will auto-start momentarily");
+    Serial.flush(); // Ensure output is sent immediately
     
     RESET_PROMPT();
   } else {
     currentMode = MODE_OFF;
     Serial.println("✗ Failed to start Access Point");
+    Serial.flush(); // Ensure error message is sent
     RESET_PROMPT();
   }
 }
@@ -111,7 +134,12 @@ void startAccessPoint(const String& ssid, const String& password) {
   
   // Start AP with new configuration
   stopWiFi();
+  
+#ifdef USE_RTOS
+  vTaskDelay(pdMS_TO_TICKS(100));
+#else
   delay(100);
+#endif
   
   WiFi.mode(WIFI_AP);
   bool apStarted = WiFi.softAP(currentAPSSID, currentAPPassword);
@@ -161,7 +189,12 @@ void stopWiFi() {
   WiFi.disconnect();
   WiFi.softAPdisconnect(true);
   WiFi.mode(WIFI_OFF);
+  
+#ifdef USE_RTOS
+  vTaskDelay(pdMS_TO_TICKS(100));
+#else
   delay(100);
+#endif
   
   currentMode = MODE_OFF;
   scanningEnabled = false;
@@ -182,7 +215,12 @@ void setIdleMode() {
   WiFi.disconnect();
   WiFi.softAPdisconnect(true);
   WiFi.mode(WIFI_OFF);
+  
+#ifdef USE_RTOS
+  vTaskDelay(pdMS_TO_TICKS(100));
+#else
   delay(100);
+#endif
   
   currentMode = MODE_IDLE;
   scanningEnabled = false;

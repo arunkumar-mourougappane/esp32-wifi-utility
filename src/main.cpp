@@ -36,10 +36,12 @@ void setup() {
   Serial.println("\n===========================================");
   Serial.println("ESP32 WiFi Utility v4.1.0 - RTOS Edition");
   Serial.println("===========================================\n");
+  Serial.flush(); // Ensure header is displayed
   
   if (!initializeRTOS()) {
     Serial.println("FATAL ERROR: RTOS initialization failed!");
     Serial.println("System cannot continue. Please check serial output.");
+    Serial.flush();
     while (1) {
       delay(1000);
     }
@@ -51,14 +53,18 @@ void setup() {
   Serial.println("[RTOS] Starting legacy modules in compatibility mode...");
   Serial.println("[RTOS] NOTE: Full task migration will occur in future phases");
   Serial.println();
+  Serial.flush(); // Ensure compatibility message is sent
   
   // Initialize Command Task (Phase 2)
   Serial.println("[RTOS] Initializing Command Interface Task...");
+  Serial.flush();
   if (!initializeCommandTask()) {
     Serial.println("WARNING: Command Task initialization failed!");
     Serial.println("Falling back to legacy command handling.");
+    Serial.flush();
   } else {
     Serial.println("[RTOS] Command Task started successfully on Core 1");
+    Serial.flush();
   }
   
   // Initialize WiFi Task (Phase 3)
