@@ -10,6 +10,7 @@
 #include "iperf_manager.h"
 #include "latency_analyzer.h"
 #include "signal_monitor.h"
+#include "port_scanner.h"
 #include <qrcode.h>
 
 // Web server instance
@@ -205,7 +206,7 @@ String generateHtmlFooter() {
 }
 
 // Generate common navigation menu - stored in PROGMEM
-const char NAV_MENU[] PROGMEM = "<div class=\"nav\"><div class=\"hamburger\" onclick=\"toggleMenu()\"><span></span><span></span><span></span></div><div class=\"nav-items\"><div><a href=\"/\">🏠 Home</a></div><div><a href=\"/status\">📊 Status</a></div><div><a href=\"/scan\">🔍 Scan</a></div><div><a href=\"/config\">⚙️ Config</a></div><div class=\"dropdown\"><a href=\"/analysis\">🔬 Analysis</a><div class=\"dropdown-content\"><a href=\"/analysis\">📊 Dashboard</a><a href=\"/signal\">📶 Signal</a><a href=\"/iperf\">⚡ iPerf</a><a href=\"/latency\">📉 Latency</a><a href=\"/channel\">📡 Channel</a></div></div></div></div>";
+const char NAV_MENU[] PROGMEM = "<div class=\"nav\"><div class=\"hamburger\" onclick=\"toggleMenu()\"><span></span><span></span><span></span></div><div class=\"nav-items\"><div><a href=\"/\">🏠 Home</a></div><div><a href=\"/status\">📊 Status</a></div><div><a href=\"/scan\">🔍 Scan</a></div><div><a href=\"/config\">⚙️ Config</a></div><div class=\"dropdown\"><a href=\"/analysis\">🔬 Analysis</a><div class=\"dropdown-content\"><a href=\"/analysis\">📊 Dashboard</a><a href=\"/signal\">📶 Signal</a><a href=\"/portscan\">🔒 Port Scanner</a><a href=\"/iperf\">⚡ iPerf</a><a href=\"/latency\">📉 Latency</a><a href=\"/channel\">📡 Channel</a></div></div></div></div>";
 
 String generateNav() {
     return FPSTR(NAV_MENU);
@@ -262,6 +263,11 @@ bool startWebServer() {
     webServer->on("/mode/switch", HTTP_POST, handleModeSwitch);
     webServer->on("/signal", handleSignalMonitor);
     webServer->on("/signal/api", handleSignalStrengthAPI);
+    webServer->on("/portscan", handlePortScanner);
+    webServer->on("/portscan/start", handlePortScanStart);
+    webServer->on("/portscan/stop", handlePortScanStop);
+    webServer->on("/portscan/status", handlePortScanStatus);
+    webServer->on("/portscan/api", handlePortScanAPI);
     webServer->onNotFound(handleNotFound);
 
     // Start the server
@@ -918,6 +924,7 @@ void handleNetworkAnalysis() {
             <div class="dropdown-content">
                 <a href="/analysis">📊 Dashboard</a>
                 <a href="/signal">📶 Signal</a>
+                <a href="/portscan">🔒 Port Scanner</a>
                 <a href="/iperf">⚡ iPerf</a>
                 <a href="/latency">📉 Latency</a>
                 <a href="/channel">📡 Channel</a>
@@ -1035,6 +1042,28 @@ void handleNetworkAnalysis() {
                 View Signal Monitor
             </button>
         </div>
+
+        <!-- Port Scanner Card -->
+        <div style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+            <h3 style="margin: 0 0 10px 0; font-size: 1.3em;">🔒 Port Scanner</h3>
+            <p style="margin: 0 0 15px 0; opacity: 0.9;">Security audit and open port detection</p>
+            <div style="margin: 10px 0;">
+                <span style="font-size: 0.9em; opacity: 0.8;">Last Scan:</span><br>
+    )rawliteral";
+    
+    PortScanResults portScanResults = getLastPortScanResults();
+    if (portScanResults.scanCompleted) {
+        html += "<strong>" + String(portScanResults.openPorts) + " open port(s) found</strong>";
+    } else {
+        html += "<strong>Never</strong>";
+    }
+    
+    html += R"rawliteral(
+            </div>
+            <button onclick="location.href='/portscan'" style="margin-top: 15px; padding: 10px 20px; background: white; color: #8b5cf6; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%;">
+                Start Port Scan
+            </button>
+        </div>
     </div>
 
     <h2>📊 Network Statistics</h2>
@@ -1147,12 +1176,16 @@ void handleNetworkAnalysis() {
         <button onclick="location.href='/iperf'" style="padding: 15px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; border-radius: 8px; font-size: 1em; font-weight: bold; cursor: pointer;">
             ⚡ Run iPerf
         </button>
+        <button onclick="location.href='/portscan'" style="padding: 15px; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none; border-radius: 8px; font-size: 1em; font-weight: bold; cursor: pointer;">
+            🔒 Scan Ports
+        </button>
     </div>
 
     <h2>💡 Network Analysis Tips</h2>
     <div style="background: #f0f9ff; padding: 20px; border-left: 4px solid #3b82f6; border-radius: 5px; margin: 20px 0;">
         <ul style="margin: 10px 0; padding-left: 25px;">
             <li><strong>Signal Monitoring:</strong> Track real-time signal strength and quality of nearby networks</li>
+            <li><strong>Port Scanner:</strong> Audit network security by discovering open ports on devices</li>
             <li><strong>Channel Analysis:</strong> Identifies congested channels and recommends optimal ones for your AP</li>
             <li><strong>Latency Testing:</strong> Measures response time, jitter, and packet loss to assess connection quality</li>
             <li><strong>iPerf Testing:</strong> Measures maximum bandwidth and throughput capabilities</li>
@@ -3472,6 +3505,324 @@ void handleSignalStrengthAPI() {
     
     json += "}";
     
+    webServer->send(200, "application/json", json);
+}
+
+// ==========================================
+// PORT SCANNER PAGE
+// ==========================================
+void handlePortScanner() {
+    String html = FPSTR(HTML_HEADER);
+    
+    html += R"rawliteral(
+    <div class="header">
+        <h1>🔒 Port Scanner</h1>
+        <p>Network Security Audit & Port Analysis</p>
+    </div>
+    )rawliteral";
+    
+    html += generateNav();
+    
+    // Scan Configuration
+    html += R"rawliteral(
+    <h2>🎯 Scan Configuration</h2>
+    <div style="background:#f8f9fa;padding:25px;border-radius:10px;margin:20px 0">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px">
+            <div>
+                <label style="display:block;font-weight:500;margin-bottom:8px;color:#333">Target IP Address:</label>
+                <input type="text" id="targetIP" placeholder="192.168.1.100" style="width:100%;padding:12px;border:2px solid #667eea;border-radius:5px;font-size:1em" value="">
+            </div>
+            
+            <div>
+                <label style="display:block;font-weight:500;margin-bottom:8px;color:#333">Scan Type:</label>
+                <select id="scanType" onchange="togglePortRange()" style="width:100%;padding:12px;border:2px solid #667eea;border-radius:5px;font-size:1em;cursor:pointer">
+                    <option value="common">Common Ports (Fast)</option>
+                    <option value="range">Custom Range</option>
+                    <option value="well-known">Well-Known (1-1024)</option>
+                    <option value="all">All Ports (1-65535)</option>
+                </select>
+            </div>
+        </div>
+        
+        <div id="portRangeDiv" style="display:none;margin-top:20px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                <div>
+                    <label style="display:block;font-weight:500;margin-bottom:8px;color:#333">Start Port:</label>
+                    <input type="number" id="startPort" min="1" max="65535" value="1" style="width:100%;padding:12px;border:2px solid #667eea;border-radius:5px;font-size:1em">
+                </div>
+                <div>
+                    <label style="display:block;font-weight:500;margin-bottom:8px;color:#333">End Port:</label>
+                    <input type="number" id="endPort" min="1" max="65535" value="1024" style="width:100%;padding:12px;border:2px;solid #667eea;border-radius:5px;font-size:1em">
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-top:20px;display:flex;gap:15px;flex-wrap:wrap">
+            <button id="startScanBtn" onclick="startPortScan()" style="padding:15px 40px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:8px;font-size:1.1em;font-weight:bold;cursor:pointer;box-shadow:0 4px 12px rgba(102,126,234,0.4)">
+                🔍 Start Scan
+            </button>
+            <button id="stopScanBtn" onclick="stopPortScan()" disabled style="padding:15px 40px;background:#ef4444;color:white;border:none;border-radius:8px;font-size:1.1em;font-weight:bold;cursor:pointer;opacity:0.5">
+                ⏸️ Stop Scan
+            </button>
+        </div>
+        
+        <div id="scanStatus" style="margin-top:20px"></div>
+    </div>
+
+    <h2>📊 Scan Results</h2>
+    <div id="scanResults" style="background:#f8f9fa;padding:25px;border-radius:10px;margin:20px 0">
+        <p style="text-align:center;color:#666">Configure scan parameters above and click "Start Scan" to begin port analysis.</p>
+    </div>
+
+    <h2>⚠️ Important Notes</h2>
+    <div style="background:#fff3cd;padding:20px;border-left:4px solid #ffc107;border-radius:5px;margin:20px 0">
+        <ul style="margin:10px 0;padding-left:25px">
+            <li><strong>Authorization:</strong> Only scan devices you own or have permission to test</li>
+            <li><strong>Network Impact:</strong> Port scanning generates network traffic and may trigger security alerts</li>
+            <li><strong>Legal Disclaimer:</strong> Unauthorized port scanning may violate laws and network policies</li>
+            <li><strong>Scan Duration:</strong> Full port scans (1-65535) can take considerable time</li>
+            <li><strong>Common Ports:</strong> Recommended for quick security assessment</li>
+        </ul>
+    </div>
+    )rawliteral";
+    
+    // JavaScript
+    html += "<script>";
+    html += "let scanInterval;";
+    html += "let scanRunning = false;";
+    
+    // Set default IP to gateway
+    html += "window.onload = function() {";
+    html += "  fetch('/portscan/api?gateway=1')";
+    html += "    .then(response => response.json())";
+    html += "    .then(data => {";
+    html += "      if (data.gateway) document.getElementById('targetIP').value = data.gateway;";
+    html += "    });";
+    html += "};";
+    
+    // Toggle port range inputs
+    html += "function togglePortRange() {";
+    html += "  const scanType = document.getElementById('scanType').value;";
+    html += "  const rangeDiv = document.getElementById('portRangeDiv');";
+    html += "  rangeDiv.style.display = (scanType === 'range') ? 'block' : 'none';";
+    html += "}";
+    
+    // Start scan
+    html += "function startPortScan() {";
+    html += "  const targetIP = document.getElementById('targetIP').value;";
+    html += "  const scanType = document.getElementById('scanType').value;";
+    html += "  if (!targetIP) { alert('Please enter target IP address'); return; }";
+    html += "  let url = '/portscan/start?ip=' + encodeURIComponent(targetIP) + '&type=' + scanType;";
+    html += "  if (scanType === 'range') {";
+    html += "    const start = document.getElementById('startPort').value;";
+    html += "    const end = document.getElementById('endPort').value;";
+    html += "    url += '&start=' + start + '&end=' + end;";
+    html += "  }";
+    html += "  fetch(url)";
+    html += "    .then(response => response.json())";
+    html += "    .then(data => {";
+    html += "      if (data.success) {";
+    html += "        scanRunning = true;";
+    html += "        document.getElementById('startScanBtn').disabled = true;";
+    html += "        document.getElementById('startScanBtn').style.opacity = '0.5';";
+    html += "        document.getElementById('stopScanBtn').disabled = false;";
+    html += "        document.getElementById('stopScanBtn').style.opacity = '1';";
+    html += "        document.getElementById('scanResults').innerHTML = '<p style=\"text-align:center;color:#667eea\">🔄 Initializing scan...</p>';";
+    html += "        scanInterval = setInterval(updateScanStatus, 1000);";
+    html += "      } else {";
+    html += "        alert('Failed to start scan: ' + (data.error || 'Unknown error'));";
+    html += "      }";
+    html += "    });";
+    html += "}";
+    
+    // Stop scan
+    html += "function stopPortScan() {";
+    html += "  fetch('/portscan/stop')";
+    html += "    .then(() => {";
+    html += "      clearInterval(scanInterval);";
+    html += "      scanRunning = false;";
+    html += "      document.getElementById('startScanBtn').disabled = false;";
+    html += "      document.getElementById('startScanBtn').style.opacity = '1';";
+    html += "      document.getElementById('stopScanBtn').disabled = true;";
+    html += "      document.getElementById('stopScanBtn').style.opacity = '0.5';";
+    html += "      document.getElementById('scanStatus').innerHTML = '<p style=\"color:#ef4444;font-weight:500\">⏸️ Scan stopped by user</p>';";
+    html += "    });";
+    html += "}";
+    
+    // Update scan status
+    html += "function updateScanStatus() {";
+    html += "  fetch('/portscan/status')";
+    html += "    .then(response => response.json())";
+    html += "    .then(data => {";
+    html += "      if (data.state === 'running') {";
+    html += "        const progress = data.progress || 0;";
+    html += "        document.getElementById('scanStatus').innerHTML = ";
+    html += "          '<div style=\"margin-top:10px\">' +";
+    html += "          '<div style=\"background:#e5e7eb;border-radius:5px;height:30px;position:relative;overflow:hidden\">' +";
+    html += "          '<div style=\"background:linear-gradient(135deg,#667eea,#764ba2);height:100%;width:' + progress + '%;transition:width 0.3s\"></div>' +";
+    html += "          '<div style=\"position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-weight:bold;color:#333\">' + progress + '%</div>' +";
+    html += "          '</div>' +";
+    html += "          '<p style=\"margin-top:10px;text-align:center;color:#666\">Scanning port ' + data.currentPort + ' of ' + data.totalPorts + '</p>' +";
+    html += "          '</div>';";
+    html += "        if (data.openPorts > 0) {";
+    html += "          displayResults(data);";
+    html += "        }";
+    html += "      } else if (data.state === 'completed') {";
+    html += "        clearInterval(scanInterval);";
+    html += "        scanRunning = false;";
+    html += "        document.getElementById('startScanBtn').disabled = false;";
+    html += "        document.getElementById('startScanBtn').style.opacity = '1';";
+    html += "        document.getElementById('stopScanBtn').disabled = true;";
+    html += "        document.getElementById('stopScanBtn').style.opacity = '0.5';";
+    html += "        document.getElementById('scanStatus').innerHTML = '<p style=\"color:#10b981;font-weight:500\">✅ Scan completed in ' + data.duration + ' seconds</p>';";
+    html += "        displayResults(data);";
+    html += "      }";
+    html += "    });";
+    html += "}";
+    
+    // Display results
+    html += "function displayResults(data) {";
+    html += "  let html = '';";
+    html += "  if (data.openPorts === 0) {";
+    html += "    html = '<p style=\"text-align:center;color:#666\">No open ports found</p>';";
+    html += "  } else {";
+    html += "    html += '<div style=\"margin-bottom:15px\">';";
+    html += "    html += '<p style=\"font-weight:500;font-size:1.1em\">Found ' + data.openPorts + ' open port(s) on ' + data.targetIP + '</p>';";
+    html += "    html += '</div>';";
+    html += "    html += '<table style=\"width:100%;border-collapse:collapse\">';";
+    html += "    html += '<tr style=\"background:#667eea;color:white\">';";
+    html += "    html += '<th style=\"padding:12px;text-align:left\">Port</th>';";
+    html += "    html += '<th style=\"padding:12px;text-align:left\">Service</th>';";
+    html += "    html += '<th style=\"padding:12px;text-align:center\">Status</th>';";
+    html += "    html += '</tr>';";
+    html += "    data.ports.forEach(function(port) {";
+    html += "      html += '<tr style=\"border-bottom:1px solid #ddd\">';";
+    html += "      html += '<td style=\"padding:12px;font-weight:500\">' + port.port + '</td>';";
+    html += "      html += '<td style=\"padding:12px\">' + port.service + '</td>';";
+    html += "      html += '<td style=\"padding:12px;text-align:center\"><span style=\"background:#10b981;color:white;padding:4px 12px;border-radius:12px;font-size:0.9em\">OPEN</span></td>';";
+    html += "      html += '</tr>';";
+    html += "    });";
+    html += "    html += '</table>';";
+    html += "  }";
+    html += "  document.getElementById('scanResults').innerHTML = html;";
+    html += "}";
+    
+    html += "</script>";
+    
+    html += generateHtmlFooter();
+    webServer->send(200, "text/html", html);
+}
+
+// ==========================================
+// PORT SCANNER START ENDPOINT
+// ==========================================
+void handlePortScanStart() {
+    String json = "{";
+    
+    if (!webServer->hasArg("ip") || !webServer->hasArg("type")) {
+        json += "\"success\":false,\"error\":\"Missing parameters\"";
+        json += "}";
+        webServer->send(400, "application/json", json);
+        return;
+    }
+    
+    String targetIP = webServer->arg("ip");
+    String scanType = webServer->arg("type");
+    
+    bool started = false;
+    
+    if (scanType == "common") {
+        started = startCommonPortScan(targetIP);
+    } else if (scanType == "well-known") {
+        started = startPortScan(targetIP, 1, 1024);
+    } else if (scanType == "all") {
+        started = startPortScan(targetIP, 1, 65535);
+    } else if (scanType == "range") {
+        if (webServer->hasArg("start") && webServer->hasArg("end")) {
+            uint16_t startPort = webServer->arg("start").toInt();
+            uint16_t endPort = webServer->arg("end").toInt();
+            started = startPortScan(targetIP, startPort, endPort);
+        }
+    }
+    
+    json += "\"success\":" + String(started ? "true" : "false");
+    if (!started) {
+        json += ",\"error\":\"Failed to start scan\"";
+    }
+    json += "}";
+    
+    webServer->send(200, "application/json", json);
+}
+
+// ==========================================
+// PORT SCANNER STOP ENDPOINT
+// ==========================================
+void handlePortScanStop() {
+    stopPortScan();
+    webServer->send(200, "application/json", "{\"success\":true}");
+}
+
+// ==========================================
+// PORT SCANNER STATUS ENDPOINT
+// ==========================================
+void handlePortScanStatus() {
+    PortScanResults results = getLastPortScanResults();
+    PortScanState state = getPortScanState();
+    
+    String json = "{";
+    json += "\"state\":\"";
+    switch(state) {
+        case PORTSCAN_IDLE: json += "idle"; break;
+        case PORTSCAN_RUNNING: json += "running"; break;
+        case PORTSCAN_COMPLETED: json += "completed"; break;
+        case PORTSCAN_ERROR: json += "error"; break;
+    }
+    json += "\",";
+    json += "\"targetIP\":\"" + results.targetIP + "\",";
+    json += "\"totalPorts\":" + String(results.totalPorts) + ",";
+    json += "\"portsScanned\":" + String(results.portsScanned) + ",";
+    json += "\"currentPort\":" + String(results.portsScanned + 1) + ",";
+    json += "\"openPorts\":" + String(results.openPorts) + ",";
+    json += "\"closedPorts\":" + String(results.closedPorts) + ",";
+    json += "\"progress\":" + String(getPortScanProgress()) + ",";
+    
+    if (results.scanCompleted) {
+        unsigned long duration = (results.endTime - results.startTime) / 1000;
+        json += "\"duration\":" + String(duration) + ",";
+    }
+    
+    json += "\"ports\":[";
+    for (size_t i = 0; i < results.openPortsList.size(); i++) {
+        if (i > 0) json += ",";
+        json += "{";
+        json += "\"port\":" + String(results.openPortsList[i].port) + ",";
+        json += "\"service\":\"" + results.openPortsList[i].service + "\"";
+        json += "}";
+    }
+    json += "]";
+    json += "}";
+    
+    webServer->send(200, "application/json", json);
+}
+
+// ==========================================
+// PORT SCANNER API ENDPOINT
+// ==========================================
+void handlePortScanAPI() {
+    String json = "{";
+    
+    if (webServer->hasArg("gateway")) {
+        // Return gateway IP
+        if (WiFi.status() == WL_CONNECTED) {
+            json += "\"gateway\":\"" + WiFi.gatewayIP().toString() + "\"";
+        } else {
+            json += "\"gateway\":\"\"";
+        }
+    } else {
+        json += "\"error\":\"Invalid request\"";
+    }
+    
+    json += "}";
     webServer->send(200, "application/json", json);
 }
 

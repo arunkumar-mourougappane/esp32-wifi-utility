@@ -10,6 +10,7 @@
 #include "latency_analyzer.h"
 #include "channel_analyzer.h"
 #include "signal_monitor.h"
+#include "port_scanner.h"
 #ifdef USE_WEBSERVER
 #include "web_server.h"
 #endif
@@ -45,6 +46,9 @@ void setup() {
   // Initialize channel analyzer
   initializeChannelAnalysis();
   
+  // Initialize port scanner
+  initializePortScanner();
+  
 #ifdef USE_WEBSERVER
   // Initialize web server
   initializeWebServer();
@@ -69,6 +73,9 @@ void loop() {
   
   // Handle signal monitoring background tasks
   updateSignalMonitoring();
+  
+  // Handle port scanner background tasks
+  handlePortScanTasks();
   
 #ifdef USE_WEBSERVER
   // Handle web server requests

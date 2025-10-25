@@ -54,6 +54,11 @@ void handleReboot();
 void handleModeSwitch();
 void handleSignalMonitor();
 void handleSignalStrengthAPI();
+void handlePortScanner();
+void handlePortScanStart();
+void handlePortScanStop();
+void handlePortScanStatus();
+void handlePortScanAPI();
 void handleNotFound();
 
 #endif // USE_WEBSERVER
