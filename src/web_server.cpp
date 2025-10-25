@@ -248,6 +248,7 @@ bool startWebServer() {
     webServer->on("/analysis", handleNetworkAnalysis);
     webServer->on("/channel", handleChannelAnalysis);
     webServer->on("/channel/scan", handleChannelScan);
+    webServer->on("/channel/graph", handleChannelGraph);
     webServer->on("/latency", handleLatency);
     webServer->on("/latency/start", handleLatencyStart);
     webServer->on("/latency/stop", handleLatencyStop);
@@ -1207,22 +1208,9 @@ void handleChannelAnalysis() {
         <h1>📡 Channel Analysis</h1>
         <p>2.4GHz Spectrum Overview & Congestion Analysis</p>
     </div>
-
-    <div class="nav">
-        <div><a href="/">🏠 Home</a></div>
-        <div><a href="/status">📊 Status</a></div>
-        <div><a href="/scan">🔍 Scan Networks</a></div>
-        <div class="dropdown">
-            <a href="/analysis">🔬 Analysis</a>
-            <div class="dropdown-content">
-                <a href="/analysis">📊 Dashboard</a>
-                <a href="/iperf">⚡ iPerf</a>
-                <a href="/latency">📉 Latency</a>
-                <a href="/channel">📡 Channel</a>
-            </div>
-        </div>
-    </div>
     )rawliteral";
+    
+    html += generateNav();
     
     // Display success message if just scanned
     if (webServer->hasArg("scanned")) {
@@ -1240,8 +1228,11 @@ void handleChannelAnalysis() {
     // Display scan button
     html += R"rawliteral(
     <div style="text-align: center; margin: 20px 0;">
-        <button onclick="startScan('/channel/scan', '📡 Analyzing Channels...', 'Scanning 2.4GHz spectrum across all WiFi channels')" style="padding: 15px 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 5px; font-size: 1.1em; cursor: pointer; font-weight: bold;">
+        <button onclick="startScan('/channel/scan', '📡 Analyzing Channels...', 'Scanning 2.4GHz spectrum across all WiFi channels')" style="padding: 15px 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 1.1em; cursor: pointer; font-weight: bold; box-shadow: 0 4px 12px rgba(102,126,234,0.4);">
             🔄 Scan Channels
+        </button>
+        <button onclick="location.href='/channel/graph'" style="padding: 15px 40px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 8px; font-size: 1.1em; cursor: pointer; font-weight: bold; box-shadow: 0 4px 12px rgba(16,185,129,0.4); margin-left: 15px;">
+            📊 View Channel Graph
         </button>
     </div>
     )rawliteral";
@@ -1322,6 +1313,260 @@ void handleChannelAnalysis() {
         • Choose channels with fewer networks and lower congestion<br>
         • Consider 5GHz band for less interference (if available)<br>
         • Rescan periodically as network conditions change
+    </div>
+    )rawliteral";
+    
+    html += generateHtmlFooter();
+    webServer->send(200, "text/html", html);
+}
+
+// ==========================================
+// CHANNEL GRAPH PAGE
+// ==========================================
+void handleChannelGraph() {
+    String html = FPSTR(HTML_HEADER);
+    
+    html += R"rawliteral(
+    <div class="header">
+        <h1>📊 Channel Graph</h1>
+        <p>Visual WiFi Channel Spectrum & Signal Strength</p>
+    </div>
+    )rawliteral";
+    
+    html += generateNav();
+    
+    // Scan button
+    html += R"rawliteral(
+    <div style="text-align:center;margin:20px 0">
+        <button onclick="startScan('/channel/scan', '📡 Analyzing Channels...', 'Scanning 2.4GHz spectrum across all WiFi channels')" style="padding:15px 40px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:8px;font-size:1.1em;font-weight:bold;cursor:pointer;box-shadow:0 4px 12px rgba(102,126,234,0.4)">
+            🔄 Scan Channels
+        </button>
+    </div>
+    )rawliteral";
+    
+    // Check if we have scan data
+    if (lastChannelAnalysis.scan_timestamp > 0) {
+        html += R"rawliteral(
+        <h2>📈 Channel Spectrum Visualization</h2>
+        <div style="background:#f8f9fa;padding:25px;border-radius:10px;margin:20px 0">
+            <canvas id="channelGraph" width="1000" height="400" style="width:100%;height:400px;background:white;border-radius:8px"></canvas>
+        </div>
+        
+        <h2>🎯 Channel Recommendations</h2>
+        <div style="background:#f8f9fa;padding:20px;border-radius:10px;margin:20px 0">
+        )rawliteral";
+        
+        html += "<p><strong>Best Channel:</strong> <span class=\"badge success\">Channel " + String(lastChannelAnalysis.best_channel_2g4) + "</span></p>";
+        html += "<p><strong>Least Crowded:</strong> Channel " + String(lastChannelAnalysis.best_channel_2g4) + " with " + String((int)(100 - lastChannelAnalysis.channels[lastChannelAnalysis.best_channel_2g4 - 1].congestion_score)) + "% available capacity</p>";
+        html += "<p><strong>Total Networks Found:</strong> " + String(lastChannelAnalysis.total_networks) + "</p>";
+        html += "<p><strong>Recommended Non-Overlapping Channels:</strong> 1, 6, 11</p>";
+        
+        html += "</div>";
+        
+        // Network list by channel
+        html += R"rawliteral(
+        <h2>📡 Networks by Channel</h2>
+        <div id="networksByChannel" style="margin:20px 0"></div>
+        )rawliteral";
+        
+        // JavaScript to draw the graph
+        html += "<script>";
+        
+        // Channel data
+        html += "const channelData = [";
+        for (int i = 0; i < 14; i++) {
+            if (lastChannelAnalysis.channels[i].channel > 0) {
+                if (i > 0) html += ",";
+                html += "{ch:" + String(lastChannelAnalysis.channels[i].channel);
+                html += ",nets:" + String(lastChannelAnalysis.channels[i].network_count);
+                html += ",cong:" + String(lastChannelAnalysis.channels[i].congestion_score, 1);
+                html += ",rec:" + String(lastChannelAnalysis.channels[i].is_recommended ? "true" : "false");
+                html += "}";
+            }
+        }
+        html += "];";
+        
+        // Draw function
+        html += R"rawliteral(
+        function drawChannelGraph() {
+            const canvas = document.getElementById('channelGraph');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            // Graph dimensions
+            const padding = 60;
+            const graphWidth = width - padding * 2;
+            const graphHeight = height - padding * 2;
+            const channels = 14;
+            const channelWidth = graphWidth / channels;
+            
+            // Draw grid
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 10; i++) {
+                const y = padding + (graphHeight / 10) * i;
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(width - padding, y);
+                ctx.stroke();
+            }
+            
+            // Draw channel lines
+            for (let i = 0; i <= channels; i++) {
+                const x = padding + channelWidth * i;
+                ctx.beginPath();
+                ctx.moveTo(x, padding);
+                ctx.lineTo(x, height - padding);
+                ctx.stroke();
+            }
+            
+            // Draw axes
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(padding, height - padding);
+            ctx.lineTo(width - padding, height - padding);
+            ctx.lineTo(width - padding, padding);
+            ctx.stroke();
+            
+            // Draw Y-axis labels (signal strength)
+            ctx.fillStyle = '#666';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'right';
+            for (let i = 0; i <= 10; i++) {
+                const y = padding + (graphHeight / 10) * i;
+                const value = 100 - (i * 10);
+                ctx.fillText(value + '%', padding - 10, y + 4);
+            }
+            
+            // Draw X-axis labels (channels)
+            ctx.textAlign = 'center';
+            for (let i = 0; i < channels; i++) {
+                const x = padding + channelWidth * i + channelWidth / 2;
+                ctx.fillText('Ch ' + (i + 1), x, height - padding + 20);
+            }
+            
+            // Axis titles
+            ctx.save();
+            ctx.translate(20, height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.font = 'bold 14px Arial';
+            ctx.fillStyle = '#333';
+            ctx.textAlign = 'center';
+            ctx.fillText('Congestion / Signal Strength', 0, 0);
+            ctx.restore();
+            
+            ctx.font = 'bold 14px Arial';
+            ctx.fillText('WiFi Channel', width / 2, height - 10);
+            
+            // Draw channel congestion bars
+            channelData.forEach((data, idx) => {
+                if (data.ch > 0 && data.ch <= 14) {
+                    const x = padding + channelWidth * (data.ch - 1);
+                    const barHeight = (data.cong / 100) * graphHeight;
+                    const y = height - padding - barHeight;
+                    
+                    // Color based on congestion
+                    let color;
+                    if (data.cong > 70) {
+                        color = '#ef4444'; // Red
+                    } else if (data.cong > 40) {
+                        color = '#fbbf24'; // Yellow
+                    } else {
+                        color = '#10b981'; // Green
+                    }
+                    
+                    // Draw bar
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x + 5, y, channelWidth - 10, barHeight);
+                    
+                    // Draw border
+                    ctx.strokeStyle = '#333';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(x + 5, y, channelWidth - 10, barHeight);
+                    
+                    // Draw network count
+                    if (data.nets > 0) {
+                        ctx.fillStyle = '#fff';
+                        ctx.font = 'bold 12px Arial';
+                        ctx.textAlign = 'center';
+                        const textY = y + barHeight / 2;
+                        ctx.fillText(data.nets + ' net' + (data.nets > 1 ? 's' : ''), x + channelWidth / 2, textY + 4);
+                    }
+                    
+                    // Mark recommended channels
+                    if (data.rec) {
+                        ctx.fillStyle = '#fbbf24';
+                        ctx.font = 'bold 16px Arial';
+                        ctx.fillText('⭐', x + channelWidth / 2, padding - 10);
+                    }
+                }
+            });
+            
+            // Draw legend
+            const legendX = width - padding - 150;
+            const legendY = padding + 20;
+            
+            ctx.font = 'bold 12px Arial';
+            ctx.fillStyle = '#333';
+            ctx.textAlign = 'left';
+            ctx.fillText('Congestion Level:', legendX, legendY);
+            
+            // Legend items
+            const items = [
+                {color: '#10b981', text: 'Low (0-40%)'},
+                {color: '#fbbf24', text: 'Medium (40-70%)'},
+                {color: '#ef4444', text: 'High (70-100%)'}
+            ];
+            
+            items.forEach((item, idx) => {
+                const y = legendY + 20 + idx * 20;
+                ctx.fillStyle = item.color;
+                ctx.fillRect(legendX, y - 10, 15, 15);
+                ctx.fillStyle = '#333';
+                ctx.fillText(item.text, legendX + 20, y + 2);
+            });
+        }
+        
+        // Draw on page load
+        window.onload = drawChannelGraph;
+        window.onresize = drawChannelGraph;
+        )rawliteral";
+        
+        html += "</script>";
+        
+        // Scan info
+        unsigned long ageSeconds = (millis() - lastChannelAnalysis.scan_timestamp) / 1000;
+        html += "<p style=\"text-align:center;color:#666;margin-top:20px\">";
+        html += "Last scan: " + String(ageSeconds) + " seconds ago | Duration: " + String(lastChannelAnalysis.scan_duration_ms) + " ms";
+        html += "</p>";
+        
+    } else {
+        html += R"rawliteral(
+        <div style="background:#fff3cd;padding:20px;border-left:4px solid #ffc107;border-radius:5px;margin:20px 0">
+            <p style="text-align:center;color:#666">
+                <strong>No channel data available yet.</strong><br><br>
+                Click "Scan Channels" above to analyze the 2.4GHz spectrum and generate the channel graph.
+            </p>
+        </div>
+        )rawliteral";
+    }
+    
+    html += R"rawliteral(
+    <h2>💡 Understanding the Channel Graph</h2>
+    <div style="background:#e3f2fd;padding:20px;border-left:4px solid #2196f3;border-radius:5px;margin:20px 0">
+        <ul style="margin:10px 0;padding-left:25px;line-height:1.8">
+            <li><strong>Bar Height:</strong> Represents channel congestion (higher = more crowded)</li>
+            <li><strong>Colors:</strong> Green (good), Yellow (moderate), Red (congested)</li>
+            <li><strong>Numbers:</strong> Show count of networks on each channel</li>
+            <li><strong>Stars (⭐):</strong> Mark recommended channels with lowest interference</li>
+            <li><strong>Non-Overlapping:</strong> Channels 1, 6, and 11 don't overlap in 2.4GHz</li>
+            <li><strong>Best Practice:</strong> Choose a channel with lowest bar and fewest networks</li>
+        </ul>
     </div>
     )rawliteral";
     

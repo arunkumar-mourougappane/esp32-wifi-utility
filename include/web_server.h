@@ -39,6 +39,7 @@ void handleScanDetails();  // New handler for network details
 void handleNetworkAnalysis();
 void handleChannelAnalysis();
 void handleChannelScan();
+void handleChannelGraph();
 void handleLatency();
 void handleLatencyStart();
 void handleLatencyStop();
