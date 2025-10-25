@@ -10,6 +10,9 @@
 #ifdef USE_NEOPIXEL
 #include "web_server.h"
 #endif
+#if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
+#include "tft_display.h"
+#endif
 
 // Helper macro for prompt handling
 #define RESET_PROMPT() promptShown = false
@@ -120,6 +123,11 @@ void startAccessPoint() {
     // Generate and display QR code for easy mobile connection
     generateAPQRCode(currentAPSSID, currentAPPassword, "WPA");
     
+#if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
+    // Display QR code on TFT display
+    displayAPQRCode(currentAPSSID, currentAPPassword, "WPA");
+#endif
+    
     // Web server will be auto-started by monitorWebServerState()
     Serial.println("  Web server will auto-start momentarily");
     Serial.flush(); // Ensure output is sent immediately
@@ -173,6 +181,11 @@ void startAccessPoint(const String& ssid, const String& password) {
     // Generate and display QR code for easy mobile connection
     generateAPQRCode(currentAPSSID, currentAPPassword, "WPA");
     
+#if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
+    // Display QR code on TFT display
+    displayAPQRCode(currentAPSSID, currentAPPassword, "WPA");
+#endif
+    
     // Web server will be auto-started by monitorWebServerState()
     Serial.println("  Web server will auto-start momentarily");
     
@@ -196,6 +209,13 @@ void stopWiFi() {
   if (isWebServerRunning()) {
     Serial.println("🌐 Stopping web server...");
     stopWebServer();
+  }
+#endif
+  
+#if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
+  // Clear TFT display when stopping WiFi
+  if (currentMode == MODE_AP) {
+    displayStatus("WiFi Off", true);
   }
 #endif
   

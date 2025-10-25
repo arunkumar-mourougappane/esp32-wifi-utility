@@ -52,6 +52,8 @@ void handleConfigStation();
 void handleConfigClear();
 void handleReboot();
 void handleModeSwitch();
+void handleSignalMonitor();
+void handleSignalStrengthAPI();
 void handleNotFound();
 
 #endif // USE_WEBSERVER

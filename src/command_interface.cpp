@@ -7,6 +7,7 @@
 #include "led_controller.h"
 #include "latency_analyzer.h"
 #include "channel_analyzer.h"
+#include "signal_monitor.h"
 #include "config.h"
 #include <esp_system.h>
 #ifdef USE_WEBSERVER
@@ -579,6 +580,12 @@ void executeCommand(String command) {
   else if (command == "spectrum") {
     executeSpectrumAnalysis();
   }
+  else if (command.startsWith("signal ")) {
+    executeSignalCommand(command);
+  }
+  else if (command == "signal") {
+    printSignalHelp();
+  }
   else if (command == "reset" || command == "restart") {
     executeResetCommand();
   }
@@ -768,6 +775,10 @@ void printHelp() {
   Serial.println("│ channel scan    │ Analyze channel congestion           │");
   Serial.println("│ congestion      │ Quick channel congestion scan        │");
   Serial.println("│ spectrum        │ Full spectrum analysis               │");
+  Serial.println("│ signal          │ Show signal strength help            │");
+  Serial.println("│ signal show     │ Display current signal strength      │");
+  Serial.println("│ signal scan     │ Scan all nearby networks             │");
+  Serial.println("│ signal monitor  │ Start continuous signal monitoring   │");
 #ifdef USE_WEBSERVER
   Serial.println("│ webserver       │ Show web server help                 │");
   Serial.println("│ webserver start │ Start web server on port 80          │");
@@ -1103,4 +1114,98 @@ void printWebServerHelp() {
   Serial.println();
 }
 #endif
+
+// ==========================================
+// SIGNAL MONITORING COMMANDS
+// ==========================================
+void executeSignalCommand(String command) {
+  if (command == "signal show" || command == "signal status") {
+    SignalInfo info = getCurrentSignalStrength();
+    printSignalInfo(info);
+  }
+  else if (command == "signal scan") {
+    Serial.println("Scanning nearby networks for signal strength...");
+    std::vector<SignalInfo> networks = getNearbySignalStrengths(20);
+    
+    if (networks.empty()) {
+      Serial.println("No networks found.");
+      return;
+    }
+    
+    Serial.println("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    Serial.println("Nearby Networks Signal Strength");
+    Serial.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    Serial.println();
+    
+    for (size_t i = 0; i < networks.size(); i++) {
+      Serial.printf("%2d. %-32s %4d dBm  %3d%%  %s%s\n",
+                    i + 1,
+                    networks[i].ssid.c_str(),
+                    networks[i].rssi,
+                    networks[i].quality,
+                    networks[i].qualityText.c_str(),
+                    networks[i].isConnected ? " [CONNECTED]" : "");
+      
+      // Show mini signal meter
+      Serial.print("    ");
+      displaySignalMeter(networks[i].rssi);
+    }
+    
+    Serial.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  }
+  else if (command.startsWith("signal monitor ")) {
+    String arg = command.substring(15);
+    arg.trim();
+    
+    if (arg == "start") {
+      uint8_t interval = 5; // default 5 seconds
+      startSignalMonitoring(interval);
+    } else if (arg == "stop") {
+      stopSignalMonitoring();
+    } else {
+      Serial.println("Invalid argument. Use: signal monitor start|stop");
+    }
+  }
+  else if (command == "signal monitor") {
+    startSignalMonitoring(5); // Default 5 second interval
+  }
+  else {
+    printSignalHelp();
+  }
+}
+
+void printSignalHelp() {
+  Serial.println("\n📶 SIGNAL STRENGTH COMMANDS:");
+  Serial.println("┌─────────────────────┬──────────────────────────────────────┐");
+  Serial.println("│ Command             │ Description                          │");
+  Serial.println("├─────────────────────┼──────────────────────────────────────┤");
+  Serial.println("│ signal show         │ Display current signal strength      │");
+  Serial.println("│ signal scan         │ Scan & show all nearby networks      │");
+  Serial.println("│ signal monitor      │ Start continuous monitoring          │");
+  Serial.println("│ signal monitor start│ Start signal strength monitoring     │");
+  Serial.println("│ signal monitor stop │ Stop monitoring                      │");
+  Serial.println("└─────────────────────┴──────────────────────────────────────┘");
+  Serial.println();
+  Serial.println("📊 Signal Strength Metrics:");
+  Serial.println("• RSSI (Received Signal Strength Indicator) in dBm");
+  Serial.println("• Quality percentage (0-100%)");
+  Serial.println("• Quality rating (Excellent, Good, Fair, Weak, Very Weak)");
+  Serial.println("• Visual signal strength meter");
+  Serial.println();
+  Serial.println("📈 RSSI Reference:");
+  Serial.println("• -30 to -50 dBm : Excellent (100%)");
+  Serial.println("• -50 to -60 dBm : Good (80-100%)");
+  Serial.println("• -60 to -70 dBm : Fair (60-80%)");
+  Serial.println("• -70 to -80 dBm : Weak (40-60%)");
+  Serial.println("• -80 to -90 dBm : Very Weak (20-40%)");
+  Serial.println("• Below -90 dBm  : Unusable (<20%)");
+  Serial.println();
+  Serial.println("💡 Usage Tips:");
+  Serial.println("• Use 'signal show' for current connection status");
+  Serial.println("• Use 'signal scan' to compare nearby network strengths");
+  Serial.println("• Use 'signal monitor' for real-time updates");
+  Serial.println("• Press any key to stop continuous monitoring");
+  Serial.println("• Access web interface at /signal for graphical view");
+  Serial.println();
+}
 

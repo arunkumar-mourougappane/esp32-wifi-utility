@@ -9,8 +9,12 @@
 #include "iperf_manager.h"
 #include "latency_analyzer.h"
 #include "channel_analyzer.h"
+#include "signal_monitor.h"
 #ifdef USE_WEBSERVER
 #include "web_server.h"
+#endif
+#if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
+#include "tft_display.h"
 #endif
 
 // Global variables are defined in their respective modules
@@ -21,6 +25,13 @@ void setup() {
 
   // Initialize hardware
   initializeLED();
+  
+#if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
+  // Initialize TFT display
+  initializeTFT();
+  displayStatus("WiFi Tool\nStarting...", true);
+  delay(1000);
+#endif
   
   // Initialize WiFi (will be configured by user commands)
   initializeWiFi();
@@ -55,6 +66,9 @@ void loop() {
   
   // Handle channel monitoring background tasks
   handleChannelMonitoringTasks();
+  
+  // Handle signal monitoring background tasks
+  updateSignalMonitoring();
   
 #ifdef USE_WEBSERVER
   // Handle web server requests

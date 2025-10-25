@@ -9,6 +9,7 @@
 #include "channel_analyzer.h"
 #include "iperf_manager.h"
 #include "latency_analyzer.h"
+#include "signal_monitor.h"
 #include <qrcode.h>
 
 // Web server instance
@@ -124,6 +125,9 @@ h2{color:#764ba2;margin:30px 0 15px;font-size:1.5em;border-bottom:2px solid #667
 .network-name{font-weight:bold;font-size:1.1em;margin-bottom:5px}
 .network-details{color:#666;font-size:.9em}
 .signal-strength{font-size:1.5em;margin-left:20px}
+button,.btn{padding:10px 20px;background:#667eea;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:1em;font-weight:500;transition:all .3s;text-decoration:none;display:inline-block}
+button:hover,.btn:hover{background:#764ba2;transform:translateY(-2px);box-shadow:0 4px 8px rgba(0,0,0,.2)}
+button:active,.btn:active{transform:translateY(0);box-shadow:0 2px 4px rgba(0,0,0,.2)}
 .footer{text-align:center;margin-top:30px;padding-top:20px;border-top:1px solid #e0e0e0;color:#666;font-size:.9em}
 .nav{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:20px 0;position:relative;align-items:center}
 .nav>div{position:relative}
@@ -201,7 +205,7 @@ String generateHtmlFooter() {
 }
 
 // Generate common navigation menu - stored in PROGMEM
-const char NAV_MENU[] PROGMEM = "<div class=\"nav\"><div class=\"hamburger\" onclick=\"toggleMenu()\"><span></span><span></span><span></span></div><div class=\"nav-items\"><div><a href=\"/\">🏠 Home</a></div><div><a href=\"/status\">📊 Status</a></div><div><a href=\"/scan\">🔍 Scan</a></div><div><a href=\"/config\">⚙️ Config</a></div><div class=\"dropdown\"><a href=\"/analysis\">🔬 Analysis</a><div class=\"dropdown-content\"><a href=\"/analysis\">📊 Dashboard</a><a href=\"/iperf\">⚡ iPerf</a><a href=\"/latency\">📉 Latency</a><a href=\"/channel\">📡 Channel</a></div></div></div></div>";
+const char NAV_MENU[] PROGMEM = "<div class=\"nav\"><div class=\"hamburger\" onclick=\"toggleMenu()\"><span></span><span></span><span></span></div><div class=\"nav-items\"><div><a href=\"/\">🏠 Home</a></div><div><a href=\"/status\">📊 Status</a></div><div><a href=\"/scan\">🔍 Scan</a></div><div><a href=\"/config\">⚙️ Config</a></div><div class=\"dropdown\"><a href=\"/analysis\">🔬 Analysis</a><div class=\"dropdown-content\"><a href=\"/analysis\">📊 Dashboard</a><a href=\"/signal\">📶 Signal</a><a href=\"/iperf\">⚡ iPerf</a><a href=\"/latency\">📉 Latency</a><a href=\"/channel\">📡 Channel</a></div></div></div></div>";
 
 String generateNav() {
     return FPSTR(NAV_MENU);
@@ -256,6 +260,8 @@ bool startWebServer() {
     webServer->on("/config/clear", HTTP_POST, handleConfigClear);
     webServer->on("/reboot", HTTP_POST, handleReboot);
     webServer->on("/mode/switch", HTTP_POST, handleModeSwitch);
+    webServer->on("/signal", handleSignalMonitor);
+    webServer->on("/signal/api", handleSignalStrengthAPI);
     webServer->onNotFound(handleNotFound);
 
     // Start the server
@@ -911,6 +917,7 @@ void handleNetworkAnalysis() {
             <a href="/analysis">🔬 Analysis</a>
             <div class="dropdown-content">
                 <a href="/analysis">📊 Dashboard</a>
+                <a href="/signal">📶 Signal</a>
                 <a href="/iperf">⚡ iPerf</a>
                 <a href="/latency">📉 Latency</a>
                 <a href="/channel">📡 Channel</a>
@@ -1003,6 +1010,29 @@ void handleNetworkAnalysis() {
             </div>
             <button onclick="location.href='/iperf'" style="margin-top: 15px; padding: 10px 20px; background: white; color: #f59e0b; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%;">
                 Start iPerf Test
+            </button>
+        </div>
+
+        <!-- Signal Strength Monitor Card -->
+        <div style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+            <h3 style="margin: 0 0 10px 0; font-size: 1.3em;">📶 Signal Monitor</h3>
+            <p style="margin: 0 0 15px 0; opacity: 0.9;">Real-time WiFi signal strength monitoring and analysis</p>
+            <div style="margin: 10px 0;">
+                <span style="font-size: 0.9em; opacity: 0.8;">Current Signal:</span><br>
+    )rawliteral";
+    
+    if (WiFi.status() == WL_CONNECTED) {
+        int32_t rssi = WiFi.RSSI();
+        uint8_t quality = rssiToQuality(rssi);
+        html += "<strong>" + String(rssi) + " dBm (" + String(quality) + "%)</strong>";
+    } else {
+        html += "<strong>Not Connected</strong>";
+    }
+    
+    html += R"rawliteral(
+            </div>
+            <button onclick="location.href='/signal'" style="margin-top: 15px; padding: 10px 20px; background: white; color: #06b6d4; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%;">
+                View Signal Monitor
             </button>
         </div>
     </div>
@@ -1108,6 +1138,9 @@ void handleNetworkAnalysis() {
         <button onclick="startScan('/scan?doscan=1', '🔍 Scanning Networks...', 'Discovering nearby WiFi networks and signal strength')" style="padding: 15px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; border-radius: 8px; font-size: 1em; font-weight: bold; cursor: pointer;">
             📡 Scan Networks
         </button>
+        <button onclick="location.href='/signal'" style="padding: 15px; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: white; border: none; border-radius: 8px; font-size: 1em; font-weight: bold; cursor: pointer;">
+            📶 Monitor Signal
+        </button>
         <button onclick="location.href='/latency/start'" style="padding: 15px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 8px; font-size: 1em; font-weight: bold; cursor: pointer;">
             📉 Test Latency
         </button>
@@ -1119,6 +1152,7 @@ void handleNetworkAnalysis() {
     <h2>💡 Network Analysis Tips</h2>
     <div style="background: #f0f9ff; padding: 20px; border-left: 4px solid #3b82f6; border-radius: 5px; margin: 20px 0;">
         <ul style="margin: 10px 0; padding-left: 25px;">
+            <li><strong>Signal Monitoring:</strong> Track real-time signal strength and quality of nearby networks</li>
             <li><strong>Channel Analysis:</strong> Identifies congested channels and recommends optimal ones for your AP</li>
             <li><strong>Latency Testing:</strong> Measures response time, jitter, and packet loss to assess connection quality</li>
             <li><strong>iPerf Testing:</strong> Measures maximum bandwidth and throughput capabilities</li>
@@ -3141,5 +3175,305 @@ void handleModeSwitch() {
         webServer->send(400, "text/plain", "Invalid mode parameter. Use 'ap' or 'station'");
     }
 }
+
+// ==========================================
+// SIGNAL STRENGTH MONITOR PAGE
+// ==========================================
+void handleSignalMonitor() {
+    String html = FPSTR(HTML_HEADER);
+    
+    html += R"rawliteral(
+    <div class="header">
+        <h1>📶 Signal Strength Monitor</h1>
+        <p>Real-Time WiFi Signal Analysis</p>
+    </div>
+    )rawliteral";
+    
+    html += generateNav();
+    
+    // Current Connection Signal
+    html += R"rawliteral(
+    <h2>📡 Current Connection</h2>
+    <div style="background:#f8f9fa;padding:20px;border-radius:10px;margin:20px 0">
+        <div id='currentSignal'>
+            <p style="color:#666">Loading signal information...</p>
+        </div>
+    </div>
+    )rawliteral";
+    
+    // Nearby Networks Signal Strength
+    html += R"rawliteral(
+    <h2>📊 Nearby Networks</h2>
+    <div style="background:#f8f9fa;padding:20px;border-radius:10px;margin:20px 0">
+        <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;margin-bottom:15px">
+            <button id="scanBtn" onclick='scanNetworks()' style="padding:12px 30px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:8px;font-size:1em;font-weight:bold;cursor:pointer;box-shadow:0 4px 12px rgba(102,126,234,0.4);transition:all 0.3s">🔍 Scan Now</button>
+            
+            <button id="autoScanBtn" onclick='toggleAutoScan()' style="padding:12px 30px;background:#10b981;color:white;border:none;border-radius:8px;font-size:1em;font-weight:bold;cursor:pointer;transition:all 0.3s">▶️ Auto Scan</button>
+            
+            <div style="display:flex;align-items:center;gap:10px">
+                <label for="scanInterval" style="font-weight:500;color:#333">Interval:</label>
+                <select id="scanInterval" onchange="updateScanInterval()" style="padding:8px 12px;border:2px solid #667eea;border-radius:5px;font-size:1em;cursor:pointer">
+                    <option value="5">5 seconds</option>
+                    <option value="10" selected>10 seconds</option>
+                    <option value="15">15 seconds</option>
+                    <option value="30">30 seconds</option>
+                    <option value="60">60 seconds</option>
+                </select>
+            </div>
+            
+            <div id="scanStatus" style="margin-left:auto;font-weight:500;color:#667eea"></div>
+        </div>
+    </div>
+    <div id='nearbySignals'>
+        <p style='text-align:center;padding:40px;color:#999'>Click "Scan Now" or enable "Auto Scan" to view nearby networks and their signal strengths.</p>
+    </div>
+    )rawliteral";
+    
+    // JavaScript for real-time updates
+    html += "<script>";
+    html += "let autoRefresh = true;";
+    html += "let refreshInterval;";
+    html += "let autoScanEnabled = false;";
+    html += "let autoScanInterval;";
+    html += "let scanIntervalSeconds = 10;";
+    html += "let lastScanTime = 0;";
+    html += "let scanInProgress = false;";
+    
+    // Function to get signal quality color
+    html += "function getSignalColor(rssi) {";
+    html += "  if (rssi >= -50) return '#10b981';";
+    html += "  if (rssi >= -60) return '#10b981';";
+    html += "  if (rssi >= -67) return '#fbbf24';";
+    html += "  if (rssi >= -75) return '#fb923c';";
+    html += "  return '#ef4444';";
+    html += "}";
+    
+    // Update scan interval
+    html += "function updateScanInterval() {";
+    html += "  scanIntervalSeconds = parseInt(document.getElementById('scanInterval').value);";
+    html += "  if (autoScanEnabled) {";
+    html += "    stopAutoScan();";
+    html += "    startAutoScan();";
+    html += "  }";
+    html += "}";
+    
+    // Toggle auto scan
+    html += "function toggleAutoScan() {";
+    html += "  if (autoScanEnabled) {";
+    html += "    stopAutoScan();";
+    html += "  } else {";
+    html += "    startAutoScan();";
+    html += "  }";
+    html += "}";
+    
+    // Start auto scan
+    html += "function startAutoScan() {";
+    html += "  autoScanEnabled = true;";
+    html += "  const btn = document.getElementById('autoScanBtn');";
+    html += "  btn.innerHTML = '⏸️ Stop Auto';";
+    html += "  btn.style.background = '#ef4444';";
+    html += "  scanNetworks();";
+    html += "  autoScanInterval = setInterval(scanNetworks, scanIntervalSeconds * 1000);";
+    html += "  updateScanStatus();";
+    html += "}";
+    
+    // Stop auto scan
+    html += "function stopAutoScan() {";
+    html += "  autoScanEnabled = false;";
+    html += "  clearInterval(autoScanInterval);";
+    html += "  const btn = document.getElementById('autoScanBtn');";
+    html += "  btn.innerHTML = '▶️ Auto Scan';";
+    html += "  btn.style.background = '#10b981';";
+    html += "  document.getElementById('scanStatus').innerHTML = '';";
+    html += "}";
+    
+    // Update scan status
+    html += "function updateScanStatus() {";
+    html += "  if (!autoScanEnabled) return;";
+    html += "  const elapsed = Math.floor((Date.now() - lastScanTime) / 1000);";
+    html += "  const remaining = Math.max(0, scanIntervalSeconds - elapsed);";
+    html += "  if (scanInProgress) {";
+    html += "    document.getElementById('scanStatus').innerHTML = '🔄 Scanning...';";
+    html += "  } else if (remaining > 0) {";
+    html += "    document.getElementById('scanStatus').innerHTML = '⏱️ Next scan in ' + remaining + 's';";
+    html += "  }";
+    html += "  setTimeout(updateScanStatus, 1000);";
+    html += "}";
+    
+    // Function to create signal bars (similar to scan page circles)
+    html += "function createSignalBars(rssi) {";
+    html += "  let bars = 0;";
+    html += "  if (rssi >= -50) bars = 5;";
+    html += "  else if (rssi >= -60) bars = 4;";
+    html += "  else if (rssi >= -67) bars = 3;";
+    html += "  else if (rssi >= -75) bars = 2;";
+    html += "  else bars = 1;";
+    html += "  let color = getSignalColor(rssi);";
+    html += "  let html = '<div style=\"display:flex;gap:3px;align-items:center\">';";
+    html += "  for (let i = 0; i < 5; i++) {";
+    html += "    if (i < bars) {";
+    html += "      html += '<svg width=\"14\" height=\"14\" style=\"display:block\"><circle cx=\"7\" cy=\"7\" r=\"6\" fill=\"' + color + '\"/></svg>';";
+    html += "    } else {";
+    html += "      html += '<svg width=\"14\" height=\"14\" style=\"display:block\"><circle cx=\"7\" cy=\"7\" r=\"6\" fill=\"none\" stroke=\"#d1d5db\" stroke-width=\"2\"/></svg>';";
+    html += "    }";
+    html += "  }";
+    html += "  html += '<span style=\"margin-left:8px;color:#666;font-size:0.9em\">' + rssi + ' dBm</span>';";
+    html += "  html += '</div>';";
+    html += "  return html;";
+    html += "}";
+    
+    // Update current signal
+    html += "function updateCurrentSignal() {";
+    html += "  fetch('/signal/api?current=1')";
+    html += "    .then(response => response.json())";
+    html += "    .then(data => {";
+    html += "      let html = '';";
+    html += "      if (data.connected) {";
+    html += "        html += '<div style=\"display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px\">';";
+    html += "        html += '<div style=\"background:#fff;padding:20px;border-radius:10px;border-left:4px solid ' + getSignalColor(data.rssi) + ';\">';";
+    html += "        html += '<div style=\"color:#666;font-size:0.9em;margin-bottom:5px\">Network Name</div>';";
+    html += "        html += '<div style=\"font-size:1.3em;font-weight:bold;color:#333\">' + data.ssid + '</div>';";
+    html += "        html += '</div>';";
+    html += "        html += '<div style=\"background:#fff;padding:20px;border-radius:10px;border-left:4px solid ' + getSignalColor(data.rssi) + ';\">';";
+    html += "        html += '<div style=\"color:#666;font-size:0.9em;margin-bottom:5px\">Signal Strength</div>';";
+    html += "        html += '<div style=\"font-size:1.3em;font-weight:bold;color:' + getSignalColor(data.rssi) + ';\">' + data.rssi + ' dBm</div>';";
+    html += "        html += '</div>';";
+    html += "        html += '<div style=\"background:#fff;padding:20px;border-radius:10px;border-left:4px solid ' + getSignalColor(data.rssi) + ';\">';";
+    html += "        html += '<div style=\"color:#666;font-size:0.9em;margin-bottom:5px\">Quality</div>';";
+    html += "        html += '<div style=\"font-size:1.3em;font-weight:bold;color:#333\">' + data.quality + '%</div>';";
+    html += "        html += '</div>';";
+    html += "        html += '<div style=\"background:#fff;padding:20px;border-radius:10px;border-left:4px solid ' + getSignalColor(data.rssi) + ';\">';";
+    html += "        html += '<div style=\"color:#666;font-size:0.9em;margin-bottom:5px\">Status</div>';";
+    html += "        html += '<div style=\"font-size:1.3em;font-weight:bold;color:#333\">' + data.qualityText + '</div>';";
+    html += "        html += '</div>';";
+    html += "        html += '</div>';";
+    html += "      } else {";
+    html += "        html += '<p style=\"text-align:center;color:#666;padding:20px\">Not connected to any WiFi network</p>';";
+    html += "      }";
+    html += "      document.getElementById('currentSignal').innerHTML = html;";
+    html += "    })";
+    html += "    .catch(err => {";
+    html += "      document.getElementById('currentSignal').innerHTML = '<p style=\"color:#ef4444;text-align:center\">Error loading signal data</p>';";
+    html += "    });";
+    html += "}";
+    
+    // Scan nearby networks
+    html += "function scanNetworks() {";
+    html += "  if (scanInProgress) return;";
+    html += "  scanInProgress = true;";
+    html += "  lastScanTime = Date.now();";
+    html += "  document.getElementById('scanBtn').disabled = true;";
+    html += "  document.getElementById('scanBtn').style.opacity = '0.6';";
+    html += "  if (autoScanEnabled) {";
+    html += "    document.getElementById('scanStatus').innerHTML = '🔄 Scanning...';";
+    html += "  }";
+    html += "  fetch('/signal/api?scan=1')";
+    html += "    .then(response => response.json())";
+    html += "    .then(data => {";
+    html += "      scanInProgress = false;";
+    html += "      lastScanTime = Date.now();";
+    html += "      document.getElementById('scanBtn').disabled = false;";
+    html += "      document.getElementById('scanBtn').style.opacity = '1';";
+    html += "      if (data.networks && data.networks.length > 0) {";
+    html += "        let html = '<ul class=\"network-list\">';";
+    html += "        data.networks.forEach(function(network) {";
+    html += "          html += '<li class=\"network-item\" style=\"cursor:default\">';";
+    html += "          html += '<div class=\"network-info\">';";
+    html += "          let displayName = network.ssid;";
+    html += "          let isHidden = network.ssid.includes('Hidden Network');";
+    html += "          if (isHidden) {";
+    html += "            html += '<div class=\"network-name\" style=\"color:#999;font-style:italic\">' + displayName;";
+    html += "          } else {";
+    html += "            html += '<div class=\"network-name\">' + displayName;";
+    html += "          }";
+    html += "          if (network.connected) html += ' <span class=\"badge success\">CONNECTED</span>';";
+    html += "          html += '</div>';";
+    html += "          html += '<div class=\"network-details\">Quality: ' + network.quality + '% (' + network.qualityText + ')</div>';";
+    html += "          html += '</div>';";
+    html += "          html += '<div class=\"signal-strength\">' + createSignalBars(network.rssi) + '</div>';";
+    html += "          html += '</li>';";
+    html += "        });";
+    html += "        html += '</ul>';";
+    html += "        html += '<p style=\"text-align:center;margin-top:20px\"><strong>Found ' + data.networks.length + ' network(s)</strong></p>';";
+    html += "        const scanTime = new Date().toLocaleTimeString();";
+    html += "        html += '<p style=\"text-align:center;color:#666;font-size:0.9em;margin-top:5px\">Last scan: ' + scanTime + '</p>';";
+    html += "        document.getElementById('nearbySignals').innerHTML = html;";
+    html += "      } else {";
+    html += "        document.getElementById('nearbySignals').innerHTML = '<p style=\"text-align:center;padding:40px;color:#666\">No networks found. Try scanning again.</p>';";
+    html += "      }";
+    html += "    })";
+    html += "    .catch(err => {";
+    html += "      scanInProgress = false;";
+    html += "      document.getElementById('scanBtn').disabled = false;";
+    html += "      document.getElementById('scanBtn').style.opacity = '1';";
+    html += "      document.getElementById('nearbySignals').innerHTML = '<p style=\"color:#ef4444;text-align:center;padding:40px\">❌ Error scanning networks</p>';";
+    html += "    });";
+    html += "}";
+    
+    // Auto-refresh current signal
+    html += "function startAutoRefresh() {";
+    html += "  updateCurrentSignal();";
+    html += "  refreshInterval = setInterval(updateCurrentSignal, 3000);";
+    html += "}";
+    
+    html += "function stopAutoRefresh() {";
+    html += "  clearInterval(refreshInterval);";
+    html += "  stopAutoScan();";
+    html += "}";
+    
+    html += "window.onload = startAutoRefresh;";
+    html += "window.onbeforeunload = stopAutoRefresh;";
+    html += "</script>";
+    
+    html += generateHtmlFooter();
+    webServer->send(200, "text/html", html);
+}
+
+// ==========================================
+// SIGNAL STRENGTH API ENDPOINT
+// ==========================================
+void handleSignalStrengthAPI() {
+    String json = "{";
+    
+    // Check if requesting current signal or scan
+    if (webServer->hasArg("current")) {
+        // Get current connection signal
+        SignalInfo info = getCurrentSignalStrength();
+        
+        json += "\"connected\":" + String(info.isConnected ? "true" : "false") + ",";
+        json += "\"ssid\":\"" + info.ssid + "\",";
+        json += "\"rssi\":" + String(info.rssi) + ",";
+        json += "\"quality\":" + String(info.quality) + ",";
+        json += "\"qualityText\":\"" + info.qualityText + "\",";
+        json += "\"timestamp\":" + String(info.timestamp);
+        
+    } else if (webServer->hasArg("scan")) {
+        // Scan nearby networks
+        std::vector<SignalInfo> networks = getNearbySignalStrengths(20);
+        
+        json += "\"count\":" + String(networks.size()) + ",";
+        json += "\"networks\":[";
+        
+        for (size_t i = 0; i < networks.size(); i++) {
+            if (i > 0) json += ",";
+            json += "{";
+            json += "\"ssid\":\"" + networks[i].ssid + "\",";
+            json += "\"rssi\":" + String(networks[i].rssi) + ",";
+            json += "\"quality\":" + String(networks[i].quality) + ",";
+            json += "\"qualityText\":\"" + networks[i].qualityText + "\",";
+            json += "\"connected\":" + String(networks[i].isConnected ? "true" : "false");
+            json += "}";
+        }
+        
+        json += "]";
+    } else {
+        json += "\"error\":\"Invalid request\"";
+    }
+    
+    json += "}";
+    
+    webServer->send(200, "application/json", json);
+}
+
 
 #endif // USE_WEBSERVER

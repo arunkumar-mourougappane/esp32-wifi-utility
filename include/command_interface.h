@@ -34,6 +34,10 @@ void executeChannelCongestionScan();
 void executeSpectrumAnalysis();
 void printChannelHelp();
 
+// Signal monitoring command handlers
+void executeSignalCommand(String command);
+void printSignalHelp();
+
 #ifdef USE_WEBSERVER
 // Web server command handlers
 void printWebServerHelp();
