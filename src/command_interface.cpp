@@ -1,6 +1,8 @@
 #include "command_interface.h"
 #include "wifi_manager.h"
 #include "ap_manager.h"
+#include "ap_config.h"
+#include "station_config.h"
 #include "iperf_manager.h"
 #include "led_controller.h"
 #include "latency_analyzer.h"
@@ -11,19 +13,12 @@
 #include "web_server.h"
 #endif
 
-#ifdef USE_RTOS
-#include "mutex_manager.h"
-#endif
-
 // ==========================================
 // COMMAND INTERFACE VARIABLES
 // ==========================================
-#ifndef USE_RTOS
-// Legacy mode variables
 String currentInput = "";
 bool promptShown = false;
 unsigned long lastActivity = 0;
-#endif
 
 // ==========================================
 // SERIAL INITIALIZATION
@@ -35,19 +30,15 @@ void initializeSerial() {
   // Ensure proper line ending handling
   Serial.setTimeout(100);
   
-#ifndef USE_RTOS
-  // Legacy mode startup message
   Serial.println("\n==========================================");
   Serial.println("       ESP32 WiFi Scanner & AP");
   Serial.println("==========================================");
   Serial.println("🟡 Device initialization starting...");
   Serial.println("==========================================\n");
   Serial.flush(); // Ensure all data is sent
-#endif
 }
 
-#ifndef USE_RTOS
-// Show initial prompt after all initialization is complete (legacy mode)
+// Show initial prompt after all initialization is complete
 void showInitialPrompt() {
   Serial.println("\n==========================================");
   Serial.println("🟡 Device in IDLE mode - Ready for commands");
@@ -94,24 +85,16 @@ void processCharacter(char c) {
     Serial.print(c); // Echo character
   }
 }
-#endif // USE_RTOS
 
 // ==========================================
 // COMMAND EXECUTION
 // ==========================================
 void executeCommand(String command) {
-#ifdef USE_RTOS
-  // Protect serial output with mutex in RTOS mode
-  MutexLock lock(serialMutex, "executeCommand");
-#endif
-
   command.trim();
   String originalCommand = command; // Preserve original case for SSID/password extraction
   command.toLowerCase();
   
-#ifndef USE_RTOS
-  promptShown = false; // Reset prompt flag (legacy mode only)
-#endif
+  promptShown = false; // Reset prompt flag
 
   // Add command execution logging for debugging
   Serial.printf("Executing command: %s\n", originalCommand.c_str());
@@ -216,26 +199,12 @@ void executeCommand(String command) {
   }
   else if (command == "debug reset") {
     // Debug command to reset command task state
-#ifdef USE_RTOS
-    Serial.println("[DEBUG] Resetting command task state...");
-    // Note: promptShown is managed by CommandTask, not directly accessible here
-    Serial.println("[DEBUG] Command task state reset complete");
-#else
     promptShown = false;
     Serial.println("[DEBUG] Legacy mode prompt state reset");
-#endif
   }
   else if (command == "debug tasks") {
     // Debug command to show RTOS task states
-#ifdef USE_RTOS
-    Serial.println("[DEBUG] RTOS Task Information:");
-    Serial.printf("Free heap: %d bytes\n", ESP.getFreeHeap());
-    Serial.printf("CPU frequency: %d MHz\n", ESP.getCpuFreqMHz());
-    Serial.printf("Core 0 tasks running on: %d\n", xPortGetCoreID());
-    Serial.flush();
-#else
     Serial.println("[DEBUG] Not in RTOS mode");
-#endif
   }
   else if (command == "ap info" && currentMode == MODE_AP) {
     printAPInfo();
@@ -245,6 +214,167 @@ void executeCommand(String command) {
   }
   else if (command == "qr" && currentMode == MODE_AP) {
     generateAPQRCode(currentAPSSID, currentAPPassword, "WPA");
+  }
+  else if (command.startsWith("ap save")) {
+    // Parse optional parameters: ap save [ssid] [password] [channel] [autostart]
+    String params = originalCommand.substring(7);
+    params.trim();
+    
+    APConfig config;
+    
+    if (params.length() == 0) {
+      // Save current AP configuration
+      if (currentMode != MODE_AP) {
+        Serial.println("✗ Error: Not in AP mode. Use 'ap save <ssid> <password> [channel] [autostart]'");
+        return;
+      }
+      
+      // Use current configuration
+      strncpy(config.ssid, currentAPSSID.c_str(), sizeof(config.ssid) - 1);
+      config.ssid[sizeof(config.ssid) - 1] = '\0';
+      strncpy(config.password, currentAPPassword.c_str(), sizeof(config.password) - 1);
+      config.password[sizeof(config.password) - 1] = '\0';
+      config.channel = currentAPChannel;
+      config.autoStart = true;
+      config.isValid = true;
+      
+      if (saveAPConfig(config)) {
+        Serial.println("✓ Current AP configuration saved");
+        Serial.println("  Device will auto-start in AP mode on next boot");
+      } else {
+        Serial.println("✗ Failed to save AP configuration");
+      }
+    } else {
+      // Parse custom configuration
+      int firstSpace = params.indexOf(' ');
+      if (firstSpace < 0) {
+        Serial.println("✗ Error: Usage: ap save <ssid> <password> [channel] [autostart]");
+        Serial.println("  Example: ap save MyNetwork MyPass123 6 yes");
+        return;
+      }
+      
+      String ssid = params.substring(0, firstSpace);
+      String remaining = params.substring(firstSpace + 1);
+      remaining.trim();
+      
+      int secondSpace = remaining.indexOf(' ');
+      String password;
+      String channelStr;
+      String autoStartStr = "yes";
+      
+      if (secondSpace < 0) {
+        password = remaining;
+      } else {
+        password = remaining.substring(0, secondSpace);
+        remaining = remaining.substring(secondSpace + 1);
+        remaining.trim();
+        
+        int thirdSpace = remaining.indexOf(' ');
+        if (thirdSpace < 0) {
+          channelStr = remaining;
+        } else {
+          channelStr = remaining.substring(0, thirdSpace);
+          autoStartStr = remaining.substring(thirdSpace + 1);
+          autoStartStr.trim();
+        }
+      }
+      
+      // Remove quotes if present
+      if ((ssid.startsWith("\"") && ssid.endsWith("\"")) || 
+          (ssid.startsWith("'") && ssid.endsWith("'"))) {
+        ssid = ssid.substring(1, ssid.length() - 1);
+      }
+      if ((password.startsWith("\"") && password.endsWith("\"")) || 
+          (password.startsWith("'") && password.endsWith("'"))) {
+        password = password.substring(1, password.length() - 1);
+      }
+      
+      // Validate SSID and password
+      if (ssid.length() == 0 || ssid.length() > 32) {
+        Serial.println("✗ Error: SSID must be 1-32 characters");
+        return;
+      }
+      if (password.length() < 8 || password.length() > 63) {
+        Serial.println("✗ Error: Password must be 8-63 characters");
+        return;
+      }
+      
+      // Parse channel (default to 1 if not specified or invalid)
+      uint8_t channel = 1;
+      if (channelStr.length() > 0) {
+        int ch = channelStr.toInt();
+        if (ch >= 1 && ch <= 13) {
+          channel = ch;
+        } else {
+          Serial.printf("⚠ Warning: Invalid channel %d, using default (1)\n", ch);
+        }
+      }
+      
+      // Parse autostart
+      bool autoStart = (autoStartStr.equalsIgnoreCase("yes") || 
+                       autoStartStr.equalsIgnoreCase("true") || 
+                       autoStartStr == "1");
+      
+      // Create configuration
+      strncpy(config.ssid, ssid.c_str(), sizeof(config.ssid) - 1);
+      config.ssid[sizeof(config.ssid) - 1] = '\0';
+      strncpy(config.password, password.c_str(), sizeof(config.password) - 1);
+      config.password[sizeof(config.password) - 1] = '\0';
+      config.channel = channel;
+      config.autoStart = autoStart;
+      config.isValid = true;
+      
+      if (saveAPConfig(config)) {
+        Serial.println("✓ AP configuration saved");
+        printAPConfig(config);
+      } else {
+        Serial.println("✗ Failed to save AP configuration");
+      }
+    }
+  }
+  else if (command == "ap load") {
+    APConfig config;
+    if (loadAPConfig(config)) {
+      Serial.println("✓ Loaded saved AP configuration:");
+      printAPConfig(config);
+      
+      // Apply configuration
+      currentAPSSID = String(config.ssid);
+      currentAPPassword = String(config.password);
+      currentAPChannel = config.channel;
+      
+      Serial.println("\nConfiguration loaded. Use 'mode ap' to start AP with saved settings.");
+    } else {
+      Serial.println("✗ No saved AP configuration found");
+    }
+  }
+  else if (command == "ap show") {
+    if (hasAPConfig()) {
+      APConfig config;
+      if (loadAPConfig(config)) {
+        Serial.println("Saved AP configuration:");
+        printAPConfig(config);
+      }
+    } else {
+      Serial.println("No saved AP configuration found");
+      Serial.println("Current default configuration:");
+      APConfig defaultConfig;
+      getDefaultAPConfig(defaultConfig);
+      printAPConfig(defaultConfig);
+    }
+  }
+  else if (command == "ap clear") {
+    if (clearAPConfig()) {
+      Serial.println("✓ AP configuration cleared");
+      Serial.println("  Device will not auto-start AP on next boot");
+      
+      // Reset to defaults
+      currentAPSSID = AP_SSID;
+      currentAPPassword = AP_PASSWORD;
+      currentAPChannel = 1;
+    } else {
+      Serial.println("✗ Failed to clear AP configuration");
+    }
   }
   else if (command.startsWith("deauth ") && currentMode == MODE_AP) {
     String macAddress = command.substring(7);
@@ -292,6 +422,132 @@ void executeCommand(String command) {
   }
   else if (command == "disconnect" && currentMode == MODE_STATION) {
     disconnectFromNetwork();
+  }
+  else if (command.startsWith("station save")) {
+    // Parse optional parameters: station save [ssid] [password] [autoconnect]
+    String params = originalCommand.substring(12);
+    params.trim();
+    
+    StationConfig config;
+    
+    if (params.length() == 0) {
+      // Save current station configuration
+      if (currentMode != MODE_STATION || WiFi.status() != WL_CONNECTED) {
+        Serial.println("✗ Error: Not connected to a network. Use 'station save <ssid> <password> [autoconnect]'");
+        return;
+      }
+      
+      // Use current connection
+      strncpy(config.ssid, WiFi.SSID().c_str(), sizeof(config.ssid) - 1);
+      config.ssid[sizeof(config.ssid) - 1] = '\0';
+      strncpy(config.password, WiFi.psk().c_str(), sizeof(config.password) - 1);
+      config.password[sizeof(config.password) - 1] = '\0';
+      config.autoConnect = true;
+      config.isValid = true;
+      
+      if (saveStationConfig(config)) {
+        Serial.println("✓ Current station configuration saved");
+        Serial.println("  Device will auto-connect to this network on next boot");
+      } else {
+        Serial.println("✗ Failed to save station configuration");
+      }
+    } else {
+      // Parse custom configuration
+      int firstSpace = params.indexOf(' ');
+      if (firstSpace < 0) {
+        Serial.println("✗ Error: Usage: station save <ssid> <password> [autoconnect]");
+        Serial.println("  Example: station save MyNetwork MyPass123 yes");
+        return;
+      }
+      
+      String ssid = params.substring(0, firstSpace);
+      String remaining = params.substring(firstSpace + 1);
+      remaining.trim();
+      
+      int secondSpace = remaining.indexOf(' ');
+      String password;
+      String autoConnectStr = "yes";
+      
+      if (secondSpace < 0) {
+        password = remaining;
+      } else {
+        password = remaining.substring(0, secondSpace);
+        autoConnectStr = remaining.substring(secondSpace + 1);
+        autoConnectStr.trim();
+      }
+      
+      // Remove quotes if present
+      if ((ssid.startsWith("\"") && ssid.endsWith("\"")) || 
+          (ssid.startsWith("'") && ssid.endsWith("'"))) {
+        ssid = ssid.substring(1, ssid.length() - 1);
+      }
+      if ((password.startsWith("\"") && password.endsWith("\"")) || 
+          (password.startsWith("'") && password.endsWith("'"))) {
+        password = password.substring(1, password.length() - 1);
+      }
+      
+      // Validate SSID
+      if (ssid.length() == 0 || ssid.length() > 32) {
+        Serial.println("✗ Error: SSID must be 1-32 characters");
+        return;
+      }
+      
+      // Password can be empty for open networks, but max 63 chars
+      if (password.length() > 63) {
+        Serial.println("✗ Error: Password must be 0-63 characters");
+        return;
+      }
+      
+      // Parse autoconnect
+      bool autoConnect = (autoConnectStr.equalsIgnoreCase("yes") || 
+                         autoConnectStr.equalsIgnoreCase("true") || 
+                         autoConnectStr == "1");
+      
+      // Create configuration
+      strncpy(config.ssid, ssid.c_str(), sizeof(config.ssid) - 1);
+      config.ssid[sizeof(config.ssid) - 1] = '\0';
+      strncpy(config.password, password.c_str(), sizeof(config.password) - 1);
+      config.password[sizeof(config.password) - 1] = '\0';
+      config.autoConnect = autoConnect;
+      config.isValid = true;
+      
+      if (saveStationConfig(config)) {
+        Serial.println("✓ Station configuration saved");
+        printStationConfig(config);
+      } else {
+        Serial.println("✗ Failed to save station configuration");
+      }
+    }
+  }
+  else if (command == "station load") {
+    StationConfig config;
+    if (loadStationConfig(config)) {
+      Serial.println("✓ Loaded saved station configuration:");
+      printStationConfig(config);
+      Serial.println("\nUse 'mode station' then 'connect <ssid> <password>' to connect,");
+      Serial.println("or restart device to auto-connect.");
+    } else {
+      Serial.println("✗ No saved station configuration found");
+    }
+  }
+  else if (command == "station show") {
+    if (hasStationConfig()) {
+      StationConfig config;
+      if (loadStationConfig(config)) {
+        Serial.println("Saved station configuration:");
+        printStationConfig(config);
+      }
+    } else {
+      Serial.println("No saved station configuration found");
+    }
+  }
+  else if (command == "station clear") {
+    if (clearStationConfig()) {
+      Serial.println("✓ Station configuration cleared");
+      Serial.println("  Device will not auto-connect on next boot");
+    } else {
+      Serial.println("✗ Failed to clear station configuration");
+    }
   }
   else if (command.startsWith("iperf ")) {
     executeIperfCommand(command);
@@ -355,10 +611,6 @@ void executeCommand(String command) {
   
   // Ensure command execution completion is logged and flushed
   Serial.flush(); // Force all output to be sent
-#ifdef USE_RTOS
-  // Give other tasks a chance to run
-  vTaskDelay(pdMS_TO_TICKS(1));
-#endif
 }
 
 // ==========================================
@@ -420,7 +672,6 @@ void executeResetCommand() {
 // ==========================================
 // DISPLAY FUNCTIONS
 // ==========================================
-#ifndef USE_RTOS
 void showPrompt() {
   String modeIcon;
   switch (currentMode) {
@@ -441,7 +692,6 @@ void showPrompt() {
   Serial.print(modeIcon + " ESP32> ");
   promptShown = true;
 }
-#endif
 
 void clearConsole() {
   // Send ANSI escape codes to clear screen and move cursor to top-left
@@ -472,9 +722,7 @@ void clearConsole() {
   Serial.println(modeText);
   Serial.println("==========================================\n");
   
-#ifndef USE_RTOS
   promptShown = false; // Will trigger new prompt display (legacy mode)
-#endif
 }
 
 void printHelp() {
@@ -493,9 +741,19 @@ void printHelp() {
   Serial.println("│ scan info <id>  │ Show detailed info for network ID    │");
   Serial.println("│ connect <s> <p> │ Connect to network (station mode)    │");
   Serial.println("│ disconnect      │ Disconnect from network (station)    │");
+  Serial.println("│ station save    │ Save current WiFi connection         │");
+  Serial.println("│ station save .. │ Save custom WiFi network [auto]      │");
+  Serial.println("│ station load    │ Load saved WiFi credentials          │");
+  Serial.println("│ station show    │ Show saved station config            │");
+  Serial.println("│ station clear   │ Clear saved WiFi credentials         │");
   Serial.println("│ status          │ Show current status                  │");
   Serial.println("│ ap info         │ Show AP details (when in AP mode)    │");
   Serial.println("│ ap clients      │ List connected clients (AP mode)     │");
+  Serial.println("│ ap save         │ Save current AP config (auto-start)  │");
+  Serial.println("│ ap save <s> <p> │ Save custom AP config [ch] [auto]    │");
+  Serial.println("│ ap load         │ Load & apply saved AP config         │");
+  Serial.println("│ ap show         │ Show saved or default AP config      │");
+  Serial.println("│ ap clear        │ Clear saved AP config (no auto)      │");
   Serial.println("│ qr              │ Show AP connection QR code (AP mode) │");
   Serial.println("│ deauth <id/mac> │ Disconnect by ID or MAC (AP mode)    │");
   Serial.println("│ deauth all      │ Disconnect all clients (AP mode)     │");
@@ -845,3 +1103,4 @@ void printWebServerHelp() {
   Serial.println();
 }
 #endif
+

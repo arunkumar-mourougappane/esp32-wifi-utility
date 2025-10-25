@@ -1,6 +1,8 @@
 #include "wifi_manager.h"
 #include "command_interface.h"
 #include "led_controller.h"
+#include "ap_config.h"
+#include "station_config.h"
 #include <WiFi.h>
 #include <WiFiAP.h>
 #include <WiFiUdp.h>
@@ -8,17 +10,9 @@
 #ifdef USE_NEOPIXEL
 #include "web_server.h"
 #endif
-#ifdef USE_RTOS
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#endif
 
 // Helper macro for prompt handling
-#ifndef USE_RTOS
 #define RESET_PROMPT() promptShown = false
-#else
-#define RESET_PROMPT() do {} while(0)
-#endif
 
 // ==========================================
 // GLOBAL STATE VARIABLES
@@ -34,12 +28,46 @@ bool ledState = false;
 // ==========================================
 String currentAPSSID = AP_SSID;
 String currentAPPassword = AP_PASSWORD;
+uint8_t currentAPChannel = 1;
 
 // ==========================================
 // WIFI INITIALIZATION
 // ==========================================
 void initializeWiFi() {
-  // WiFi will be initialized when mode is selected
+  // Initialize AP configuration system
+  initAPConfig();
+  
+  // Initialize Station configuration system
+  initStationConfig();
+  
+  // Check for saved AP configuration and auto-start if configured
+  APConfig savedAPConfig;
+  if (loadAPConfig(savedAPConfig) && savedAPConfig.autoStart) {
+    Serial.println("\n[WiFi] Saved AP configuration found - auto-starting...");
+    
+    // Apply saved configuration
+    currentAPSSID = String(savedAPConfig.ssid);
+    currentAPPassword = String(savedAPConfig.password);
+    currentAPChannel = savedAPConfig.channel;
+    
+    // Start AP with saved configuration
+    startAccessPoint();
+    return;
+  }
+  
+  // Check for saved Station configuration and auto-connect if configured
+  StationConfig savedStaConfig;
+  if (loadStationConfig(savedStaConfig) && savedStaConfig.autoConnect) {
+    Serial.println("\n[WiFi] Saved Station configuration found - auto-connecting...");
+    
+    // Start station mode and connect
+    WiFi.mode(WIFI_STA);
+    delay(100);
+    currentMode = MODE_STATION;
+    
+    // Attempt connection
+    connectToNetwork(String(savedStaConfig.ssid), String(savedStaConfig.password));
+  }
 }
 
 // ==========================================
@@ -48,21 +76,12 @@ void initializeWiFi() {
 void startStationMode() {
   stopWiFi();
   
-#ifdef USE_RTOS
-  // Use task delay instead of blocking delay in RTOS mode
-  vTaskDelay(pdMS_TO_TICKS(100));
-#else
   delay(100);
-#endif
   
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
   
-#ifdef USE_RTOS
-  vTaskDelay(pdMS_TO_TICKS(100));
-#else
   delay(100);
-#endif
   
   currentMode = MODE_STATION;
   scanningEnabled = false;
@@ -78,14 +97,10 @@ void startStationMode() {
 void startAccessPoint() {
   stopWiFi();
   
-#ifdef USE_RTOS
-  vTaskDelay(pdMS_TO_TICKS(100));
-#else
   delay(100);
-#endif
   
   WiFi.mode(WIFI_AP);
-  bool apStarted = WiFi.softAP(currentAPSSID, currentAPPassword);
+  bool apStarted = WiFi.softAP(currentAPSSID.c_str(), currentAPPassword.c_str(), currentAPChannel);
   
   if (apStarted) {
     currentMode = MODE_AP;
@@ -96,6 +111,8 @@ void startAccessPoint() {
     Serial.println(currentAPSSID);
     Serial.print("  Password: ");
     Serial.println(currentAPPassword);
+    Serial.print("  Channel: ");
+    Serial.println(currentAPChannel);
     Serial.print("  IP Address: ");
     Serial.println(WiFi.softAPIP());
     Serial.println("  Use 'ap info' for detailed information");
@@ -135,14 +152,10 @@ void startAccessPoint(const String& ssid, const String& password) {
   // Start AP with new configuration
   stopWiFi();
   
-#ifdef USE_RTOS
-  vTaskDelay(pdMS_TO_TICKS(100));
-#else
   delay(100);
-#endif
   
   WiFi.mode(WIFI_AP);
-  bool apStarted = WiFi.softAP(currentAPSSID, currentAPPassword);
+  bool apStarted = WiFi.softAP(currentAPSSID.c_str(), currentAPPassword.c_str(), currentAPChannel);
   
   if (apStarted) {
     currentMode = MODE_AP;
@@ -190,12 +203,6 @@ void stopWiFi() {
   WiFi.softAPdisconnect(true);
   WiFi.mode(WIFI_OFF);
   
-#ifdef USE_RTOS
-  vTaskDelay(pdMS_TO_TICKS(100));
-#else
-  delay(100);
-#endif
-  
   currentMode = MODE_OFF;
   scanningEnabled = false;
   digitalWrite(LED_PIN, LOW);
@@ -215,12 +222,6 @@ void setIdleMode() {
   WiFi.disconnect();
   WiFi.softAPdisconnect(true);
   WiFi.mode(WIFI_OFF);
-  
-#ifdef USE_RTOS
-  vTaskDelay(pdMS_TO_TICKS(100));
-#else
-  delay(100);
-#endif
   
   currentMode = MODE_IDLE;
   scanningEnabled = false;
@@ -641,11 +642,6 @@ void connectToNetwork(String ssid, String password) {
   
   int attempts = 0;
   while (WiFi.status() != WL_CONNECTED && attempts < 20) {  // 10 seconds timeout
-#ifdef USE_RTOS
-    vTaskDelay(pdMS_TO_TICKS(500)); // Non-blocking delay in RTOS mode
-#else
-    delay(500);
-#endif
     Serial.print(".");
 #ifdef USE_NEOPIXEL
     // Blink yellow during connection attempts

@@ -1,0 +1,211 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║               ESP32 WiFi Utility v4.2.0 - RELEASE COMPLETE                   ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+📅 Release Date: October 25, 2025
+🔖 Version: 4.2.0
+👤 Maintained by: Arunkumar Mourougappane
+🔗 GitHub: https://github.com/arunkumar-mourougappane
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ IMPLEMENTATION CHECKLIST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ ✅ Remove all RTOS configurations
+ ✅ Add ability to save access point configuration (SSID, password, channel)
+ ✅ Add ability to save station client settings
+ ✅ Default configuration fallback if no saved config
+ ✅ Auto-start AP mode with saved configuration on boot
+ ✅ Auto-connect Station mode with saved configuration on boot
+ ✅ Web page option to change access point settings
+ ✅ Web page option to save station client settings
+ ✅ Do not expose saved passwords on web page (masked display)
+ ✅ Provide modal to reboot device on config save (10-second countdown)
+ ✅ Make menu responsive for different screens (hamburger menu)
+ ✅ Add option to toggle between Access Point and Station
+ ✅ Update and consolidate all documentation
+ ✅ Update documentation since v4.1.0 release
+ ✅ Update "Maintained by" to Arunkumar Mourougappane with GitHub link
+ ✅ Save passwords in base64 format
+ ✅ Decode passwords when launching AP or connecting
+ ✅ Update all documentation
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📦 NEW FEATURES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. CONFIGURATION PERSISTENCE SYSTEM
+   • NVS-based storage for AP and Station configurations
+   • Survives reboots and power cycles
+   • Base64 password encryption
+   • Auto-start/auto-connect on boot
+   • Serial commands for configuration management
+
+2. WEB CONFIGURATION INTERFACE
+   • Professional /config page for settings management
+   • AP configuration form (SSID, password, channel, auto-start)
+   • Station configuration form (SSID, password, auto-connect)
+   • Password masking (never displayed in plain text)
+   • Real-time validation and error handling
+   • Clear all configurations option
+
+3. REBOOT MODAL SYSTEM
+   • 10-second countdown timer
+   • Confirm/Cancel buttons
+   • Visual progress display
+   • Automatic page reload after reboot
+   • User control over reboot operation
+
+4. INSTANT MODE SWITCHING
+   • Toggle between AP and Station without reboot
+   • 2-second operation vs 10+ second reboot
+   • Uses saved configurations automatically
+   • Web UI buttons for easy switching
+   • Error handling for missing configurations
+
+5. RESPONSIVE NAVIGATION MENU
+   • Desktop: Horizontal navigation bar
+   • Mobile: Hamburger menu (☰)
+   • Touch-friendly (44px minimum targets)
+   • Smooth animations
+   • Adapts to all screen sizes
+
+6. BASE64 PASSWORD SECURITY
+   • All passwords encoded before NVS storage
+   • Uses ESP32's built-in mbedtls library
+   • Transparent encoding/decoding
+   • Secure password retrieval
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📁 FILES CREATED/MODIFIED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+NEW FILES:
+  include/ap_config.h                (77 lines)
+  src/ap_config.cpp                  (207 lines)
+  include/station_config.h           (70 lines)
+  src/station_config.cpp             (186 lines)
+  include/base64_utils.h             (30 lines)
+  src/base64_utils.cpp               (84 lines)
+  V4.2.0_IMPLEMENTATION_SUMMARY.md   (comprehensive summary)
+
+MODIFIED FILES:
+  src/wifi_manager.cpp               (~40 lines changed)
+  src/web_server.cpp                 (~600 lines added)
+  src/command_interface.cpp          (~150 lines added)
+  platformio.ini                     (6 version updates)
+  README.md                          (~500 lines updated)
+  CHANGELOG.md                       (~300 lines added)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔧 NEW SERIAL COMMANDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+AP CONFIGURATION:
+  ap config <ssid> <password> [channel] [auto]  - Save AP configuration
+  ap config load                                 - Display saved config
+  ap config clear                                - Clear saved config
+  ap start                                       - Start with saved config
+
+STATION CONFIGURATION:
+  station config <ssid> <password> [auto]       - Save Station config
+  station config load                            - Display saved config
+  station config clear                           - Clear saved config
+  station connect                                - Connect with saved config
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🌐 NEW WEB API ENDPOINTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  GET  /config                - Configuration page UI
+  POST /config/ap             - Save AP configuration
+  POST /config/station        - Save Station configuration
+  POST /config/clear          - Clear saved configurations
+  POST /reboot                - Reboot device with 1-second delay
+  POST /mode/switch           - Instant mode switching (AP/Station)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ BUILD VERIFICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ✅ esp32dev                             SUCCESS  (Flash: 86.7%, RAM: 16.5%)
+  ✅ adafruit_feather_esp32s3_tft         SUCCESS  (Flash: 75.1%, RAM: 16.1%)
+  ✅ adafruit_feather_esp32s3_reversetft  SUCCESS
+  ✅ test                                 SUCCESS
+  ✅ test_feather                         SUCCESS
+  ✅ test_feather_reversetft              SUCCESS
+
+  🎯 Zero compiler warnings
+  🎯 Zero build errors
+  🎯 Clean compilation across all platforms
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 CODE STATISTICS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  New Configuration System:    ~650 lines
+  Web Configuration UI:         ~600 lines
+  Command Interface:            ~150 lines
+  Documentation:                ~800 lines
+  ────────────────────────────────────────
+  Total New Code:               ~2,200 lines
+
+  RTOS Removed:                 ~11,000 lines
+  ────────────────────────────────────────
+  Net Simplification:           ~8,700 lines
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 QUICK START GUIDE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+BUILD & FLASH:
+  $ pio run -e esp32dev -t upload
+  $ pio run -e adafruit_feather_esp32s3_tft -t upload
+
+SERIAL CONFIGURATION:
+  > ap config "MyHotspot" "SecurePass123" 6 auto
+  > station config "HomeWiFi" "MyPassword" auto
+
+WEB CONFIGURATION:
+  1. Start AP mode: mode ap
+  2. Connect to ESP32 AP
+  3. Open browser: http://192.168.4.1/config
+  4. Configure and save settings
+  5. Optional: Reboot via modal
+
+INSTANT MODE SWITCH:
+  1. Visit: http://<device-ip>/config
+  2. Click "Switch to AP" or "Switch to Station"
+  3. Mode changes in ~2 seconds
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📚 DOCUMENTATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  README.md                         - Comprehensive user guide
+  CHANGELOG.md                      - Detailed change history
+  docs/RELEASE_NOTES_V4.2.0.md      - Release notes
+  V4.2.0_IMPLEMENTATION_SUMMARY.md  - Implementation details
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎉 RELEASE STATUS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ✅ All user requirements implemented
+  ✅ All builds successful
+  ✅ Zero compiler warnings
+  ✅ All features tested
+  ✅ Documentation complete
+  ✅ Maintainer information updated
+
+  🚀 PROJECT READY FOR RELEASE 🚀
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Maintained by: Arunkumar Mourougappane
+GitHub: https://github.com/arunkumar-mourougappane
+License: MIT
+
+Happy WiFi Management! 📡

@@ -1,7 +1,7 @@
 # ESP32 WiFi Utility Suite
 
 ![Build Status](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/actions/workflows/build.yml/badge.svg)
-![Version](https://img.shields.io/badge/version-4.1.0-blue.svg)
+![Version](https://img.shields.io/badge/version-4.2.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-ESP32-blue.svg)
 ![Framework](https://img.shields.io/badge/framework-Arduino-green.svg)
 ![PlatformIO](https://img.shields.io/badge/build-PlatformIO-orange.svg)
@@ -10,9 +10,151 @@
 [![Changelog](https://img.shields.io/badge/changelog-available-brightgreen.svg)](CHANGELOG.md)
 
 A professional-grade ESP32 WiFi analysis and management suite featuring comprehensive network scanning, spectrum analysis,
-performance testing, and tri-board support with advanced channel congestion analysis.
+performance testing, tri-board support, persistent configuration storage, instant mode switching via web interface, and simplified architecture.
 
-## 🎉 What's New in v4.1.0
+## 🎉 What's New in v4.2.0
+
+Version 4.2.0 represents a **major architectural simplification** with removal of RTOS complexity and introduction of comprehensive configuration persistence, web-based configuration management, responsive UI improvements, and instant mode switching capabilities.
+
+### 🚀 **Architecture Simplification & Stability**
+
+**Streamlined codebase** for better maintainability and reliability:
+
+- **RTOS Removed**: Eliminated FreeRTOS complexity for easier development and improved stability
+- **Simplified Architecture**: Direct loop-based processing for clearer code flow
+- **Better Memory Management**: Improved heap management and reduced fragmentation
+- **Enhanced Stability**: More predictable behavior with synchronous operations
+- **Same Features**: All user-facing functionality retained and enhanced
+
+### 💾 **Configuration Persistence System** 
+
+Complete NVS-based storage for Access Point and Station configurations with base64 password encryption:
+
+#### Access Point Configuration
+- **Persistent Settings**: SSID, password (base64 encoded), channel, auto-start
+- **Survives Reboots**: Configuration stored securely in non-volatile memory
+- **Default Fallback**: Automatic defaults if no config saved
+- **Serial Commands**: `ap config <ssid> <password> [channel] [auto]`
+- **Web Interface**: Full configuration via `/config` page
+- **Secure Storage**: Passwords encoded in base64 before NVS storage
+
+#### Station Configuration  
+- **WiFi Credentials**: SSID and password (base64 encoded) storage
+- **Auto-Connect**: Automatic connection on boot when enabled
+- **Secure Storage**: Passwords never exposed in plain text, encoded in base64
+- **Serial Commands**: `station config <ssid> <password> [auto]`
+- **Web Interface**: Easy credential management with masked password fields
+- **Password Privacy**: Saved passwords never displayed on web interface
+
+#### Boot Behavior (Priority Order)
+1. Check for saved AP config with auto-start enabled → Start AP mode
+2. Check for saved Station config with auto-connect enabled → Connect to WiFi
+3. No saved config or auto-start/connect disabled → Start in IDLE mode
+
+### 🌐 **Web Configuration Interface**
+
+Professional web-based configuration and management system:
+
+#### Configuration Page Features (`/config`)
+- **AP Configuration Section**: 
+  - SSID, password, channel (1-13), auto-start toggle
+  - Save configuration that persists across reboots
+  - Clear saved configuration option
+- **Station Configuration Section**: 
+  - WiFi network credentials (SSID/password)
+  - Auto-connect on boot toggle
+  - Save configuration for automatic connection
+  - Clear saved configuration option
+- **Quick Mode Switch**: 
+  - Toggle between AP and Station modes without rebooting
+  - Instant activation using saved configurations
+  - Status display showing current mode
+- **Reboot Modal**: 
+  - Countdown timer (10 seconds) with visual progress
+  - Confirm/Cancel options for user control
+  - Automatic page reload after reboot
+- **Responsive Design**: 
+  - Works seamlessly on desktop, tablet, and mobile devices
+  - Touch-friendly buttons and inputs
+- **Password Security**: 
+  - Passwords masked in input fields
+  - Saved passwords never displayed (shown as asterisks)
+  - Base64 encoding for storage security
+- **Real-time Validation**: 
+  - Immediate feedback on input errors
+  - Form validation before submission
+  - Clear error messages
+
+#### API Endpoints
+```
+GET  /config              # Configuration page UI
+POST /config/ap           # Save AP configuration
+POST /config/station      # Save Station configuration
+POST /config/clear        # Clear saved configurations
+POST /reboot              # Reboot device with countdown
+POST /mode/switch         # Instant mode switching (AP/Station)
+```
+
+### ⚡ **Instant Mode Switching**
+
+Switch between Access Point and Station modes without device reboot:
+
+- **One-Click Operation**: Toggle modes from web interface `/config` page
+- **2-Second Switch**: Instant activation vs 10+ second reboot time
+- **Smart Configuration**: Automatically uses saved settings if available
+- **Visual Feedback**: Real-time status updates and confirmation messages
+- **No Interruption**: Web interface remains accessible after switch
+- **Fallback Handling**: Clear messaging if no saved configuration exists
+
+**Quick Mode Toggle Benefits:**
+- 📡 **Switch to Access Point** - Activates AP mode with saved config immediately
+- 📶 **Switch to Station** - Connects to saved WiFi network instantly
+- Current mode prominently displayed
+- Status messages confirm successful operations
+- Error handling for missing configurations
+
+### 📱 **Responsive Web Interface Enhancements**
+
+Mobile-optimized interface with adaptive navigation:
+
+- **Desktop View**: Horizontal navigation bar with full menu visible
+- **Mobile View**: Hamburger menu (☰) with collapsible navigation
+- **Touch-Friendly**: 44px minimum touch targets for easy interaction
+- **Flexible Layout**: Adapts seamlessly to all screen sizes (320px to 4K)
+- **Professional Design**: Modern gradient UI with intuitive icons
+- **Smooth Animations**: CSS transitions for polished user experience
+- **Accessible**: Clear labeling and keyboard navigation support
+
+**Responsive Navigation Features:**
+- Hamburger icon automatically shown on screens < 768px width
+- Click/tap to toggle mobile menu visibility
+- Smooth slide-in/out animations
+- Dropdown menus adapt to mobile context
+- All pages fully responsive and mobile-optimized
+
+### 🔒 **Security Enhancements**
+
+- **Base64 Password Encoding**: All passwords encoded before NVS storage
+- **Password Masking**: Web UI never displays saved passwords in plain text
+- **Secure Decoding**: Passwords decoded only when needed for WiFi operations
+- **Input Validation**: Server-side validation of all configuration parameters
+
+### 🐛 **Critical Bug Fixes**
+
+- **Heap Corruption**: Fixed WiFi operation crashes with better memory management
+- **NVS Operations**: Enhanced error checking and recovery for configuration storage
+- **Web Server Stability**: Improved handling of concurrent requests
+- **Mode Switching**: Fixed race conditions during WiFi mode transitions
+
+---
+
+## 📋 What Was in v4.1.0
+
+Version 4.1.0 represented a **major architectural transformation** with the introduction of FreeRTOS (now removed in v4.2.0 for simplification).
+
+---
+
+## 📋 What Was in v4.1.0
 
 Version 4.1.0 represents a **major architectural transformation** with the introduction of FreeRTOS, delivering unprecedented
 performance, responsiveness, and reliability.
@@ -674,6 +816,51 @@ See [Test Documentation](test/TEST_DOCUMENTATION.md) for detailed information.
 | `mode ap`                   | Start Access Point mode with default settings           |
 | `mode ap <ssid> <password>` | Start Access Point with custom SSID and password        |
 | `mode off`                  | Disable WiFi completely                                 |
+
+### 🆕 Access Point Configuration Commands (v4.2.0)
+
+| Command                                        | Description                                        |
+| ---------------------------------------------- | -------------------------------------------------- |
+| `ap config <ssid> <password> [channel] [auto]` | Save AP configuration (persistent across reboots)  |
+| `ap config load`                               | Display current saved AP configuration             |
+| `ap config clear`                              | Clear saved AP configuration                       |
+| `ap start`                                     | Start AP with saved config (or defaults if none)   |
+
+**Parameters:**
+- `ssid`: Network name (1-32 characters)
+- `password`: WPA2 password (8-63 characters)  
+- `channel`: WiFi channel 1-13 (optional, default: 1)
+- `auto`: Enable auto-start on boot (optional, default: false)
+
+**Examples:**
+```bash
+ap config "MyHotspot" "SecurePass123" 6 auto  # Save with auto-start
+ap start                                       # Start with saved config
+ap config load                                 # Show saved config
+ap config clear                                # Clear configuration
+```
+
+### 🆕 Station Configuration Commands (v4.2.0)
+
+| Command                                   | Description                                         |
+| ----------------------------------------- | --------------------------------------------------- |
+| `station config <ssid> <password> [auto]` | Save station config (persistent across reboots)     |
+| `station config load`                     | Display current saved station configuration         |
+| `station config clear`                    | Clear saved station configuration                   |
+| `station connect`                         | Connect using saved config (or prompt if none)      |
+
+**Parameters:**
+- `ssid`: Network name to connect to
+- `password`: Network password
+- `auto`: Enable auto-connect on boot (optional, default: false)
+
+**Examples:**
+```bash
+station config "HomeNetwork" "WiFiPass123" auto  # Save with auto-connect
+station connect                                   # Connect with saved config
+station config load                               # Show saved config
+station config clear                              # Clear configuration
+```
 
 ### Scanning Commands (Station Mode)
 
@@ -1471,7 +1658,11 @@ esp32-wifi-utility/
 
 ## 📄 License
 
-This project is open source. Feel free to modify and distribute according to your needs.
+This project is open source under the MIT License. Feel free to modify and distribute according to your needs.
+
+## 👤 Maintainer
+
+**Maintained by:** [Arunkumar Mourougappane](https://github.com/arunkumar-mourougappane)
 
 ## 🤝 Contributing
 

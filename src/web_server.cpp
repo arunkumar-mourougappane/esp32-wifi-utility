@@ -4,6 +4,8 @@
 
 #include "wifi_manager.h"
 #include "ap_manager.h"
+#include "ap_config.h"
+#include "station_config.h"
 #include "channel_analyzer.h"
 #include "iperf_manager.h"
 #include "latency_analyzer.h"
@@ -123,28 +125,62 @@ h2{color:#764ba2;margin:30px 0 15px;font-size:1.5em;border-bottom:2px solid #667
 .network-details{color:#666;font-size:.9em}
 .signal-strength{font-size:1.5em;margin-left:20px}
 .footer{text-align:center;margin-top:30px;padding-top:20px;border-top:1px solid #e0e0e0;color:#666;font-size:.9em}
-.nav{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:20px 0;position:relative}
-.nav a{text-decoration:none;padding:10px 20px;background:#667eea;color:#fff;border-radius:5px;transition:all .3s}
+.nav{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:20px 0;position:relative;align-items:center}
+.nav>div{position:relative}
+.nav a{text-decoration:none;padding:10px 20px;background:#667eea;color:#fff;border-radius:5px;transition:all .3s;display:block;white-space:nowrap}
 .nav a:hover{background:#764ba2;transform:translateY(-2px);box-shadow:0 4px 8px rgba(0,0,0,.2)}
 .dropdown{position:relative;display:inline-block}
-.dropdown-content{display:none;position:absolute;background-color:#667eea;min-width:200px;box-shadow:0 8px 16px rgba(0,0,0,.3);z-index:1;border-radius:5px;margin-top:5px}
+.dropdown-content{display:none;position:absolute;background-color:#667eea;min-width:200px;box-shadow:0 8px 16px rgba(0,0,0,.3);z-index:1000;border-radius:5px;margin-top:5px;left:0}
 .dropdown-content a{color:#fff;padding:12px 16px;text-decoration:none;display:block;border-radius:0;margin:0}
 .dropdown-content a:first-child{border-radius:5px 5px 0 0}
 .dropdown-content a:last-child{border-radius:0 0 5px 5px}
 .dropdown-content a:hover{background-color:#764ba2;transform:none}
 .dropdown:hover .dropdown-content{display:block}
 .dropdown>a::after{content:' ▼';font-size:.8em}
+.hamburger{display:none;flex-direction:column;cursor:pointer;padding:10px;background:#667eea;border-radius:5px;position:absolute;right:0;top:0;z-index:1001}
+.hamburger span{width:25px;height:3px;background:#fff;margin:3px 0;border-radius:2px;transition:all .3s}
+.hamburger.active span:nth-child(1){transform:rotate(45deg) translate(7px,7px)}
+.hamburger.active span:nth-child(2){opacity:0}
+.hamburger.active span:nth-child(3){transform:rotate(-45deg) translate(7px,-7px)}
+.nav-items{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:100%}
 .progress-backdrop{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:9999;justify-content:center;align-items:center}
 .progress-container{background:#fff;padding:30px;border-radius:15px;box-shadow:0 10px 40px rgba(0,0,0,.3);text-align:center;min-width:300px;max-width:500px}
 .progress-title{color:#667eea;font-size:1.5em;margin-bottom:20px;font-weight:bold}
 .spinner{border:4px solid #f3f3f3;border-top:4px solid #667eea;border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin:20px auto}
 @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-@media(max-width:768px){.container{padding:15px}h1{font-size:1.5em}.stat-grid{grid-template-columns:1fr}.dropdown-content{position:relative;margin-top:5px}.dropdown:hover .dropdown-content,.dropdown:focus-within .dropdown-content{display:block}}
+@media(max-width:768px){
+body{padding:10px}
+.container{padding:15px;border-radius:10px}
+h1{font-size:1.5em}
+h2{font-size:1.2em}
+.stat-grid{grid-template-columns:1fr}
+.hamburger{display:flex}
+.nav{padding-top:50px}
+.nav-items{display:none;flex-direction:column;width:100%;gap:5px}
+.nav-items.active{display:flex}
+.nav>div{width:100%}
+.nav a{padding:12px 15px;text-align:center}
+.dropdown{width:100%}
+.dropdown>a{width:100%}
+.dropdown-content{position:static;margin-top:5px;width:100%;box-shadow:none;background:#5a6dd8}
+.dropdown-content a{padding-left:30px}
+.dropdown:hover .dropdown-content,.dropdown:focus-within .dropdown-content{display:none}
+.dropdown.active .dropdown-content{display:block}
+.dropdown>a::after{float:right}
+}
+@media(min-width:769px) and (max-width:1024px){
+.container{padding:20px}
+.nav{gap:8px}
+.nav a{padding:8px 15px;font-size:0.9em}
+}
 </style>
 <script>
 function showProgress(t,m){const b=document.getElementById('progressBackdrop'),ti=document.getElementById('progressTitle'),me=document.getElementById('progressMessage');if(ti)ti.textContent=t;if(me)me.textContent=m;if(b)b.style.display='flex'}
 function hideProgress(){const b=document.getElementById('progressBackdrop');if(b)b.style.display='none'}
 function startScan(u,t,m){showProgress(t,m);window.location.href=u}
+function toggleMenu(){const hamburger=document.querySelector('.hamburger');const navItems=document.querySelector('.nav-items');hamburger.classList.toggle('active');navItems.classList.toggle('active')}
+function toggleDropdown(e){if(window.innerWidth<=768){e.preventDefault();const dropdown=e.target.closest('.dropdown');dropdown.classList.toggle('active')}}
+document.addEventListener('DOMContentLoaded',function(){const dropdownLinks=document.querySelectorAll('.dropdown>a');dropdownLinks.forEach(link=>{link.addEventListener('click',toggleDropdown)})})
 </script>
 </head>
 <body>
@@ -165,7 +201,7 @@ String generateHtmlFooter() {
 }
 
 // Generate common navigation menu - stored in PROGMEM
-const char NAV_MENU[] PROGMEM = "<div class=\"nav\"><div><a href=\"/\">🏠 Home</a></div><div><a href=\"/status\">📊 Status</a></div><div><a href=\"/scan\">🔍 Scan</a></div><div class=\"dropdown\"><a href=\"/analysis\">🔬 Analysis</a><div class=\"dropdown-content\"><a href=\"/analysis\">📊 Dashboard</a><a href=\"/iperf\">⚡ iPerf</a><a href=\"/latency\">📉 Latency</a><a href=\"/channel\">📡 Channel</a></div></div></div>";
+const char NAV_MENU[] PROGMEM = "<div class=\"nav\"><div class=\"hamburger\" onclick=\"toggleMenu()\"><span></span><span></span><span></span></div><div class=\"nav-items\"><div><a href=\"/\">🏠 Home</a></div><div><a href=\"/status\">📊 Status</a></div><div><a href=\"/scan\">🔍 Scan</a></div><div><a href=\"/config\">⚙️ Config</a></div><div class=\"dropdown\"><a href=\"/analysis\">🔬 Analysis</a><div class=\"dropdown-content\"><a href=\"/analysis\">📊 Dashboard</a><a href=\"/iperf\">⚡ iPerf</a><a href=\"/latency\">📉 Latency</a><a href=\"/channel\">📡 Channel</a></div></div></div></div>";
 
 String generateNav() {
     return FPSTR(NAV_MENU);
@@ -214,6 +250,12 @@ bool startWebServer() {
     webServer->on("/iperf/start", handleIperfStart);
     webServer->on("/iperf/stop", handleIperfStop);
     webServer->on("/iperf/results", handleIperfResults);
+    webServer->on("/config", handleConfig);
+    webServer->on("/config/ap", HTTP_POST, handleConfigAP);
+    webServer->on("/config/station", HTTP_POST, handleConfigStation);
+    webServer->on("/config/clear", HTTP_POST, handleConfigClear);
+    webServer->on("/reboot", HTTP_POST, handleReboot);
+    webServer->on("/mode/switch", HTTP_POST, handleModeSwitch);
     webServer->onNotFound(handleNotFound);
 
     // Start the server
@@ -2071,6 +2113,1033 @@ void handleLatencyStop() {
     // Redirect back to main latency page with stopped message
     webServer->sendHeader("Location", "/latency?stopped=1", true);
     webServer->send(302, "text/plain", "");
+}
+
+// ==========================================
+// CONFIGURATION HANDLERS
+// ==========================================
+
+void handleConfig() {
+    String html = HTML_HEADER;
+    
+    html += R"rawliteral(
+    <div class="header">
+        <h1>⚙️ Configuration</h1>
+        <p>Manage Access Point and Station Mode Settings</p>
+    </div>
+    )rawliteral";
+    
+    html += FPSTR(NAV_MENU);
+    
+    html += R"rawliteral(
+    <style>
+        .config-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .config-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4CAF50;
+        }
+        .config-header h2 {
+            margin: 0;
+            color: #333;
+        }
+        .config-status {
+            background: #f0f0f0;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .status-saved {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        .status-none {
+            color: #999;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        .form-group small {
+            color: #666;
+            font-size: 12px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .btn-save {
+            background: #4CAF50;
+            color: white;
+        }
+        .btn-save:hover {
+            background: #45a049;
+        }
+        .btn-clear {
+            background: #f44336;
+            color: white;
+        }
+        .btn-clear:hover {
+            background: #da190b;
+        }
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 10px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .checkbox-group input {
+            width: auto;
+            margin-right: 10px;
+        }
+        .mode-toggle-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .mode-toggle-section h3 {
+            margin: 0 0 15px 0;
+            color: white;
+        }
+        .toggle-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .mode-label {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 80px;
+            height: 40px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #4CAF50;
+            transition: .4s;
+            border-radius: 40px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 32px;
+            width: 32px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .toggle-slider {
+            background-color: #2196F3;
+        }
+        input:checked + .toggle-slider:before {
+            transform: translateX(40px);
+        }
+        .mode-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        .mode-btn {
+            padding: 10px 20px;
+            border: 2px solid white;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .mode-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .mode-btn.active {
+            background: white;
+            color: #667eea;
+        }
+    </style>
+    
+    <h1>⚙️ Configuration</h1>
+    )rawliteral";
+    
+    // Check for saved configurations
+    APConfig apConfig;
+    bool hasAP = loadAPConfig(apConfig);
+    
+    StationConfig staConfig;
+    bool hasStation = loadStationConfig(staConfig);
+    
+    // Get current WiFi mode
+    wifi_mode_t currentMode = WiFi.getMode();
+    String currentModeStr = "IDLE";
+    if (currentMode == WIFI_MODE_AP || currentMode == WIFI_MODE_APSTA) {
+        currentModeStr = "AP";
+    } else if (currentMode == WIFI_MODE_STA) {
+        currentModeStr = "Station";
+    }
+    
+    // Mode Toggle Section
+    html += R"rawliteral(
+    <div class="mode-toggle-section">
+        <h3>🔄 Quick Mode Switch</h3>
+        <p style="margin: 5px 0; font-size: 0.9em;">Current Mode: <strong id="currentMode">)rawliteral";
+    html += currentModeStr;
+    html += R"rawliteral(</strong></p>
+        
+        <div class="mode-buttons">
+            <button class="mode-btn" id="btnSwitchAP" onclick="switchMode('ap')">📡 Switch to Access Point</button>
+            <button class="mode-btn" id="btnSwitchStation" onclick="switchMode('station')">📶 Switch to Station</button>
+        </div>
+        
+        <div id="switchStatus" style="margin-top: 10px; font-size: 0.9em;"></div>
+    </div>
+    
+    <script>
+        function switchMode(mode) {
+            const statusDiv = document.getElementById('switchStatus');
+            const apBtn = document.getElementById('btnSwitchAP');
+            const staBtn = document.getElementById('btnSwitchStation');
+            
+            // Disable buttons
+            apBtn.disabled = true;
+            staBtn.disabled = true;
+            
+            statusDiv.innerHTML = '⏳ Switching to ' + (mode === 'ap' ? 'Access Point' : 'Station') + ' mode...';
+            
+            fetch('/mode/switch', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: 'mode=' + mode
+            })
+            .then(response => response.text())
+            .then(data => {
+                statusDiv.innerHTML = '✓ ' + data;
+                document.getElementById('currentMode').textContent = mode === 'ap' ? 'AP' : 'Station';
+                
+                // Re-enable buttons after 2 seconds
+                setTimeout(() => {
+                    apBtn.disabled = false;
+                    staBtn.disabled = false;
+                    statusDiv.innerHTML = '';
+                }, 2000);
+            })
+            .catch(error => {
+                statusDiv.innerHTML = '✗ Error: ' + error;
+                apBtn.disabled = false;
+                staBtn.disabled = false;
+            });
+        }
+    </script>
+    )rawliteral";
+    
+    // AP Configuration Section
+    html += R"rawliteral(
+    <div class="config-section">
+        <div class="config-header">
+            <h2>📡 Access Point Configuration</h2>
+        </div>
+        )rawliteral";
+    
+    if (hasAP) {
+        html += "<div class='config-status'>";
+        html += "<span class='status-saved'>✓ Saved Configuration</span><br>";
+        html += "SSID: <strong>" + String(apConfig.ssid) + "</strong><br>";
+        html += "Channel: <strong>" + String(apConfig.channel) + "</strong><br>";
+        html += "Auto-start: <strong>" + String(apConfig.autoStart ? "Yes" : "No") + "</strong>";
+        html += "</div>";
+    } else {
+        html += "<div class='config-status'><span class='status-none'>No saved configuration</span></div>";
+    }
+    
+    html += R"rawliteral(
+        <form action="/config/ap" method="POST">
+            <div class="form-group">
+                <label for="ap_ssid">SSID *</label>
+                <input type="text" id="ap_ssid" name="ssid" placeholder="Enter AP SSID" 
+                       maxlength="32" required )rawliteral";
+    if (hasAP) {
+        html += " value=\"" + String(apConfig.ssid) + "\"";
+    }
+    html += R"rawliteral(>
+                <small>1-32 characters</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="ap_password">Password *</label>
+                <input type="password" id="ap_password" name="password" 
+                       placeholder="Enter new password (8-63 chars)" minlength="8" maxlength="63">
+                <small>Leave empty to keep current password. 8-63 characters for new password.</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="ap_channel">Channel</label>
+                <select id="ap_channel" name="channel">
+    )rawliteral";
+    
+    for (int ch = 1; ch <= 13; ch++) {
+        html += "<option value=\"" + String(ch) + "\"";
+        if (hasAP && apConfig.channel == ch) {
+            html += " selected";
+        } else if (!hasAP && ch == 1) {
+            html += " selected";
+        }
+        html += ">Channel " + String(ch) + "</option>";
+    }
+    
+    html += R"rawliteral(
+                </select>
+            </div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="ap_autostart" name="autostart" value="1" )rawliteral";
+    if (!hasAP || apConfig.autoStart) {
+        html += " checked";
+    }
+    html += R"rawliteral(>
+                <label for="ap_autostart">Auto-start AP on boot</label>
+            </div>
+            
+            <div class="info-box">
+                <strong>ℹ️ Note:</strong> Auto-start has highest priority. If enabled, device will boot as AP.
+            </div>
+            
+            <div class="btn-group">
+                <button type="submit" class="btn btn-save">💾 Save AP Config</button>
+    )rawliteral";
+    
+    if (hasAP) {
+        html += R"rawliteral(
+                <button type="button" class="btn btn-clear" onclick="clearAPConfig()">🗑️ Clear Config</button>
+        )rawliteral";
+    }
+    
+    html += R"rawliteral(
+            </div>
+        </form>
+    </div>
+    )rawliteral";
+    
+    // Station Configuration Section
+    html += R"rawliteral(
+    <div class="config-section">
+        <div class="config-header">
+            <h2>📶 Station Configuration</h2>
+        </div>
+        )rawliteral";
+    
+    if (hasStation) {
+        html += "<div class='config-status'>";
+        html += "<span class='status-saved'>✓ Saved Configuration</span><br>";
+        html += "SSID: <strong>" + String(staConfig.ssid) + "</strong><br>";
+        html += "Auto-connect: <strong>" + String(staConfig.autoConnect ? "Yes" : "No") + "</strong>";
+        html += "</div>";
+    } else {
+        html += "<div class='config-status'><span class='status-none'>No saved configuration</span></div>";
+    }
+    
+    html += R"rawliteral(
+        <form action="/config/station" method="POST">
+            <div class="form-group">
+                <label for="sta_ssid">WiFi Network SSID *</label>
+                <input type="text" id="sta_ssid" name="ssid" placeholder="Enter WiFi SSID" 
+                       maxlength="32" required )rawliteral";
+    if (hasStation) {
+        html += " value=\"" + String(staConfig.ssid) + "\"";
+    }
+    html += R"rawliteral(>
+                <small>1-32 characters</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="sta_password">WiFi Password *</label>
+                <input type="password" id="sta_password" name="password" 
+                       placeholder="Enter new password (0-63 chars)" maxlength="63">
+                <small>Leave empty to keep current password. 0-63 characters for new password (empty for open network).</small>
+            </div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="sta_autoconnect" name="autoconnect" value="1" )rawliteral";
+    if (!hasStation || staConfig.autoConnect) {
+        html += " checked";
+    }
+    html += R"rawliteral(>
+                <label for="sta_autoconnect">Auto-connect on boot</label>
+            </div>
+            
+            <div class="warning-box">
+                <strong>⚠️ Priority:</strong> AP auto-start takes priority over Station auto-connect.
+                If both are enabled, device will boot as AP.
+            </div>
+            
+            <div class="btn-group">
+                <button type="submit" class="btn btn-save">💾 Save Station Config</button>
+    )rawliteral";
+    
+    if (hasStation) {
+        html += R"rawliteral(
+                <button type="button" class="btn btn-clear" onclick="clearStationConfig()">🗑️ Clear Config</button>
+        )rawliteral";
+    }
+    
+    html += R"rawliteral(
+            </div>
+        </form>
+    </div>
+    
+    <script>
+        function clearAPConfig() {
+            if (confirm('Are you sure you want to clear the AP configuration?')) {
+                fetch('/config/clear', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: 'type=ap'
+                })
+                .then(response => response.text())
+                .then(result => {
+                    alert('AP configuration cleared');
+                    location.reload();
+                })
+                .catch(error => {
+                    alert('Error clearing AP configuration');
+                });
+            }
+        }
+        
+        function clearStationConfig() {
+            if (confirm('Are you sure you want to clear the Station configuration?')) {
+                fetch('/config/clear', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: 'type=station'
+                })
+                .then(response => response.text())
+                .then(result => {
+                    alert('Station configuration cleared');
+                    location.reload();
+                })
+                .catch(error => {
+                    alert('Error clearing Station configuration');
+                });
+            }
+        }
+    </script>
+    )rawliteral";
+    
+    html += generateHtmlFooter();
+    webServer->send(200, "text/html", html);
+}
+
+void handleConfigAP() {
+    if (!webServer->hasArg("ssid")) {
+        webServer->send(400, "text/plain", "Missing SSID parameter");
+        return;
+    }
+    
+    String ssid = webServer->arg("ssid");
+    String password = webServer->arg("password");
+    String channelStr = webServer->arg("channel");
+    bool autoStart = webServer->hasArg("autostart");
+    
+    // Validate SSID
+    if (ssid.length() == 0 || ssid.length() > 32) {
+        webServer->send(400, "text/plain", "SSID must be 1-32 characters");
+        return;
+    }
+    
+    // Check if we're updating existing config
+    APConfig config;
+    bool hasExisting = loadAPConfig(config);
+    
+    // If password is empty and we have existing config, keep old password
+    if (password.length() == 0 && hasExisting) {
+        // Keep existing password
+        Serial.println("[Web Config] Keeping existing AP password");
+    } else {
+        // Validate new password
+        if (password.length() < 8 || password.length() > 63) {
+            webServer->send(400, "text/plain", "Password must be 8-63 characters");
+            return;
+        }
+        // Use new password
+        strncpy(config.password, password.c_str(), sizeof(config.password) - 1);
+        config.password[sizeof(config.password) - 1] = '\0';
+    }
+    
+    // Set SSID
+    strncpy(config.ssid, ssid.c_str(), sizeof(config.ssid) - 1);
+    config.ssid[sizeof(config.ssid) - 1] = '\0';
+    
+    // Set channel
+    int channel = channelStr.toInt();
+    if (channel < 1 || channel > 13) {
+        channel = 1;
+    }
+    config.channel = channel;
+    
+    // Set auto-start
+    config.autoStart = autoStart;
+    config.isValid = true;
+    
+    // Save configuration
+    if (saveAPConfig(config)) {
+        String html = HTML_HEADER;
+        html += R"rawliteral(
+        <div class="header">
+            <h1 style="color: #4CAF50;">✓ AP Configuration Saved</h1>
+        </div>
+        )rawliteral";
+        html += FPSTR(NAV_MENU);
+        html += R"rawliteral(
+        <style>
+            .modal {
+                display: none;
+                position: fixed;
+                z-index: 10000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0,0,0,0.6);
+                animation: fadeIn 0.3s;
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            .modal-content {
+                background-color: white;
+                margin: 10% auto;
+                padding: 30px;
+                border-radius: 15px;
+                width: 90%;
+                max-width: 500px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                animation: slideIn 0.3s;
+            }
+            @keyframes slideIn {
+                from { transform: translateY(-50px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+            .modal-header {
+                font-size: 1.5em;
+                color: #667eea;
+                margin-bottom: 20px;
+                text-align: center;
+            }
+            .modal-body {
+                color: #666;
+                line-height: 1.6;
+                margin-bottom: 25px;
+                text-align: center;
+            }
+            .modal-buttons {
+                display: flex;
+                gap: 10px;
+                justify-content: center;
+            }
+            .modal-btn {
+                padding: 12px 30px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: bold;
+                transition: all 0.3s;
+            }
+            .modal-btn-primary {
+                background: #4CAF50;
+                color: white;
+            }
+            .modal-btn-primary:hover {
+                background: #45a049;
+            }
+            .modal-btn-secondary {
+                background: #ddd;
+                color: #333;
+            }
+            .modal-btn-secondary:hover {
+                background: #ccc;
+            }
+            .countdown {
+                font-size: 1.2em;
+                font-weight: bold;
+                color: #667eea;
+                margin: 10px 0;
+            }
+        </style>
+        
+        <div style="text-align: center; padding: 40px;">
+            <p style="font-size: 16px; color: #666;">
+                SSID: <strong>)rawliteral" + ssid + R"rawliteral(</strong><br>
+                Channel: <strong>)rawliteral" + String(channel) + R"rawliteral(</strong><br>
+                Auto-start: <strong>)rawliteral" + String(autoStart ? "Yes" : "No") + R"rawliteral(</strong>
+            </p>
+            <p style="margin-top: 30px;">
+                <button onclick="showRebootModal()" style="padding: 12px 30px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: bold; margin-right: 10px;">🔄 Reboot Device</button>
+                <a href="/config" style="padding: 12px 30px; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px; display: inline-block;">← Back to Configuration</a>
+            </p>
+        </div>
+        
+        <!-- Reboot Modal -->
+        <div id="rebootModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">🔄 Reboot Device</div>
+                <div class="modal-body">
+                    <p>Configuration has been saved successfully.</p>
+                    <p>Do you want to reboot the device now to apply the changes?</p>
+                    <div class="countdown" id="countdown" style="display: none;">Rebooting in <span id="countdownValue">3</span> seconds...</div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="modal-btn modal-btn-primary" onclick="rebootDevice()">Yes, Reboot Now</button>
+                    <button class="modal-btn modal-btn-secondary" onclick="closeModal()">No, Later</button>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+            function showRebootModal() {
+                document.getElementById('rebootModal').style.display = 'block';
+            }
+            
+            function closeModal() {
+                document.getElementById('rebootModal').style.display = 'none';
+            }
+            
+            function rebootDevice() {
+                // Disable buttons
+                const buttons = document.querySelectorAll('.modal-btn');
+                buttons.forEach(btn => btn.disabled = true);
+                
+                // Show countdown
+                document.getElementById('countdown').style.display = 'block';
+                document.querySelector('.modal-body p:last-of-type').style.display = 'none';
+                
+                let count = 3;
+                const countdownEl = document.getElementById('countdownValue');
+                
+                const countdown = setInterval(() => {
+                    count--;
+                    countdownEl.textContent = count;
+                    if (count <= 0) {
+                        clearInterval(countdown);
+                        countdownEl.textContent = 'Rebooting...';
+                    }
+                }, 1000);
+                
+                // Send reboot request
+                fetch('/reboot', { method: 'POST' })
+                    .then(() => {
+                        setTimeout(() => {
+                            document.querySelector('.modal-body').innerHTML = 
+                                '<p>Device is rebooting...</p>' +
+                                '<p>Please wait 10 seconds and reconnect.</p>' +
+                                '<p style="font-size: 0.9em; color: #999; margin-top: 20px;">This page will close automatically.</p>';
+                            setTimeout(() => {
+                                window.close();
+                                window.location.href = '/';
+                            }, 10000);
+                        }, 3000);
+                    })
+                    .catch(error => {
+                        document.querySelector('.modal-body').innerHTML = 
+                            '<p style="color: #f44336;">Error initiating reboot.</p>' +
+                            '<p>Please manually reboot the device.</p>';
+                        buttons.forEach(btn => btn.disabled = false);
+                    });
+            }
+            
+            // Close modal when clicking outside
+            window.onclick = function(event) {
+                const modal = document.getElementById('rebootModal');
+                if (event.target == modal) {
+                    closeModal();
+                }
+            }
+        </script>
+        )rawliteral";
+        html += generateHtmlFooter();
+        webServer->send(200, "text/html", html);
+    } else {
+        webServer->send(500, "text/plain", "Failed to save configuration");
+    }
+}
+
+void handleConfigStation() {
+    if (!webServer->hasArg("ssid")) {
+        webServer->send(400, "text/plain", "Missing SSID parameter");
+        return;
+    }
+    
+    String ssid = webServer->arg("ssid");
+    String password = webServer->arg("password");
+    bool autoConnect = webServer->hasArg("autoconnect");
+    
+    // Validate SSID
+    if (ssid.length() == 0 || ssid.length() > 32) {
+        webServer->send(400, "text/plain", "SSID must be 1-32 characters");
+        return;
+    }
+    
+    // Check if we're updating existing config
+    StationConfig config;
+    bool hasExisting = loadStationConfig(config);
+    
+    // If password is empty and we have existing config, keep old password
+    if (password.length() == 0 && hasExisting) {
+        // Keep existing password
+        Serial.println("[Web Config] Keeping existing Station password");
+    } else {
+        // Validate new password (can be empty for open networks)
+        if (password.length() > 63) {
+            webServer->send(400, "text/plain", "Password must be 0-63 characters");
+            return;
+        }
+        // Use new password
+        strncpy(config.password, password.c_str(), sizeof(config.password) - 1);
+        config.password[sizeof(config.password) - 1] = '\0';
+    }
+    
+    // Set SSID
+    strncpy(config.ssid, ssid.c_str(), sizeof(config.ssid) - 1);
+    config.ssid[sizeof(config.ssid) - 1] = '\0';
+    
+    // Set auto-connect
+    config.autoConnect = autoConnect;
+    config.isValid = true;
+    
+    // Save configuration
+    if (saveStationConfig(config)) {
+        String html = HTML_HEADER;
+        html += R"rawliteral(
+        <div class="header">
+            <h1 style="color: #4CAF50;">✓ Station Configuration Saved</h1>
+        </div>
+        )rawliteral";
+        html += FPSTR(NAV_MENU);
+        html += R"rawliteral(
+        <style>
+            .modal {
+                display: none;
+                position: fixed;
+                z-index: 10000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0,0,0,0.6);
+                animation: fadeIn 0.3s;
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            .modal-content {
+                background-color: white;
+                margin: 10% auto;
+                padding: 30px;
+                border-radius: 15px;
+                width: 90%;
+                max-width: 500px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                animation: slideIn 0.3s;
+            }
+            @keyframes slideIn {
+                from { transform: translateY(-50px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+            .modal-header {
+                font-size: 1.5em;
+                color: #667eea;
+                margin-bottom: 20px;
+                text-align: center;
+            }
+            .modal-body {
+                color: #666;
+                line-height: 1.6;
+                margin-bottom: 25px;
+                text-align: center;
+            }
+            .modal-buttons {
+                display: flex;
+                gap: 10px;
+                justify-content: center;
+            }
+            .modal-btn {
+                padding: 12px 30px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: bold;
+                transition: all 0.3s;
+            }
+            .modal-btn-primary {
+                background: #4CAF50;
+                color: white;
+            }
+            .modal-btn-primary:hover {
+                background: #45a049;
+            }
+            .modal-btn-secondary {
+                background: #ddd;
+                color: #333;
+            }
+            .modal-btn-secondary:hover {
+                background: #ccc;
+            }
+            .countdown {
+                font-size: 1.2em;
+                font-weight: bold;
+                color: #667eea;
+                margin: 10px 0;
+            }
+        </style>
+        
+        <div style="text-align: center; padding: 40px;">
+            <p style="font-size: 16px; color: #666;">
+                SSID: <strong>)rawliteral" + ssid + R"rawliteral(</strong><br>
+                Auto-connect: <strong>)rawliteral" + String(autoConnect ? "Yes" : "No") + R"rawliteral(</strong>
+            </p>
+            <p style="margin-top: 30px;">
+                <button onclick="showRebootModal()" style="padding: 12px 30px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: bold; margin-right: 10px;">🔄 Reboot Device</button>
+                <a href="/config" style="padding: 12px 30px; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px; display: inline-block;">← Back to Configuration</a>
+            </p>
+        </div>
+        
+        <!-- Reboot Modal -->
+        <div id="rebootModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">🔄 Reboot Device</div>
+                <div class="modal-body">
+                    <p>Configuration has been saved successfully.</p>
+                    <p>Do you want to reboot the device now to apply the changes?</p>
+                    <div class="countdown" id="countdown" style="display: none;">Rebooting in <span id="countdownValue">3</span> seconds...</div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="modal-btn modal-btn-primary" onclick="rebootDevice()">Yes, Reboot Now</button>
+                    <button class="modal-btn modal-btn-secondary" onclick="closeModal()">No, Later</button>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+            function showRebootModal() {
+                document.getElementById('rebootModal').style.display = 'block';
+            }
+            
+            function closeModal() {
+                document.getElementById('rebootModal').style.display = 'none';
+            }
+            
+            function rebootDevice() {
+                // Disable buttons
+                const buttons = document.querySelectorAll('.modal-btn');
+                buttons.forEach(btn => btn.disabled = true);
+                
+                // Show countdown
+                document.getElementById('countdown').style.display = 'block';
+                document.querySelector('.modal-body p:last-of-type').style.display = 'none';
+                
+                let count = 3;
+                const countdownEl = document.getElementById('countdownValue');
+                
+                const countdown = setInterval(() => {
+                    count--;
+                    countdownEl.textContent = count;
+                    if (count <= 0) {
+                        clearInterval(countdown);
+                        countdownEl.textContent = 'Rebooting...';
+                    }
+                }, 1000);
+                
+                // Send reboot request
+                fetch('/reboot', { method: 'POST' })
+                    .then(() => {
+                        setTimeout(() => {
+                            document.querySelector('.modal-body').innerHTML = 
+                                '<p>Device is rebooting...</p>' +
+                                '<p>Please wait 10 seconds and reconnect.</p>' +
+                                '<p style="font-size: 0.9em; color: #999; margin-top: 20px;">This page will close automatically.</p>';
+                            setTimeout(() => {
+                                window.close();
+                                window.location.href = '/';
+                            }, 10000);
+                        }, 3000);
+                    })
+                    .catch(error => {
+                        document.querySelector('.modal-body').innerHTML = 
+                            '<p style="color: #f44336;">Error initiating reboot.</p>' +
+                            '<p>Please manually reboot the device.</p>';
+                        buttons.forEach(btn => btn.disabled = false);
+                    });
+            }
+            
+            // Close modal when clicking outside
+            window.onclick = function(event) {
+                const modal = document.getElementById('rebootModal');
+                if (event.target == modal) {
+                    closeModal();
+                }
+            }
+        </script>
+        )rawliteral";
+        html += generateHtmlFooter();
+        webServer->send(200, "text/html", html);
+    } else {
+        webServer->send(500, "text/plain", "Failed to save configuration");
+    }
+}
+
+void handleConfigClear() {
+    if (!webServer->hasArg("type")) {
+        webServer->send(400, "text/plain", "Missing type parameter");
+        return;
+    }
+    
+    String type = webServer->arg("type");
+    
+    if (type == "ap") {
+        if (clearAPConfig()) {
+            webServer->send(200, "text/plain", "AP configuration cleared");
+        } else {
+            webServer->send(500, "text/plain", "Failed to clear AP configuration");
+        }
+    } else if (type == "station") {
+        if (clearStationConfig()) {
+            webServer->send(200, "text/plain", "Station configuration cleared");
+        } else {
+            webServer->send(500, "text/plain", "Failed to clear Station configuration");
+        }
+    } else {
+        webServer->send(400, "text/plain", "Invalid type parameter");
+    }
+}
+
+void handleReboot() {
+    Serial.println("[Web] Reboot requested via web interface");
+    
+    webServer->send(200, "text/plain", "Rebooting device...");
+    
+    // Give time for response to be sent
+    delay(100);
+    
+    Serial.println("[Web] Rebooting device in 1 second...");
+    delay(1000);
+    
+    ESP.restart();
+}
+
+void handleModeSwitch() {
+    if (!webServer->hasArg("mode")) {
+        webServer->send(400, "text/plain", "Missing mode parameter");
+        return;
+    }
+    
+    String mode = webServer->arg("mode");
+    
+    if (mode == "ap") {
+        // Switch to Access Point mode
+        Serial.println("[Web] Switching to Access Point mode");
+        
+        // Check if we have saved AP config
+        APConfig config;
+        if (loadAPConfig(config)) {
+            // Use saved config
+            startAccessPoint(String(config.ssid), String(config.password));
+            webServer->send(200, "text/plain", "Switched to Access Point mode with saved config");
+            Serial.println("[Web] Switched to AP mode with saved config");
+        } else {
+            // No saved config, use defaults
+            startAccessPoint();
+            webServer->send(200, "text/plain", "Switched to Access Point mode (default config)");
+            Serial.println("[Web] Switched to AP mode with default config");
+        }
+    } else if (mode == "station") {
+        // Switch to Station mode
+        Serial.println("[Web] Switching to Station mode");
+        
+        // Check if we have saved Station config
+        StationConfig config;
+        if (loadStationConfig(config)) {
+            // Use saved config
+            connectToNetwork(String(config.ssid), String(config.password));
+            webServer->send(200, "text/plain", "Connecting to Station mode... Check status in a moment");
+            Serial.println("[Web] Initiated Station mode connection");
+        } else {
+            webServer->send(400, "text/plain", "No saved Station configuration. Please save credentials first.");
+            Serial.println("[Web] No Station config available");
+        }
+    } else {
+        webServer->send(400, "text/plain", "Invalid mode parameter. Use 'ap' or 'station'");
+    }
 }
 
 #endif // USE_WEBSERVER

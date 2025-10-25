@@ -16,6 +16,7 @@ extern bool ledState;
 // ==========================================
 extern String currentAPSSID;
 extern String currentAPPassword;
+extern uint8_t currentAPChannel;
 
 // ==========================================
 // WIFI STATE MANAGEMENT

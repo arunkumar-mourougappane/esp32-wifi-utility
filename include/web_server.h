@@ -46,6 +46,12 @@ void handleIperf();
 void handleIperfStart();
 void handleIperfStop();
 void handleIperfResults();
+void handleConfig();
+void handleConfigAP();
+void handleConfigStation();
+void handleConfigClear();
+void handleReboot();
+void handleModeSwitch();
 void handleNotFound();
 
 #endif // USE_WEBSERVER
