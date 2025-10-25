@@ -5,6 +5,158 @@ All notable changes to the ESP32 WiFi Utility project are documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.3.0] - 2025-10-25
+
+### 🚀 MAJOR: Advanced Network Analysis & TFT Display Release
+
+This major version introduces **professional network analysis tools**, **TFT display support**, and **visual spectrum analysis** for comprehensive WiFi diagnostics and security auditing.
+
+#### Added - Signal Strength Monitor
+
+##### Real-Time Signal Monitoring
+- **Files**: `signal_monitor.h/.cpp`, `docs/SIGNAL_STRENGTH_MONITOR.md`
+- **Web Interface**: `/signal` - Professional signal monitoring page
+- **Features**:
+  - Live current connection signal strength with 3-second auto-refresh
+  - Nearby networks scanner with signal quality indicators
+  - Auto-scan mode with configurable intervals (5, 10, 15, 30, 60 seconds)
+  - Hidden network detection displaying as `<Hidden Network>`
+  - Real-time countdown timer showing next scan time
+  - Non-blocking scans - content remains visible during updates
+  - Visual signal quality circles (Green/Yellow/Orange/Red)
+  - RSSI to quality percentage conversion (0-100%)
+  - Quality text classifications (Excellent/Good/Fair/Weak/Very Weak)
+- **API Endpoints**:
+  - `/signal` - Main monitoring page
+  - `/signal/api?current=1` - Get current signal info (JSON)
+  - `/signal/api?scan=1` - Scan nearby networks (JSON)
+- **Integration**: Added to Analysis Dashboard with cyan-themed card
+
+#### Added - Port Scanner
+
+##### Network Security Auditing
+- **Files**: `port_scanner.h/.cpp`
+- **Web Interface**: `/portscan` - Professional security audit page
+- **Scan Types**:
+  - Common Ports (16 most-used ports - fastest scan)
+  - Well-Known Ports (1-1024)
+  - Custom Range (user-defined start/end ports)
+  - All Ports (1-65535 - comprehensive scan)
+- **Features**:
+  - Service identification for 25+ common services
+  - Real-time progress bar with percentage display
+  - Background scanning with non-blocking TCP tests
+  - Port/Service/Status tabular results display
+  - Auto-populated target IP (gateway)
+  - Security warnings and legal disclaimers
+  - Purple gradient themed UI
+- **API Endpoints**:
+  - `/portscan` - Main scanner page
+  - `/portscan/start` - Start scan with parameters
+  - `/portscan/stop` - Stop active scan
+  - `/portscan/status` - Get scan progress (JSON)
+  - `/portscan/api` - Helper endpoints
+- **Services Detected**: HTTP, HTTPS, SSH, FTP, Telnet, SMTP, DNS, MySQL, PostgreSQL, MongoDB, Redis, RDP, VNC, SMB, and more
+- **Integration**: Added to Analysis Dashboard with purple-themed card
+
+#### Added - Channel Graph Visualization
+
+##### Visual Spectrum Analysis
+- **Web Interface**: `/channel/graph` - Interactive channel graph
+- **Features**:
+  - HTML5 Canvas-based bar chart for 2.4GHz spectrum
+  - Color-coded congestion levels:
+    * Green: Low congestion (0-40%)
+    * Yellow: Medium congestion (40-70%)
+    * Red: High congestion (70-100%)
+  - Network count overlays on each channel bar
+  - Recommended channels marked with stars (⭐)
+  - Best channel automatic identification
+  - Professional graph with grid, axes, and labels
+  - Interactive legend explaining colors and metrics
+  - Non-overlapping channel indicators (1, 6, 11)
+  - Responsive design with window resize support
+  - Educational content about channel overlap
+- **Integration**: Added button to Channel Analysis page
+- **Graph Dimensions**: 1000x400px canvas (responsive)
+
+#### Added - TFT Display Support
+
+##### Built-in Screen Support for Feather Boards
+- **Files**: `tft_display.h/.cpp`
+- **Hardware Support**:
+  - Adafruit Feather ESP32-S3 TFT
+  - Adafruit Feather ESP32-S3 Reverse TFT
+- **AP Mode Display**:
+  - Green "AP Mode" text indicator
+  - QR code for instant WiFi connection
+  - SSID and password display
+  - AP IP address
+  - Optimized layout for 135x240 screen
+- **Station Mode Display**:
+  - Blue "Station Mode" text indicator
+  - Connection status with visual feedback
+  - Connected network SSID
+  - Local IP address
+  - Real-time signal strength (RSSI in dBm)
+  - Color-coded signal quality:
+    * Green: Strong signal (-60 dBm or better)
+    * Yellow: Medium signal (-60 to -70 dBm)
+    * Red: Weak signal (below -70 dBm)
+  - Visual signal quality bar graph (0-100%)
+- **Features**:
+  - Automatic mode detection using esp_wifi_get_mode()
+  - Dynamic display updates based on WiFi mode
+  - QR code generation for AP connection
+  - Real-time signal visualization
+  - Professional color scheme and layout
+- **Libraries Added**:
+  - Adafruit ST7735 and ST7789 Library
+  - Adafruit GFX Library
+
+#### Changed - Web Interface Enhancements
+
+##### Analysis Dashboard Updates
+- Added Signal Monitor card with cyan gradient theme
+- Added Port Scanner card with purple gradient theme
+- Added Channel Graph button to Channel Analysis page
+- Updated navigation dropdown to include all new tools
+- Added Quick Actions section with one-click tool access
+- Updated Tips section with guidance for new features
+- Consistent gradient styling across all analysis tools
+
+##### Navigation Updates
+- Added "📶 Signal" to Analysis dropdown
+- Added "🔒 Port Scanner" to Analysis dropdown
+- Maintained "📡 Channel" with added graph option
+- All tools accessible from unified dashboard at `/analysis`
+
+#### Changed - Library Dependencies
+
+##### New Dependencies Added
+- `Adafruit ST7735 and ST7789 Library@^1.10.0` - TFT display driver
+- `Adafruit GFX Library@^1.11.0` - Graphics support
+- Added to all Feather ESP32-S3 TFT board configurations
+
+#### Changed - Build Configuration
+
+##### Flash Usage
+- ESP32dev: 90.7% (1,188,777 bytes) - increased due to new features
+- Feather ESP32-S3 TFT: 80.0% (1,153,357 bytes)
+- All 6 environments build successfully
+
+#### Documentation
+
+##### New Documentation
+- `docs/SIGNAL_STRENGTH_MONITOR.md` - Complete signal monitor guide
+- Updated README.md with v4.3.0 features
+- Updated CHANGELOG.md with detailed changes
+
+##### Updated Documentation
+- README.md: Added v4.3.0 features section
+- README.md: Updated version badge to 4.3.0
+- README.md: Enhanced feature descriptions
+
 ## [4.2.0] - 2025-10-25
 
 ### 🚀 MAJOR: Architecture Simplification & Configuration Persistence Release

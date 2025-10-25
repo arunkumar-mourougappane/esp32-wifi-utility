@@ -1,7 +1,7 @@
 # ESP32 WiFi Utility Suite
 
 ![Build Status](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/actions/workflows/build.yml/badge.svg)
-![Version](https://img.shields.io/badge/version-4.2.0-blue.svg)
+![Version](https://img.shields.io/badge/version-4.3.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-ESP32-blue.svg)
 ![Framework](https://img.shields.io/badge/framework-Arduino-green.svg)
 ![PlatformIO](https://img.shields.io/badge/build-PlatformIO-orange.svg)
@@ -9,8 +9,119 @@
 ![Boards](https://img.shields.io/badge/boards-ESP32dev%20|%20Feather%20ESP32--S3%20|%20Reverse%20TFT-brightgreen.svg)
 [![Changelog](https://img.shields.io/badge/changelog-available-brightgreen.svg)](CHANGELOG.md)
 
-A professional-grade ESP32 WiFi analysis and management suite featuring comprehensive network scanning, spectrum analysis,
-performance testing, tri-board support, persistent configuration storage, instant mode switching via web interface, and simplified architecture.
+A professional-grade ESP32 WiFi analysis and management suite featuring comprehensive network scanning, signal strength monitoring, port scanning, visual spectrum analysis, TFT display support, performance testing, tri-board support, persistent configuration storage, instant mode switching via web interface, and simplified architecture.
+
+## 🎉 What's New in v4.3.0
+
+Version 4.3.0 introduces **advanced network analysis tools**, **TFT display support**, and **visual spectrum analysis** for professional WiFi diagnostics and security auditing.
+
+### 📶 **Signal Strength Monitor**
+
+Real-time WiFi signal analysis with auto-scanning capabilities:
+
+- **Live Signal Monitoring**: Current connection signal strength with 3-second auto-refresh
+- **Nearby Networks Scanner**: Comprehensive scan of all networks with signal quality
+- **Auto-Scan Mode**: Configurable intervals (5, 10, 15, 30, 60 seconds)
+- **Hidden Network Detection**: Identifies and displays hidden SSIDs as `<Hidden Network>`
+- **Visual Signal Quality**: Color-coded circles (Green/Yellow/Orange/Red)
+- **Non-Blocking Scans**: Page content remains visible during scan updates
+- **Real-Time Countdown**: Shows time until next automatic scan
+- **Web Interface**: Professional UI at `/signal` with responsive design
+- **RSSI to Quality**: Automatic conversion to percentage (0-100%)
+- **Quality Text**: Excellent/Good/Fair/Weak/Very Weak classifications
+- **Integration**: Added to Analysis Dashboard for quick access
+
+### 🔒 **Port Scanner**
+
+Network security auditing and open port detection:
+
+- **Multiple Scan Types**:
+  - Common Ports (16 most-used ports - fastest)
+  - Well-Known Ports (1-1024)
+  - Custom Range (user-defined start/end)
+  - All Ports (1-65535 - comprehensive)
+- **Service Identification**: Maps 25+ common services (HTTP, SSH, MySQL, RDP, etc.)
+- **Real-Time Progress**: Animated progress bar with percentage
+- **Background Scanning**: Non-blocking TCP connection tests
+- **Results Display**: Tabular format with Port/Service/Status
+- **Target Selection**: Auto-populated with gateway IP
+- **Security Warnings**: Clear legal disclaimers and authorization reminders
+- **Web Interface**: Professional purple-themed UI at `/portscan`
+- **API Endpoints**: RESTful API for scan control and status
+- **Integration**: Added to Analysis Dashboard with dedicated card
+
+### 📊 **Channel Graph Visualization**
+
+Visual WiFi spectrum analysis with interactive graph:
+
+- **HTML5 Canvas Graph**: Professional bar chart showing all 2.4GHz channels
+- **Color-Coded Visualization**:
+  - 🟢 Green: Low congestion (0-40%)
+  - 🟡 Yellow: Medium congestion (40-70%)
+  - 🔴 Red: High congestion (70-100%)
+- **Network Count Overlays**: Shows number of networks on each channel
+- **Recommended Channels**: Starred (⭐) channels with lowest interference
+- **Best Channel Detection**: Automatically identifies optimal channel
+- **Interactive Legend**: Clear explanation of colors and metrics
+- **Grid and Axes**: Professional graph layout with labeled axes
+- **Non-Overlapping Indicators**: Highlights channels 1, 6, and 11
+- **Responsive Design**: Adapts to screen size with window resize support
+- **Web Interface**: Accessible at `/channel/graph`
+- **Educational Content**: Detailed explanation of channel overlap
+
+### 📱 **TFT Display Support**
+
+Built-in screen support for Adafruit Feather ESP32-S3 TFT boards:
+
+- **Mode-Specific Displays**:
+  - **AP Mode**: 
+    - Green "AP Mode" indicator
+    - QR code for easy device connection
+    - SSID and password display
+    - AP IP address
+  - **Station Mode**:
+    - Blue "Station Mode" indicator
+    - Connection status
+    - Connected network SSID
+    - Local IP address
+    - Real-time signal strength (RSSI in dBm)
+    - Color-coded signal quality (Green/Yellow/Red)
+    - Visual signal quality bar graph
+- **Dynamic Updates**: Automatically updates based on WiFi mode
+- **QR Code Generation**: Instant WiFi connection via QR scan
+- **Signal Visualization**: Live signal strength with quality bar
+- **Compact Layout**: Optimized for 135x240 pixel display
+- **Board Support**:
+  - Adafruit Feather ESP32-S3 TFT
+  - Adafruit Feather ESP32-S3 Reverse TFT
+- **Auto-Detection**: Automatically displays appropriate mode info
+
+### 🌐 **Web Interface Enhancements**
+
+Expanded Analysis Dashboard with new tools:
+
+- **Signal Monitor Card**: Cyan-themed card with current signal info
+- **Port Scanner Card**: Purple-themed card with last scan results
+- **Channel Graph Button**: Quick access to visual spectrum
+- **Quick Actions**: All tools accessible from one location
+- **Updated Navigation**: Analysis dropdown includes all new tools
+- **Responsive Design**: Mobile-optimized for all screen sizes
+- **Professional Styling**: Consistent gradient themes throughout
+
+### 🎯 **Integration & Accessibility**
+
+- **Unified Dashboard**: All analysis tools in one place at `/analysis`
+- **Navigation Menu**: Analysis dropdown includes Signal, Port Scanner, and Channel tools
+- **Quick Actions**: One-click access to all diagnostic features
+- **Tips Section**: Educational content for each tool
+- **Status Cards**: Real-time status display for each tool
+- **Color Themes**: 
+  - Cyan: Signal Monitor
+  - Purple: Port Scanner
+  - Green: Channel Graph
+  - Purple/Blue: Other analysis tools
+
+---
 
 ## 🎉 What's New in v4.2.0
 
