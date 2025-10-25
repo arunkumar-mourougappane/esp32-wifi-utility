@@ -685,6 +685,13 @@ void connectToNetwork(String ssid, String password) {
     Serial.printf("  IP Address: %s\n", WiFi.localIP().toString().c_str());
     Serial.printf("  Gateway: %s\n", WiFi.gatewayIP().toString().c_str());
     Serial.printf("  DNS: %s\n", WiFi.dnsIP().toString().c_str());
+    
+#if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
+    // Display station mode info on TFT
+    extern void displayStationInfo();
+    displayStationInfo();
+#endif
+    
 #ifdef USE_NEOPIXEL
     // Show solid green for successful connection
     setNeoPixelColor(0, 255, 0);

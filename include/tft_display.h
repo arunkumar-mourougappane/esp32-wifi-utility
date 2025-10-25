@@ -47,6 +47,19 @@ void clearTFT();
 void displayAPQRCode(const String& ssid, const String& password, const String& encryption);
 
 /**
+ * @brief Displays QR code for Station mode (connected AP)
+ * @param ssid WiFi network SSID
+ * @param password WiFi network password
+ * @param encryption Encryption type (usually "WPA")
+ */
+void displayStationQRCode(const String& ssid, const String& password, const String& encryption);
+
+/**
+ * @brief Update TFT display based on current WiFi mode
+ */
+void updateTFTDisplay();
+
+/**
  * @brief Displays status text on TFT
  * @param text Status text to display
  * @param clear Whether to clear screen first
