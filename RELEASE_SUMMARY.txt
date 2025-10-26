@@ -1,211 +1,349 @@
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                                                                              ║
-║               ESP32 WiFi Utility v4.2.0 - RELEASE COMPLETE                   ║
-║                                                                              ║
-╚══════════════════════════════════════════════════════════════════════════════╝
+================================================================================
+          ESP32 WiFi Utility Suite - Release Summary v4.3.0
+================================================================================
 
-📅 Release Date: October 25, 2025
-🔖 Version: 4.2.0
-👤 Maintained by: Arunkumar Mourougappane
-🔗 GitHub: https://github.com/arunkumar-mourougappane
+Release Date:     October 25, 2025
+Version:          4.3.0
+Release Type:     Major Feature Release
+Build Status:     ✅ All 6 Environments Pass
+Production Ready: ✅ Yes
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ IMPLEMENTATION CHECKLIST
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+================================================================================
+                            🎉 RELEASE HIGHLIGHTS
+================================================================================
 
- ✅ Remove all RTOS configurations
- ✅ Add ability to save access point configuration (SSID, password, channel)
- ✅ Add ability to save station client settings
- ✅ Default configuration fallback if no saved config
- ✅ Auto-start AP mode with saved configuration on boot
- ✅ Auto-connect Station mode with saved configuration on boot
- ✅ Web page option to change access point settings
- ✅ Web page option to save station client settings
- ✅ Do not expose saved passwords on web page (masked display)
- ✅ Provide modal to reboot device on config save (10-second countdown)
- ✅ Make menu responsive for different screens (hamburger menu)
- ✅ Add option to toggle between Access Point and Station
- ✅ Update and consolidate all documentation
- ✅ Update documentation since v4.1.0 release
- ✅ Update "Maintained by" to Arunkumar Mourougappane with GitHub link
- ✅ Save passwords in base64 format
- ✅ Decode passwords when launching AP or connecting
- ✅ Update all documentation
+Version 4.3.0 introduces FOUR MAJOR NETWORK ANALYSIS TOOLS:
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📦 NEW FEATURES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  📶 Signal Strength Monitor  - Real-time WiFi signal monitoring
+  🔒 Port Scanner            - Network security auditing  
+  📊 Channel Graph           - Visual spectrum analysis
+  📱 TFT Display Support     - Built-in screen integration
 
-1. CONFIGURATION PERSISTENCE SYSTEM
-   • NVS-based storage for AP and Station configurations
-   • Survives reboots and power cycles
-   • Base64 password encryption
-   • Auto-start/auto-connect on boot
-   • Serial commands for configuration management
+================================================================================
+                              🚀 NEW FEATURES
+================================================================================
 
-2. WEB CONFIGURATION INTERFACE
-   • Professional /config page for settings management
-   • AP configuration form (SSID, password, channel, auto-start)
-   • Station configuration form (SSID, password, auto-connect)
-   • Password masking (never displayed in plain text)
-   • Real-time validation and error handling
-   • Clear all configurations option
+1. SIGNAL STRENGTH MONITOR
+   ──────────────────────────────────────────────────────────────
+   ✓ Live current connection signal strength (3s auto-refresh)
+   ✓ Nearby networks scanner with signal quality indicators
+   ✓ Auto-scan mode: 5, 10, 15, 30, 60 second intervals
+   ✓ Hidden network detection: <Hidden Network>
+   ✓ Visual quality indicators: 🟢🟡🟠🔴
+   ✓ RSSI to quality percentage conversion (0-100%)
+   ✓ Quality text: Excellent/Good/Fair/Weak/Very Weak
+   ✓ Non-blocking scans - page content remains visible
+   ✓ Real-time countdown timer for next scan
+   
+   Web Interface:  http://<device-ip>/signal
+   Documentation:  docs/SIGNAL_STRENGTH_MONITOR.md
+   Integration:    Analysis Dashboard (cyan card)
 
-3. REBOOT MODAL SYSTEM
-   • 10-second countdown timer
-   • Confirm/Cancel buttons
-   • Visual progress display
-   • Automatic page reload after reboot
-   • User control over reboot operation
+2. PORT SCANNER  
+   ──────────────────────────────────────────────────────────────
+   ✓ Common Ports scan (16 ports, ~20-30 seconds)
+   ✓ Well-Known Ports scan (1-1024, ~10-30 minutes)
+   ✓ Custom Range scan (user-defined ports)
+   ✓ All Ports scan (1-65535, ~8-12 hours)
+   ✓ Service identification: 25+ common services
+   ✓ Real-time progress bar with percentage
+   ✓ Background scanning (non-blocking TCP tests)
+   ✓ Results display: Port/Service/Status table
+   ✓ Gateway IP auto-population
+   ✓ Security warnings and legal disclaimers
+   
+   Web Interface:  http://<device-ip>/portscan
+   Documentation:  docs/PORT_SCANNER.md
+   Integration:    Analysis Dashboard (purple card)
+   
+   Services Detected:
+   • Web: HTTP, HTTPS, HTTP-Alt
+   • Remote: SSH, Telnet, RDP, VNC
+   • Email: SMTP, POP3, IMAP
+   • Databases: MySQL, PostgreSQL, MongoDB, Redis
+   • File Transfer: FTP, SMB
+   • And 15+ more services
 
-4. INSTANT MODE SWITCHING
-   • Toggle between AP and Station without reboot
-   • 2-second operation vs 10+ second reboot
-   • Uses saved configurations automatically
-   • Web UI buttons for easy switching
-   • Error handling for missing configurations
+3. CHANNEL GRAPH VISUALIZATION
+   ──────────────────────────────────────────────────────────────
+   ✓ HTML5 Canvas-based bar chart (1000x400px responsive)
+   ✓ Color-coded congestion levels:
+     • Green (0-40%): Low congestion - Excellent choice
+     • Yellow (40-70%): Medium congestion - Acceptable  
+     • Red (70-100%): High congestion - Avoid
+   ✓ Network count overlays on each channel bar
+   ✓ Recommended channels marked with stars (⭐)
+   ✓ Best channel automatic identification
+   ✓ Professional graph: grid, axes, labels
+   ✓ Interactive legend with explanations
+   ✓ Non-overlapping channel indicators (1, 6, 11)
+   ✓ Responsive design with window resize support
+   ✓ Educational content about channel overlap
+   
+   Web Interface:  http://<device-ip>/channel/graph
+   Documentation:  docs/CHANNEL_GRAPH.md
+   Integration:    Button on Channel Analysis page
 
-5. RESPONSIVE NAVIGATION MENU
-   • Desktop: Horizontal navigation bar
-   • Mobile: Hamburger menu (☰)
-   • Touch-friendly (44px minimum targets)
-   • Smooth animations
-   • Adapts to all screen sizes
+4. TFT DISPLAY SUPPORT
+   ──────────────────────────────────────────────────────────────
+   Hardware Support:
+   • Adafruit Feather ESP32-S3 TFT
+   • Adafruit Feather ESP32-S3 Reverse TFT
+   • 135x240 pixel display, ST7789 driver
+   
+   AP Mode Display:
+   ✓ Green "AP Mode" text indicator
+   ✓ QR code for instant WiFi connection
+   ✓ SSID and password display
+   ✓ AP IP address
+   ✓ Optimized layout for small screen
+   
+   Station Mode Display:
+   ✓ Blue "Station Mode" text indicator
+   ✓ Connection status with visual feedback
+   ✓ Connected network SSID
+   ✓ Local IP address
+   ✓ Real-time signal strength (RSSI in dBm)
+   ✓ Color-coded signal quality:
+     • Green: Strong signal (-60 dBm or better)
+     • Yellow: Medium signal (-60 to -70 dBm)
+     • Red: Weak signal (below -70 dBm)
+   ✓ Visual signal quality bar graph (0-100%)
+   
+   Features:
+   • Automatic mode detection using esp_wifi_get_mode()
+   • Dynamic display updates based on WiFi mode
+   • QR code generation for AP connection
+   • Real-time signal visualization
+   • Professional color scheme and layout
 
-6. BASE64 PASSWORD SECURITY
-   • All passwords encoded before NVS storage
-   • Uses ESP32's built-in mbedtls library
-   • Transparent encoding/decoding
-   • Secure password retrieval
+================================================================================
+                        🌐 WEB INTERFACE ENHANCEMENTS
+================================================================================
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📁 FILES CREATED/MODIFIED
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ANALYSIS DASHBOARD UPDATES:
+  • Signal Monitor card (cyan gradient) - Current signal info
+  • Port Scanner card (purple gradient) - Last scan results
+  • Channel Graph button - Quick visual spectrum access
+  • Updated navigation dropdown - All new tools included
+  • Quick Actions section - One-click tool access
+  • Tips section - Guidance for new features
+  • Consistent gradient styling throughout
 
-NEW FILES:
-  include/ap_config.h                (77 lines)
-  src/ap_config.cpp                  (207 lines)
-  include/station_config.h           (70 lines)
-  src/station_config.cpp             (186 lines)
-  include/base64_utils.h             (30 lines)
-  src/base64_utils.cpp               (84 lines)
-  V4.2.0_IMPLEMENTATION_SUMMARY.md   (comprehensive summary)
+NAVIGATION IMPROVEMENTS:
+  Analysis Dropdown Menu:
+    📊 Dashboard
+    📶 Signal (NEW)
+    🔒 Port Scanner (NEW)
+    ⚡ iPerf
+    📉 Latency
+    📡 Channel (with Graph option)
+
+================================================================================
+                           📚 NEW DOCUMENTATION
+================================================================================
+
+New Documentation Files:
+  • docs/SIGNAL_STRENGTH_MONITOR.md  (~400 lines)
+  • docs/PORT_SCANNER.md             (~476 lines)
+  • docs/CHANNEL_GRAPH.md            (~595 lines)
+
+Updated Documentation:
+  • README.md     - Added v4.3.0 features section (~150 lines)
+  • CHANGELOG.md  - Complete v4.3.0 release notes (~200 lines)
+  • Version badges updated to 4.3.0
+
+Total Documentation Added: ~1,821 lines
+
+================================================================================
+                            🔧 TECHNICAL DETAILS
+================================================================================
+
+NEW SOURCE FILES:
+  Signal Monitor:
+    • include/signal_monitor.h
+    • src/signal_monitor.cpp
+  
+  Port Scanner:
+    • include/port_scanner.h
+    • src/port_scanner.cpp
+  
+  TFT Display:
+    • include/tft_display.h
+    • src/tft_display.cpp
 
 MODIFIED FILES:
-  src/wifi_manager.cpp               (~40 lines changed)
-  src/web_server.cpp                 (~600 lines added)
-  src/command_interface.cpp          (~150 lines added)
-  platformio.ini                     (6 version updates)
-  README.md                          (~500 lines updated)
-  CHANGELOG.md                       (~300 lines added)
+  • include/web_server.h         - New handler declarations
+  • src/web_server.cpp           - New routes and pages (~800 lines)
+  • src/main.cpp                 - TFT and signal monitor init
+  • src/wifi_manager.cpp         - TFT display integration
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔧 NEW SERIAL COMMANDS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BUILD CONFIGURATION:
+  Flash Usage:
+    ESP32dev:              90.7% (1,188,777 bytes) +10KB
+    Feather ESP32-S3 TFT:  80.0% (1,153,357 bytes)
+    All 6 environments:    ✅ Build successfully
 
-AP CONFIGURATION:
-  ap config <ssid> <password> [channel] [auto]  - Save AP configuration
-  ap config load                                 - Display saved config
-  ap config clear                                - Clear saved config
-  ap start                                       - Start with saved config
+  New Library Dependencies:
+    • Adafruit ST7735 and ST7789 Library @^1.10.0
+    • Adafruit GFX Library @^1.11.0
 
-STATION CONFIGURATION:
-  station config <ssid> <password> [auto]       - Save Station config
-  station config load                            - Display saved config
-  station config clear                           - Clear saved config
-  station connect                                - Connect with saved config
+================================================================================
+                              📊 STATISTICS
+================================================================================
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🌐 NEW WEB API ENDPOINTS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CODE ADDITIONS:
+  Component              Lines Added
+  ────────────────────────────────────
+  Signal Monitor              ~400
+  Port Scanner                ~650
+  Channel Graph               ~260
+  TFT Display                 ~320
+  Web Pages                   ~800
+  Documentation             ~1,500
+  ────────────────────────────────────
+  TOTAL                     ~3,930
 
-  GET  /config                - Configuration page UI
-  POST /config/ap             - Save AP configuration
-  POST /config/station        - Save Station configuration
-  POST /config/clear          - Clear saved configurations
-  POST /reboot                - Reboot device with 1-second delay
-  POST /mode/switch           - Instant mode switching (AP/Station)
+FEATURE COUNTS:
+  • New Web Pages:              3
+  • New API Endpoints:          8
+  • New Documentation Files:    3
+  • Service Identifications:    25+
+  • Scan Configurations:        4 types
+  • Auto-Scan Intervals:        5 options
+  • TFT Display Modes:          2 (AP/Station)
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ BUILD VERIFICATION
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+================================================================================
+                            ⚠️  IMPORTANT NOTES
+================================================================================
 
-  ✅ esp32dev                             SUCCESS  (Flash: 86.7%, RAM: 16.5%)
-  ✅ adafruit_feather_esp32s3_tft         SUCCESS  (Flash: 75.1%, RAM: 16.1%)
-  ✅ adafruit_feather_esp32s3_reversetft  SUCCESS
-  ✅ test                                 SUCCESS
-  ✅ test_feather                         SUCCESS
-  ✅ test_feather_reversetft              SUCCESS
+PORT SCANNER DISCLAIMER:
+  ⚠️  LEGAL AND ETHICAL USE REQUIRED:
+  • Only scan devices you own or have explicit permission to scan
+  • Unauthorized port scanning may be illegal in your jurisdiction
+  • Comply with organizational security policies
+  • Check local laws before scanning
+  • Use responsibly and ethically
 
-  🎯 Zero compiler warnings
-  🎯 Zero build errors
-  🎯 Clean compilation across all platforms
+  NETWORK IMPACT:
+  • Port scanning generates network traffic
+  • May trigger IDS/IPS alerts
+  • Can affect network performance
+  • Should be scheduled during maintenance windows
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📊 CODE STATISTICS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TFT DISPLAY REQUIREMENTS:
+  • Only works on Adafruit Feather ESP32-S3 TFT boards
+  • Regular ESP32 boards do not have built-in display
+  • Reverse TFT variant also supported
+  • Libraries automatically included in TFT builds
 
-  New Configuration System:    ~650 lines
-  Web Configuration UI:         ~600 lines
-  Command Interface:            ~150 lines
-  Documentation:                ~800 lines
-  ────────────────────────────────────────
-  Total New Code:               ~2,200 lines
+CHANNEL GRAPH BROWSER REQUIREMENTS:
+  • Requires HTML5 Canvas support
+  • Modern browsers: Chrome, Firefox, Safari, Edge
+  • Mobile browsers supported
+  • Internet Explorer NOT supported
 
-  RTOS Removed:                 ~11,000 lines
-  ────────────────────────────────────────
-  Net Simplification:           ~8,700 lines
+================================================================================
+                         🔄 UPGRADE INSTRUCTIONS
+================================================================================
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🚀 QUICK START GUIDE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FROM v4.2.0 TO v4.3.0:
 
-BUILD & FLASH:
-  $ pio run -e esp32dev -t upload
-  $ pio run -e adafruit_feather_esp32s3_tft -t upload
+  ✅ NO CONFIGURATION CHANGES REQUIRED!
+  
+  All existing features remain fully compatible.
+  New features are additions only.
 
-SERIAL CONFIGURATION:
-  > ap config "MyHotspot" "SecurePass123" 6 auto
-  > station config "HomeWiFi" "MyPassword" auto
+STEPS:
+  1. Flash new firmware to device
+  2. No configuration reset needed
+  3. Access new features via web interface
+  4. Documentation available in /docs folder
 
-WEB CONFIGURATION:
-  1. Start AP mode: mode ap
-  2. Connect to ESP32 AP
-  3. Open browser: http://192.168.4.1/config
-  4. Configure and save settings
-  5. Optional: Reboot via modal
+WHAT'S PRESERVED:
+  ✅ AP configuration
+  ✅ Station configuration
+  ✅ All existing settings
+  ✅ All existing commands
+  ✅ Web interface compatibility
 
-INSTANT MODE SWITCH:
-  1. Visit: http://<device-ip>/config
-  2. Click "Switch to AP" or "Switch to Station"
-  3. Mode changes in ~2 seconds
+WHAT'S NEW:
+  ✅ Signal Monitor at /signal
+  ✅ Port Scanner at /portscan
+  ✅ Channel Graph at /channel/graph
+  ✅ TFT display support (if hardware available)
+  ✅ Enhanced Analysis Dashboard
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📚 DOCUMENTATION
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+================================================================================
+                            🎯 USE CASES
+================================================================================
 
-  README.md                         - Comprehensive user guide
-  CHANGELOG.md                      - Detailed change history
-  docs/RELEASE_NOTES_V4.2.0.md      - Release notes
-  V4.2.0_IMPLEMENTATION_SUMMARY.md  - Implementation details
+FOR HOME USERS:
+  • WiFi optimization (signal monitor, channel graph)
+  • Security audits (port scanner)
+  • Connection troubleshooting
+  • Network quality monitoring
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎉 RELEASE STATUS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FOR IT PROFESSIONALS:
+  • Network deployment and planning
+  • Security auditing and service discovery
+  • Performance optimization
+  • Site surveys and spectrum analysis
 
-  ✅ All user requirements implemented
-  ✅ All builds successful
-  ✅ Zero compiler warnings
-  ✅ All features tested
-  ✅ Documentation complete
-  ✅ Maintainer information updated
+FOR NETWORK ADMINISTRATORS:
+  • Comprehensive site surveys
+  • Regular security compliance scans
+  • Network documentation
+  • Capacity planning
 
-  🚀 PROJECT READY FOR RELEASE 🚀
+================================================================================
+                          🔮 FUTURE ROADMAP
+================================================================================
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PLANNED FOR v4.4.0:
+  • 5GHz spectrum analysis
+  • Network device discovery (ARP scanning)
+  • Bandwidth usage monitoring
+  • Enhanced security scanning
+  • Export functionality (CSV/JSON)
+  • Historical data tracking
+  • Network topology mapping
 
-Maintained by: Arunkumar Mourougappane
-GitHub: https://github.com/arunkumar-mourougappane
-License: MIT
+================================================================================
+                              📞 SUPPORT
+================================================================================
 
-Happy WiFi Management! 📡
+DOCUMENTATION:
+  • README.md          - Quick start guide
+  • CHANGELOG.md       - Detailed change history
+  • docs/              - Feature-specific guides
+  • RELEASE_NOTES_V4.3.0.md - This release details
+
+ONLINE RESOURCES:
+  • GitHub Issues      - Bug reports and feature requests
+  • GitHub Wiki        - Extended documentation
+  • GitHub Discussions - Community support
+
+================================================================================
+                            🎉 CONCLUSION
+================================================================================
+
+Version 4.3.0 represents a MAJOR MILESTONE in the ESP32 WiFi Utility Suite
+evolution, transforming it from a WiFi management tool into a COMPREHENSIVE
+NETWORK ANALYSIS PLATFORM.
+
+KEY ACHIEVEMENTS:
+  ✅ 4 major features added
+  ✅ ~4,000 lines of new code
+  ✅ Professional documentation (~1,800 lines)
+  ✅ Enhanced user experience
+  ✅ Expanded use cases
+
+ENJOY YOUR ENHANCED WiFi ANALYSIS CAPABILITIES! 🚀
+
+================================================================================
+Release Date:     October 25, 2025
+Version:          4.3.0
+Build:            All 6 environments pass
+Status:           Production Ready ✅
+================================================================================
