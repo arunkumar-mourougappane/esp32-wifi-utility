@@ -5,6 +5,126 @@ All notable changes to the ESP32 WiFi Utility project are documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.3.1] - 2025-10-25
+
+### 📚 Documentation Update Release
+
+This patch release focuses on comprehensive Wiki documentation improvements and organization.
+
+#### Added - Wiki Documentation
+
+##### Port Scanner Documentation
+- **New Wiki Page**: `Port-Scanner.md` (1,400+ lines)
+  - Complete port scanning fundamentals and concepts
+  - Four scan types documentation (Common, Well-Known, Custom, All Ports)
+  - Service identification guide for 25+ common services
+  - Web interface detailed UI documentation
+  - RESTful API endpoints with JavaScript integration examples
+  - Five detailed use cases (router security, web server audit, database check, IoT discovery, network inventory)
+  - Legal and ethical considerations
+  - Security best practices and responsible disclosure guidelines
+  - Technical implementation details and performance characteristics
+  - Comprehensive troubleshooting guide
+  - Integration with other features
+  - Quick reference guide
+
+##### Signal Strength Monitor Documentation
+- **New Wiki Page**: `Signal-Strength-Monitor.md` (1,100+ lines)
+  - Complete RSSI reference guide with signal quality interpretation
+  - Serial command documentation (signal show/scan/monitor) with examples
+  - Web interface details with auto-refresh and color-coded meters
+  - Use cases: troubleshooting, positioning, site surveys, stability monitoring
+  - JSON API integration with JavaScript examples
+  - Best practices and optimization tips
+  - Technical specifications and performance metrics
+
+#### Updated - Wiki Navigation
+
+##### Home Page
+- Added Port Scanner to Network Analysis & Testing section
+- Added Signal Strength Monitor to navigation
+- Updated documentation structure
+
+##### Sidebar Navigation
+- Added Port Scanner link in Features section
+- Added Signal Strength Monitor link in Features section
+- Improved navigation hierarchy
+
+##### Web Configuration Interface
+- Updated page count from 8 to 10 pages
+- Added `/portscan` page description and features
+- Added `/signal` page description and features
+- Added Port Scanner API endpoints documentation
+- Added Signal Strength Monitor API endpoints documentation
+
+##### Command Reference
+- Added signal monitoring commands (signal show/scan/monitor)
+- Detailed examples and use cases for signal commands
+- Signal quality reference tables
+
+##### Quick Start Guide
+- Added Signal Strength Monitor to essential features list
+- Added signal commands to quick reference table
+- Updated feature count and descriptions
+
+#### Documentation Statistics
+
+- **Total Lines Added**: 2,500+ lines of comprehensive documentation
+- **New Wiki Pages**: 2 major feature documentation pages
+- **Updated Wiki Pages**: 5 existing pages enhanced
+- **API Examples**: JavaScript integration samples for all new endpoints
+- **Use Cases**: 10+ detailed real-world scenarios
+- **Troubleshooting**: Complete guides for common issues
+
+#### Quality Improvements
+
+##### Documentation Enhancements
+- Professional formatting with tables and code blocks
+- Clear section hierarchy and navigation
+- Comprehensive cross-referencing between pages
+- Mobile-friendly documentation structure
+- Consistent styling across all pages
+
+##### User Experience
+- Step-by-step guides for common tasks
+- Visual indicators and formatting for clarity
+- Quick reference sections for experienced users
+- Detailed explanations for beginners
+- Best practices and security warnings
+
+### Changed
+
+#### Version Management
+- Bumped version to 4.3.1 in all platformio.ini environments
+- Updated version strings across all build configurations
+
+### Removed
+
+#### Legacy Documentation
+- Removed outdated `RELEASE_NOTES_V4.3.0.md` (superseded by Wiki)
+- Removed old `RELEASE_SUMMARY.txt` (consolidated into CHANGELOG)
+- Removed `docs/MIGRATION_GUIDE_V4.2.0.md` (integrated into Wiki)
+- Removed `docs/RELEASE_NOTES_V4.2.0.md` (consolidated into CHANGELOG)
+- Removed `docs/technical/CODE_IMPROVEMENTS_V4.2.0.md` (archived)
+
+#### Documentation Consolidation
+- Migrated all release documentation to structured Wiki format
+- Centralized feature documentation in dedicated Wiki pages
+- Improved documentation discoverability and maintenance
+
+### Notes
+
+This release focuses entirely on documentation improvements following the v4.3.0 feature release. All features from v4.3.0 remain unchanged and stable. The comprehensive Wiki documentation provides users with detailed guides for:
+
+- Port Scanner network security auditing
+- Signal Strength Monitor for WiFi optimization
+- Complete API reference for integration
+- Best practices and troubleshooting
+
+**Migration**: No code changes - update documentation references to use new Wiki pages.
+
+---
+
 ## [4.3.0] - 2025-10-25
 
 ### 🚀 MAJOR: Advanced Network Analysis & TFT Display Release

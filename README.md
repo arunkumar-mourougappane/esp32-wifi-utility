@@ -1,7 +1,7 @@
 # ESP32 WiFi Utility Suite
 
 ![Build Status](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/actions/workflows/build.yml/badge.svg)
-![Version](https://img.shields.io/badge/version-4.3.0-blue.svg)
+![Version](https://img.shields.io/badge/version-4.3.1-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-ESP32-blue.svg)
 ![Framework](https://img.shields.io/badge/framework-Arduino-green.svg)
 ![PlatformIO](https://img.shields.io/badge/build-PlatformIO-orange.svg)
@@ -10,6 +10,57 @@
 [![Changelog](https://img.shields.io/badge/changelog-available-brightgreen.svg)](CHANGELOG.md)
 
 A professional-grade ESP32 WiFi analysis and management suite featuring comprehensive network scanning, signal strength monitoring, port scanning, visual spectrum analysis, TFT display support, performance testing, tri-board support, persistent configuration storage, instant mode switching via web interface, and simplified architecture.
+
+## 🎉 What's New in v4.3.1
+
+Version 4.3.1 is a **documentation-focused patch release** providing comprehensive Wiki documentation for all v4.3.0 features. This release significantly enhances user experience with detailed guides, API references, and best practices.
+
+### 📚 **Comprehensive Wiki Documentation**
+
+**New Wiki Pages** (2,500+ lines of documentation):
+
+- **[Port Scanner Documentation](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/wiki/Port-Scanner)** (1,400+ lines)
+  - Port scanning fundamentals and TCP connection concepts
+  - Four scan types: Common (16 ports), Well-Known (1-1024), Custom Range, All Ports (65,535)
+  - 25+ service identifications (HTTP, SSH, MySQL, RDP, VNC, etc.)
+  - Web interface guide with detailed UI documentation
+  - RESTful API endpoints with JavaScript integration examples
+  - Real-world use cases: router security, web server audit, database checks, IoT discovery
+  - Legal and ethical considerations, security best practices
+  - Troubleshooting guide and technical implementation details
+
+- **[Signal Strength Monitor Documentation](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/wiki/Signal-Strength-Monitor)** (1,100+ lines)
+  - RSSI fundamentals: dBm explained, quality ratings, signal interpretation
+  - Serial commands: `signal show/scan/monitor` with detailed examples
+  - Web interface with auto-refresh, color-coded meters, graphical bars
+  - Use cases: troubleshooting, positioning, site surveys, stability monitoring
+  - JSON API integration with JavaScript examples
+  - Best practices for accurate measurements and signal optimization
+  - Technical specifications, performance metrics, memory usage
+
+**Updated Wiki Pages**:
+- [Home](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/wiki/Home) - Added navigation to new tools
+- [Web Configuration Interface](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/wiki/Web-Configuration-Interface) - Updated to 10 pages, added API endpoints
+- [Command Reference](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/wiki/Command-Reference) - Added signal commands
+- [Quick Start Guide](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/wiki/Quick-Start-Guide) - Updated feature list
+- [Sidebar Navigation](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/wiki/_Sidebar) - Enhanced navigation
+
+### 📊 **Documentation Highlights**
+
+- **15+ API Integration Examples**: JavaScript code samples for all endpoints
+- **10+ Use Cases**: Real-world scenarios with step-by-step guides
+- **25+ Service Identifications**: Complete port-to-service mapping
+- **8+ New Commands**: Serial interface command documentation
+- **Complete Troubleshooting**: Common issues and solutions for all features
+- **Security Guidelines**: Legal considerations and responsible disclosure
+
+### 🔗 **Quick Links**
+
+- **GitHub Wiki**: [Complete Documentation](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/wiki)
+- **Release Notes**: [v4.3.1 Details](docs/RELEASE_NOTES_V4.3.1.md)
+- **Changelog**: [Full Version History](CHANGELOG.md)
+
+---
 
 ## 🎉 What's New in v4.3.0
 
@@ -807,6 +858,16 @@ Every version bump in `platformio.ini` automatically triggers a new release with
 See our [Automated Release Documentation](docs/technical/AUTOMATED_RELEASES.md) for details.
 
 ## ⚡ Quick Start
+
+### 📚 Documentation
+
+For comprehensive guides and API references, visit the [GitHub Wiki](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/wiki):
+
+- **[Quick Start Guide](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/wiki/Quick-Start-Guide)** - Get started in minutes
+- **[Port Scanner](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/wiki/Port-Scanner)** - Network security auditing
+- **[Signal Strength Monitor](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/wiki/Signal-Strength-Monitor)** - WiFi optimization
+- **[Command Reference](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/wiki/Command-Reference)** - Complete command list
+- **[Web Configuration](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/wiki/Web-Configuration-Interface)** - Browser interface guide
 
 ### 1. Hardware Setup
 
