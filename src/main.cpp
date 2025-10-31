@@ -77,6 +77,11 @@ void loop() {
   // Handle port scanner background tasks
   handlePortScanTasks();
   
+#if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
+  // Handle TFT background updates
+  processTFTBackgroundUpdates();
+#endif
+
 #ifdef USE_WEBSERVER
   // Handle web server requests
   handleWebServerRequests();

@@ -213,8 +213,8 @@ void stopWiFi() {
 #endif
   
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
-  // Clear TFT display when stopping WiFi
-  if (currentMode == MODE_AP) {
+  // Clear TFT display when stopping WiFi (from any mode)
+  if (currentMode == MODE_AP || currentMode == MODE_STATION) {
     displayStatus("WiFi Off", true);
   }
 #endif
