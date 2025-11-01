@@ -17,20 +17,17 @@
 // TFT display instance
 Adafruit_ST7789* tft = nullptr;
 
-// Forward declarations
-void displayStationInfo();
-void drawQRCode(const String& qrData, int offsetX, int offsetY);
-void displayAPInfo(const String& ssid, const String& password);
-void displayStationDetails(const String& ssid, int rssi, const IPAddress& ip);
+// FreeRTOS Queue for TFT messages
+static QueueHandle_t tftQueue = nullptr;
 
-// Background update variables
-static unsigned long lastAPInfoUpdate = 0;
-static unsigned long lastStationInfoUpdate = 0;
-static const unsigned long AP_INFO_UPDATE_INTERVAL = 5000; // Update every 5 seconds
-static const unsigned long STATION_INFO_UPDATE_INTERVAL = 10000; // Update every 10 seconds
-static bool isInAPMode = false;
-static bool isInStationMode = false;
-static bool qrCodeDisplayed = false;
+// Task handle
+static TaskHandle_t tftTaskHandle = nullptr;
+
+// Forward declarations for internal functions
+static void drawQRCode(const String& qrData, int offsetX, int offsetY);
+static void displayAPInfoInternal(const TFTAPInfo& apInfo);
+static void displayStationDetailsInternal(const TFTStationInfo& stationInfo);
+static void tftDisplayTask(void* parameter);
 
 // ==========================================
 // TFT DISPLAY INITIALIZATION
@@ -48,7 +45,99 @@ void initializeTFT() {
     // Clear screen with black background
     tft->fillScreen(ST77XX_BLACK);
     
-    Serial.println("✅ TFT Display initialized");
+    // Create message queue (5 messages max)
+    tftQueue = xQueueCreate(5, sizeof(TFTMessage));
+    if (tftQueue == nullptr) {
+        Serial.println("❌ Failed to create TFT message queue");
+        return;
+    }
+    
+    // Create TFT display task pinned to Core 1 (app core)
+    // Stack: 4096 bytes, Priority: 1 (low)
+    BaseType_t result = xTaskCreatePinnedToCore(
+        tftDisplayTask,      // Task function
+        "TFT_Display",       // Task name
+        4096,                // Stack size (bytes)
+        nullptr,             // Task parameters
+        1,                   // Priority (1 = low)
+        &tftTaskHandle,      // Task handle
+        1                    // Core ID (1 = app core)
+    );
+    
+    if (result != pdPASS) {
+        Serial.println("❌ Failed to create TFT display task");
+        return;
+    }
+    
+    Serial.println("✅ TFT Display initialized with FreeRTOS task on Core 1");
+}
+
+// ==========================================
+// QUEUE MESSAGE FUNCTIONS
+// ==========================================
+bool sendTFTAPUpdate(const char* ssid, const char* password, const char* ip, uint8_t clients) {
+    if (tftQueue == nullptr) return false;
+    
+    TFTMessage msg;
+    msg.mode = TFT_MODE_AP;
+    
+    // Copy strings safely
+    strncpy(msg.data.ap.ssid, ssid, sizeof(msg.data.ap.ssid) - 1);
+    msg.data.ap.ssid[sizeof(msg.data.ap.ssid) - 1] = '\0';
+    
+    strncpy(msg.data.ap.password, password, sizeof(msg.data.ap.password) - 1);
+    msg.data.ap.password[sizeof(msg.data.ap.password) - 1] = '\0';
+    
+    strncpy(msg.data.ap.ip, ip, sizeof(msg.data.ap.ip) - 1);
+    msg.data.ap.ip[sizeof(msg.data.ap.ip) - 1] = '\0';
+    
+    msg.data.ap.clients = clients;
+    
+    // Send to queue (don't block if full)
+    return xQueueSend(tftQueue, &msg, 0) == pdTRUE;
+}
+
+bool sendTFTStationUpdate(const char* ssid, const char* ip, int8_t rssi) {
+    if (tftQueue == nullptr) return false;
+    
+    TFTMessage msg;
+    msg.mode = TFT_MODE_STATION;
+    
+    // Copy strings safely
+    strncpy(msg.data.station.ssid, ssid, sizeof(msg.data.station.ssid) - 1);
+    msg.data.station.ssid[sizeof(msg.data.station.ssid) - 1] = '\0';
+    
+    strncpy(msg.data.station.ip, ip, sizeof(msg.data.station.ip) - 1);
+    msg.data.station.ip[sizeof(msg.data.station.ip) - 1] = '\0';
+    
+    msg.data.station.rssi = rssi;
+    
+    // Send to queue (don't block if full)
+    return xQueueSend(tftQueue, &msg, 0) == pdTRUE;
+}
+
+bool sendTFTStatus(const char* message) {
+    if (tftQueue == nullptr) return false;
+    
+    TFTMessage msg;
+    msg.mode = TFT_MODE_STATUS;
+    
+    // Copy string safely
+    strncpy(msg.data.status.message, message, sizeof(msg.data.status.message) - 1);
+    msg.data.status.message[sizeof(msg.data.status.message) - 1] = '\0';
+    
+    // Send to queue (don't block if full)
+    return xQueueSend(tftQueue, &msg, 0) == pdTRUE;
+}
+
+bool sendTFTClear() {
+    if (tftQueue == nullptr) return false;
+    
+    TFTMessage msg;
+    msg.mode = TFT_MODE_OFF;
+    
+    // Send to queue (don't block if full)
+    return xQueueSend(tftQueue, &msg, 0) == pdTRUE;
 }
 
 void clearTFT() {
@@ -68,7 +157,7 @@ void tftBacklightOff() {
 // ==========================================
 // QR CODE UTILITIES
 // ==========================================
-void drawQRCode(const String& qrData, int offsetX, int offsetY) {
+static void drawQRCode(const String& qrData, int offsetX, int offsetY) {
     if (!tft) return;
     
     // Create QR code
@@ -99,11 +188,9 @@ void drawQRCode(const String& qrData, int offsetX, int offsetY) {
     }
 }
 
-void displayAPInfo(const String& ssid, const String& password) {
+static void displayAPInfoInternal(const TFTAPInfo& apInfo) {
     if (!tft) return;
-    // Get connected stations
-    wifi_sta_list_t stationList;
-    (void) esp_wifi_ap_get_sta_list(&stationList);
+    
     // Display mode indicator
     tft->setTextColor(ST77XX_GREEN);
     tft->setTextSize(1);
@@ -121,7 +208,7 @@ void displayAPInfo(const String& ssid, const String& password) {
     tft->setTextSize(1);
     
     // Truncate SSID if too long
-    String displaySSID = ssid;
+    String displaySSID = String(apInfo.ssid);
     if (displaySSID.length() > 20) {
         displaySSID = displaySSID.substring(0, 17) + "...";
     }
@@ -136,7 +223,7 @@ void displayAPInfo(const String& ssid, const String& password) {
     tft->setTextColor(ST77XX_WHITE);
     
     // Show password (truncated if needed)
-    String displayPass = password;
+    String displayPass = String(apInfo.password);
     if (displayPass.length() > 20) {
         displayPass = displayPass.substring(0, 17) + "...";
     }
@@ -148,7 +235,7 @@ void displayAPInfo(const String& ssid, const String& password) {
     tft->print("  IP:");
     tft->setCursor(TFT_INFO_X_OFFSET, TFT_INFO_START_Y + (TFT_LINE_HEIGHT * 4) + (TFT_SECTION_GAP ));
     tft->setTextColor(ST77XX_WHITE);
-    tft->print("  " + WiFi.softAPIP().toString());
+    tft->print("  " + String(apInfo.ip));
     
     // Display connected clients
     tft->setCursor(TFT_INFO_X_OFFSET, TFT_INFO_START_Y + (TFT_LINE_HEIGHT * 5) + (TFT_SECTION_GAP));
@@ -156,10 +243,10 @@ void displayAPInfo(const String& ssid, const String& password) {
     tft->print("  Clients:");
     tft->setCursor(TFT_INFO_X_OFFSET, TFT_INFO_START_Y + (TFT_LINE_HEIGHT * 6) + (TFT_SECTION_GAP));
     tft->setTextColor(ST77XX_WHITE);
-    tft->print("  " + String(stationList.num));
+    tft->print("  " + String(apInfo.clients));
 }
 
-void displayStationDetails(const String& ssid, int rssi, const IPAddress& ip) {
+static void displayStationDetailsInternal(const TFTStationInfo& stationInfo) {
     if (!tft) return;
     
     // Display connected network name
@@ -173,7 +260,7 @@ void displayStationDetails(const String& ssid, int rssi, const IPAddress& ip) {
     tft->setTextSize(1);
     
     // Truncate SSID if too long
-    String displaySSID = ssid;
+    String displaySSID = String(stationInfo.ssid);
     if (displaySSID.length() > 20) {
         displaySSID = displaySSID.substring(0, 17) + "...";
     }
@@ -185,7 +272,7 @@ void displayStationDetails(const String& ssid, int rssi, const IPAddress& ip) {
     tft->print("  IP:");
     tft->setCursor(TFT_INFO_X_OFFSET, TFT_INFO_START_Y + (TFT_LINE_HEIGHT * 2) + TFT_SECTION_GAP);
     tft->setTextColor(ST77XX_WHITE);
-    tft->print("  " + ip.toString());
+    tft->print("  " + String(stationInfo.ip));
     
     // Display signal strength
     tft->setCursor(TFT_INFO_X_OFFSET, TFT_INFO_START_Y + (TFT_LINE_HEIGHT * 3) + (TFT_SECTION_GAP));
@@ -194,6 +281,7 @@ void displayStationDetails(const String& ssid, int rssi, const IPAddress& ip) {
     tft->setCursor(TFT_INFO_X_OFFSET, TFT_INFO_START_Y + (TFT_LINE_HEIGHT * 4) + (TFT_SECTION_GAP));
     
     // Color based on signal strength
+    int8_t rssi = stationInfo.rssi;
     if (rssi >= -60) {
         tft->setTextColor(ST77XX_GREEN);
     } else if (rssi >= -70) {
@@ -205,234 +293,114 @@ void displayStationDetails(const String& ssid, int rssi, const IPAddress& ip) {
 }
 
 // ==========================================
-// QR CODE DISPLAY
+// FREERTOS DISPLAY TASK
 // ==========================================
-void displayAPQRCode(const String& ssid, const String& password, const String& encryption) {
-    if (!tft) return;
+static void tftDisplayTask(void* parameter) {
+    TFTMessage msg;
+    TickType_t lastAPUpdate = 0;
+    TickType_t lastStationUpdate = 0;
+    const TickType_t AP_UPDATE_INTERVAL = pdMS_TO_TICKS(5000);      // 5 seconds
+    const TickType_t STATION_UPDATE_INTERVAL = pdMS_TO_TICKS(10000); // 10 seconds
     
-    clearTFT();
-
-    // Create WiFi connection string for QR code
-    String qrData = "WIFI:T:" + encryption + ";S:" + ssid + ";P:" + password + ";;";
+    TFTDisplayMode currentMode = TFT_MODE_OFF;
+    TFTAPInfo lastAPInfo = {};
+    TFTStationInfo lastStationInfo = {};
     
-    // Calculate QR code position (centered horizontally)
-    int moduleSize = 4;
-    int qrSize = 25 * moduleSize; // QR code version 3 is typically 25x25 modules
-    int offsetX = (TFT_WIDTH - qrSize) / 2;
-    int offsetY = 5; // Top margin
+    Serial.println("🎯 TFT Display task started on Core 1");
     
-    // Draw QR code
-    drawQRCode(qrData, offsetX, offsetY);
-    
-    // Display AP information
-    displayAPInfo(ssid, password);
-
-    Serial.println("✅ AP Mode QR Code displayed on TFT");
-}
-
-void displayStationQRCode(const String& ssid, const String& password, const String& encryption) {
-    if (!tft) return;
-    
-    clearTFT();
-    
-    // Display mode indicator
-    tft->setTextColor(ST77XX_BLUE);
-    tft->setTextSize(1);
-    tft->setCursor(TFT_INFO_X_OFFSET, TFT_MODE_Y_OFFSET);
-    tft->print("  Station Mode");
-    
-    // Create WiFi connection string for QR code
-    String qrData = "WIFI:T:" + encryption + ";S:" + ssid + ";P:" + password + ";;";
-    
-    // Calculate QR code position (centered horizontally)
-    int moduleSize = 4;
-    int qrSize = 25 * moduleSize; // QR code version 3 is typically 25x25 modules
-    int offsetX = (TFT_WIDTH - qrSize) / 2;
-    int offsetY = 0; // Top margin
-    
-    // Draw QR code
-    drawQRCode(qrData, offsetX, offsetY);
-    
-    // Display station information
-    int rssi = WiFi.RSSI();
-    IPAddress ip = WiFi.localIP();
-    displayStationDetails(ssid, rssi, ip);
-    
-    Serial.println("✅ Station Mode QR Code displayed on TFT");
-}
-
-// ==========================================
-// BACKGROUND UPDATE FUNCTIONS
-// ==========================================
-void updateAPInfoPeriodically() {
-    if (!tft || !isInAPMode) return;
-    
-    unsigned long currentTime = millis();
-    
-    // Update AP info periodically (but keep QR code)
-    if (currentTime - lastAPInfoUpdate >= AP_INFO_UPDATE_INTERVAL) {
-        extern String currentAPSSID;
-        extern String currentAPPassword;
-        
-        // Only update the info section, not the entire display
-        displayAPInfo(currentAPSSID, currentAPPassword);
-        
-        lastAPInfoUpdate = currentTime;
-        Serial.println("🔄 AP Info updated periodically");
-    }
-}
-
-void updateStationInfoPeriodically() {
-    if (!tft || !isInStationMode) return;
-    
-    unsigned long currentTime = millis();
-    
-    // Update Station info periodically (signal strength, IP, etc.)
-    if (currentTime - lastStationInfoUpdate >= STATION_INFO_UPDATE_INTERVAL) {
-        if (WiFi.status() == WL_CONNECTED) {
-            String ssid = WiFi.SSID();
-            int rssi = WiFi.RSSI();
-            IPAddress ip = WiFi.localIP();
-            
-            // Only update the info section, not the entire display
-            displayStationDetails(ssid, rssi, ip);
-            
-            lastStationInfoUpdate = currentTime;
-            Serial.println("🔄 Station Info updated periodically");
-        }
-    }
-}
-
-void processTFTBackgroundUpdates() {
-    updateAPInfoPeriodically();
-    updateStationInfoPeriodically();
-}
-
-// ==========================================
-// DYNAMIC MODE UPDATE
-// ==========================================
-void updateTFTDisplay() {
-    if (!tft) return;
-    
-    // Get current WiFi mode
-    wifi_mode_t mode;
-    esp_wifi_get_mode(&mode);
-    
-    if (mode == WIFI_MODE_AP || mode == WIFI_MODE_APSTA) {
-        // AP Mode - show AP QR code (full display)
-        extern String currentAPSSID;
-        extern String currentAPPassword;
-        
-        // Only do full display if not already in AP mode or QR code not displayed
-        if (!isInAPMode || !qrCodeDisplayed) {
-            displayAPQRCode(currentAPSSID, currentAPPassword, "WPA");
-            qrCodeDisplayed = true;
-            lastAPInfoUpdate = millis(); // Reset timer after full display
+    while (true) {
+        // Wait for messages with timeout for periodic updates
+        if (xQueueReceive(tftQueue, &msg, pdMS_TO_TICKS(100)) == pdTRUE) {
+            // Process new message
+            switch (msg.mode) {
+                case TFT_MODE_OFF:
+                    clearTFT();
+                    currentMode = TFT_MODE_OFF;
+                    Serial.println("🔄 TFT cleared via task");
+                    break;
+                    
+                case TFT_MODE_AP:
+                    // Full display update with QR code
+                    clearTFT();
+                    
+                    // Create WiFi connection string for QR code
+                    {
+                        String qrData = "WIFI:T:WPA;S:" + String(msg.data.ap.ssid) + 
+                                       ";P:" + String(msg.data.ap.password) + ";;";
+                        
+                        // Calculate QR code position (centered horizontally)
+                        int moduleSize = 4;
+                        int qrSize = 25 * moduleSize; // QR code version 3
+                        int offsetX = (TFT_WIDTH - qrSize) / 2;
+                        int offsetY = 5; // Top margin
+                        
+                        // Draw QR code
+                        drawQRCode(qrData, offsetX, offsetY);
+                    }
+                    
+                    // Display AP information
+                    displayAPInfoInternal(msg.data.ap);
+                    
+                    // Save for periodic updates
+                    lastAPInfo = msg.data.ap;
+                    currentMode = TFT_MODE_AP;
+                    lastAPUpdate = xTaskGetTickCount();
+                    
+                    Serial.println("✅ AP Mode displayed via task");
+                    break;
+                    
+                case TFT_MODE_STATION:
+                    // Full display update
+                    clearTFT();
+                    
+                    // Display mode indicator
+                    tft->setTextColor(ST77XX_BLUE);
+                    tft->setTextSize(1);
+                    tft->setCursor(TFT_INFO_X_OFFSET, TFT_MODE_Y_OFFSET);
+                    tft->print("  Station Mode");
+                    
+                    // Create WiFi connection string for QR code (if we had password)
+                    // For now, just show station details
+                    displayStationDetailsInternal(msg.data.station);
+                    
+                    // Save for periodic updates
+                    lastStationInfo = msg.data.station;
+                    currentMode = TFT_MODE_STATION;
+                    lastStationUpdate = xTaskGetTickCount();
+                    
+                    Serial.println("✅ Station Mode displayed via task");
+                    break;
+                    
+                case TFT_MODE_STATUS:
+                    clearTFT();
+                    displayStatus(String(msg.data.status.message), false);
+                    currentMode = TFT_MODE_STATUS;
+                    Serial.println("✅ Status displayed via task");
+                    break;
+            }
         }
         
-        isInAPMode = true;
-        isInStationMode = false;
+        // Handle periodic updates for current mode
+        TickType_t currentTick = xTaskGetTickCount();
         
-    } else if (mode == WIFI_MODE_STA && WiFi.status() == WL_CONNECTED) {
-        // Station Mode - show connected AP info
-        String ssid = WiFi.SSID();
-        
-        // Only do full display if not already in Station mode
-        if (!isInStationMode) {
-            displayStationInfo();
-            lastStationInfoUpdate = millis(); // Reset timer after full display
+        if (currentMode == TFT_MODE_AP) {
+            // Periodic AP info update (keep QR code, update info section only)
+            if ((currentTick - lastAPUpdate) >= AP_UPDATE_INTERVAL) {
+                displayAPInfoInternal(lastAPInfo);
+                lastAPUpdate = currentTick;
+                Serial.println("🔄 AP Info updated periodically by task");
+            }
+        } else if (currentMode == TFT_MODE_STATION) {
+            // Periodic Station info update
+            if ((currentTick - lastStationUpdate) >= STATION_UPDATE_INTERVAL) {
+                displayStationDetailsInternal(lastStationInfo);
+                lastStationUpdate = currentTick;
+                Serial.println("🔄 Station Info updated periodically by task");
+            }
         }
         
-        isInAPMode = false;
-        isInStationMode = true;
-        qrCodeDisplayed = false;
-        
-    } else {
-        // Not connected or off
-        displayStatus("WiFi\nDisconnected", true);
-        
-        // Reset all mode flags
-        isInAPMode = false;
-        isInStationMode = false;
-        qrCodeDisplayed = false;
-    }
-}
-
-void displayStationInfo() {
-    if (!tft) return;
-    
-    clearTFT();
-    
-    // Display mode indicator
-    tft->setTextColor(ST77XX_BLUE);
-    tft->setTextSize(1);
-    tft->setCursor(0, TFT_MODE_Y_OFFSET);
-    tft->print("  Station Mode");
-    
-    // Display connection status
-    if (WiFi.status() == WL_CONNECTED) {
-        String ssid = WiFi.SSID();
-        int rssi = WiFi.RSSI();
-        IPAddress ip = WiFi.localIP();
-        
-        tft->setTextColor(ST77XX_GREEN);
-        tft->setTextSize(1);
-        tft->setCursor(0, TFT_INFO_START_Y + TFT_SECTION_GAP);
-        tft->print("  Connected!");
-        
-        // Display SSID
-        tft->setCursor(0, TFT_INFO_START_Y + (TFT_LINE_HEIGHT * 3) + TFT_SECTION_GAP);
-        tft->setTextColor(ST77XX_YELLOW);
-        tft->print("  Network:");
-        
-        tft->setCursor(0, TFT_INFO_START_Y + (TFT_LINE_HEIGHT * 4) + TFT_SECTION_GAP);
-        tft->setTextColor(ST77XX_WHITE);
-        String displaySSID = ssid;
-        if (displaySSID.length() > 20) {
-            displaySSID = displaySSID.substring(0, 17) + "...";
-        }
-        tft->print("  " + displaySSID);
-        
-        // Display IP address
-        tft->setCursor(0, TFT_INFO_START_Y + (TFT_LINE_HEIGHT * 5) + (TFT_SECTION_GAP * 2));
-        tft->setTextColor(ST77XX_CYAN);
-        tft->print("  IP Address:");
-        
-        tft->setCursor(0, TFT_INFO_START_Y + (TFT_LINE_HEIGHT * 6) + (TFT_SECTION_GAP * 2));
-        tft->setTextColor(ST77XX_WHITE);
-        tft->print("  " + ip.toString());
-        
-        // Display signal strength
-        tft->setCursor(0, TFT_INFO_START_Y + (TFT_LINE_HEIGHT * 7) + (TFT_SECTION_GAP * 3));
-        tft->setTextColor(ST77XX_YELLOW);
-        tft->print("  Signal:");
-        
-        tft->setCursor(0, TFT_INFO_START_Y + (TFT_LINE_HEIGHT * 8) + (TFT_SECTION_GAP * 3));
-        // Color based on signal strength
-        if (rssi >= -60) {
-            tft->setTextColor(ST77XX_GREEN);
-        } else if (rssi >= -70) {
-            tft->setTextColor(ST77XX_YELLOW);
-        } else {
-            tft->setTextColor(ST77XX_RED);
-        }
-        tft->print("  " + String(rssi) + " dBm");
-        
-        // Signal quality bar
-        int quality = constrain(2 * (rssi + 100), 0, 100);
-        int barWidth = (quality * 100) / 100;  // Max 100 pixels
-        int barY = TFT_INFO_START_Y + (TFT_LINE_HEIGHT * 12) + (TFT_SECTION_GAP * 4);
-        tft->fillRect(10, barY, barWidth, 10, ST77XX_GREEN);
-        tft->drawRect(10, barY, 100, 10, ST77XX_WHITE);
-        
-        Serial.println("✅ Station Mode info displayed on TFT");
-    } else {
-        tft->setTextColor(ST77XX_RED);
-        tft->setTextSize(2);
-        tft->setCursor(10, TFT_INFO_START_Y + (TFT_LINE_HEIGHT * 5));
-        tft->print("Not");
-        tft->setCursor(10, TFT_INFO_START_Y + (TFT_LINE_HEIGHT * 6) + TFT_SECTION_GAP);
-        tft->print("Connected");
+        // Small yield to prevent task starvation
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 

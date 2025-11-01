@@ -7,6 +7,7 @@
 #include <WiFiAP.h>
 #include <WiFiUdp.h>
 #include <qrcode.h>
+#include "esp_wifi.h"
 #ifdef USE_NEOPIXEL
 #include "web_server.h"
 #endif
@@ -124,8 +125,11 @@ void startAccessPoint() {
     generateAPQRCode(currentAPSSID, currentAPPassword, "WPA");
     
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
-    // Display QR code on TFT display
-    displayAPQRCode(currentAPSSID, currentAPPassword, "WPA");
+    // Send AP info to TFT display task via queue
+    wifi_sta_list_t stationList;
+    esp_wifi_ap_get_sta_list(&stationList);
+    sendTFTAPUpdate(currentAPSSID.c_str(), currentAPPassword.c_str(), 
+                    WiFi.softAPIP().toString().c_str(), stationList.num);
 #endif
     
     // Web server will be auto-started by monitorWebServerState()
@@ -182,8 +186,11 @@ void startAccessPoint(const String& ssid, const String& password) {
     generateAPQRCode(currentAPSSID, currentAPPassword, "WPA");
     
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
-    // Display QR code on TFT display
-    displayAPQRCode(currentAPSSID, currentAPPassword, "WPA");
+    // Send AP info to TFT display task via queue
+    wifi_sta_list_t stationList;
+    esp_wifi_ap_get_sta_list(&stationList);
+    sendTFTAPUpdate(currentAPSSID.c_str(), currentAPPassword.c_str(), 
+                    WiFi.softAPIP().toString().c_str(), stationList.num);
 #endif
     
     // Web server will be auto-started by monitorWebServerState()
@@ -215,7 +222,7 @@ void stopWiFi() {
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
   // Clear TFT display when stopping WiFi (from any mode)
   if (currentMode == MODE_AP || currentMode == MODE_STATION) {
-    displayStatus("WiFi Off", true);
+    sendTFTStatus("WiFi Off");
   }
 #endif
   
@@ -687,9 +694,8 @@ void connectToNetwork(String ssid, String password) {
     Serial.printf("  DNS: %s\n", WiFi.dnsIP().toString().c_str());
     
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
-    // Display station mode info on TFT
-    extern void displayStationInfo();
-    displayStationInfo();
+    // Send station mode info to TFT display task via queue
+    sendTFTStationUpdate(ssid.c_str(), WiFi.localIP().toString().c_str(), WiFi.RSSI());
 #endif
     
 #ifdef USE_NEOPIXEL

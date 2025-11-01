@@ -7,6 +7,9 @@
 #include <Adafruit_ST7789.h>
 #include <qrcode.h>
 #include "config.h"
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <freertos/queue.h>
 
 // TFT Display pins - board specific
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
@@ -35,11 +38,53 @@
 #endif
 
 // ==========================================
+// TFT DISPLAY MESSAGE STRUCTURES
+// ==========================================
+
+// Display mode enumeration
+enum TFTDisplayMode {
+    TFT_MODE_OFF,        // Display cleared
+    TFT_MODE_AP,         // Access Point mode with QR code
+    TFT_MODE_STATION,    // Station mode with connection info
+    TFT_MODE_STATUS      // Generic status message
+};
+
+// AP information structure (for queue)
+struct TFTAPInfo {
+    char ssid[33];       // Max SSID length is 32 + null terminator
+    char password[64];   // Max password length is 63 + null terminator
+    char ip[16];         // IPv4 address string (xxx.xxx.xxx.xxx)
+    uint8_t clients;     // Number of connected clients
+};
+
+// Station information structure (for queue)
+struct TFTStationInfo {
+    char ssid[33];       // Connected network SSID
+    char ip[16];         // Assigned IP address
+    int8_t rssi;         // Signal strength in dBm
+};
+
+// Status message structure (for queue)
+struct TFTStatusInfo {
+    char message[128];   // Status message text
+};
+
+// Queue message structure
+struct TFTMessage {
+    TFTDisplayMode mode;
+    union {
+        TFTAPInfo ap;
+        TFTStationInfo station;
+        TFTStatusInfo status;
+    } data;
+};
+
+// ==========================================
 // TFT DISPLAY FUNCTIONS
 // ==========================================
 
 /**
- * @brief Initializes the TFT display
+ * @brief Initializes the TFT display and starts the display task
  */
 void initializeTFT();
 
@@ -49,30 +94,36 @@ void initializeTFT();
 void clearTFT();
 
 /**
- * @brief Displays QR code for AP mode connection
+ * @brief Send AP mode information to TFT display task
  * @param ssid WiFi network SSID
  * @param password WiFi network password
- * @param encryption Encryption type (usually "WPA")
+ * @param ip IP address string
+ * @param clients Number of connected clients
+ * @return true if message was sent successfully, false if queue is full
  */
-void displayAPQRCode(const String& ssid, const String& password, const String& encryption);
+bool sendTFTAPUpdate(const char* ssid, const char* password, const char* ip, uint8_t clients);
 
 /**
- * @brief Displays QR code for Station mode (connected AP)
- * @param ssid WiFi network SSID
- * @param password WiFi network password
- * @param encryption Encryption type (usually "WPA")
+ * @brief Send Station mode information to TFT display task
+ * @param ssid Connected WiFi network SSID
+ * @param ip IP address string
+ * @param rssi Signal strength in dBm
+ * @return true if message was sent successfully, false if queue is full
  */
-void displayStationQRCode(const String& ssid, const String& password, const String& encryption);
+bool sendTFTStationUpdate(const char* ssid, const char* ip, int8_t rssi);
 
 /**
- * @brief Update TFT display based on current WiFi mode
+ * @brief Send status message to TFT display task
+ * @param message Status message to display
+ * @return true if message was sent successfully, false if queue is full
  */
-void updateTFTDisplay();
+bool sendTFTStatus(const char* message);
 
 /**
- * @brief Process background TFT updates (call from main loop)
+ * @brief Clear the TFT display via task queue
+ * @return true if message was sent successfully, false if queue is full
  */
-void processTFTBackgroundUpdates();
+bool sendTFTClear();
 
 /**
  * @brief Displays status text on TFT
@@ -80,33 +131,6 @@ void processTFTBackgroundUpdates();
  * @param clear Whether to clear screen first
  */
 void displayStatus(const String& text, bool clear = true);
-
-// ==========================================
-// QR CODE UTILITIES
-// ==========================================
-
-/**
- * @brief Draws a QR code at specified position
- * @param qrData QR code data string
- * @param offsetX X position for QR code
- * @param offsetY Y position for QR code
- */
-void drawQRCode(const String& qrData, int offsetX, int offsetY);
-
-/**
- * @brief Displays AP mode information (SSID, password, IP, clients)
- * @param ssid WiFi network SSID
- * @param password WiFi network password
- */
-void displayAPInfo(const String& ssid, const String& password);
-
-/**
- * @brief Displays Station mode connection details (SSID, IP, signal)
- * @param ssid Connected WiFi network SSID
- * @param rssi Signal strength in dBm
- * @param ip IP address
- */
-void displayStationDetails(const String& ssid, int rssi, const IPAddress& ip);
 
 /**
  * @brief Turns off the TFT backlight
