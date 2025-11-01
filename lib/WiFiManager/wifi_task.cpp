@@ -50,6 +50,9 @@ static void wifiCommandTask(void* parameter) {
                     {
                         Serial.println("[WiFi Task] Switching to Station mode");
                         
+                        // First set to Station mode
+                        startStationMode();
+                        
                         if (strlen(cmd.param1) > 0 && strlen(cmd.param2) > 0) {
                             // Use provided credentials
                             connectToNetwork(String(cmd.param1), String(cmd.param2));
