@@ -824,13 +824,115 @@ void printStatus() {
     Serial.println("Off");
   }
   
+  // Station Mode Information
+  if (currentMode == MODE_STATION) {
+    Serial.println("──────────────────");
+    Serial.println("📶 Station Mode Status:");
+    
+    if (WiFi.status() == WL_CONNECTED) {
+      // Connected to network
+      Serial.println("Status: ✅ Connected");
+      
+      // Network name
+      Serial.print("  SSID: ");
+      Serial.println(WiFi.SSID());
+      
+      // IP Address Information
+      Serial.print("  IP Address: ");
+      Serial.println(WiFi.localIP());
+      
+      Serial.print("  Subnet Mask: ");
+      Serial.println(WiFi.subnetMask());
+      
+      Serial.print("  Gateway: ");
+      Serial.println(WiFi.gatewayIP());
+      
+      Serial.print("  DNS Server: ");
+      Serial.println(WiFi.dnsIP());
+      
+      // MAC Address
+      Serial.print("  MAC Address: ");
+      Serial.println(WiFi.macAddress());
+      
+      // Signal Strength
+      int32_t rssi = WiFi.RSSI();
+      Serial.print("  Signal Strength: ");
+      Serial.print(rssi);
+      Serial.print(" dBm (");
+      
+      // Signal quality description
+      if (rssi >= -50) {
+        Serial.print("Excellent 🟢🟢🟢🟢");
+      } else if (rssi >= -60) {
+        Serial.print("Very Good 🟢🟢🟢");
+      } else if (rssi >= -70) {
+        Serial.print("Good 🟢🟢");
+      } else if (rssi >= -80) {
+        Serial.print("Fair 🟡");
+      } else {
+        Serial.print("Weak 🔴");
+      }
+      Serial.println(")");
+      
+      // Channel Information
+      Serial.print("  Channel: ");
+      Serial.println(WiFi.channel());
+      
+      // Connection uptime
+      Serial.print("  Connection Time: ");
+      unsigned long uptimeSeconds = millis() / 1000;
+      unsigned long hours = uptimeSeconds / 3600;
+      unsigned long minutes = (uptimeSeconds % 3600) / 60;
+      unsigned long seconds = uptimeSeconds % 60;
+      Serial.printf("%02lu:%02lu:%02lu\n", hours, minutes, seconds);
+      
+    } else {
+      // Not connected
+      Serial.println("Status: ❌ Not Connected");
+      
+      // Show WiFi status code
+      wl_status_t status = WiFi.status();
+      Serial.print("  Status Code: ");
+      switch (status) {
+        case WL_IDLE_STATUS:
+          Serial.println("Idle");
+          break;
+        case WL_NO_SSID_AVAIL:
+          Serial.println("SSID Not Available");
+          break;
+        case WL_SCAN_COMPLETED:
+          Serial.println("Scan Completed");
+          break;
+        case WL_CONNECT_FAILED:
+          Serial.println("Connection Failed");
+          break;
+        case WL_CONNECTION_LOST:
+          Serial.println("Connection Lost");
+          break;
+        case WL_DISCONNECTED:
+          Serial.println("Disconnected");
+          break;
+        default:
+          Serial.println("Unknown");
+          break;
+      }
+      
+      Serial.println("  Use 'scan now' to find networks");
+      Serial.println("  Use 'connect <SSID> <password>' to connect");
+    }
+  }
+  
+  // AP Mode Information
   if (currentMode == MODE_AP) {
-    Serial.print("AP IP: ");
+    Serial.println("──────────────────");
+    Serial.println("📡 Access Point Status:");
+    Serial.print("  AP IP: ");
     Serial.println(WiFi.softAPIP());
-    Serial.print("Connected Clients: ");
+    Serial.print("  Connected Clients: ");
     Serial.println(WiFi.softAPgetStationNum());
   }
   
+  Serial.println("──────────────────");
   Serial.print("Free Heap: ");
   Serial.print(ESP.getFreeHeap());
   Serial.println(" bytes");
