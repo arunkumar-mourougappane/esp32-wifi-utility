@@ -1633,6 +1633,8 @@ void handleIperf() {
             <a href="/analysis">🔬 Analysis</a>
             <div class="dropdown-content">
                 <a href="/analysis">📊 Dashboard</a>
+                <a href="/signal">📶 Signal</a>
+                <a href="/portscan">🔒 Port Scanner</a>
                 <a href="/iperf">⚡ iPerf</a>
                 <a href="/latency">📉 Latency</a>
                 <a href="/channel">📡 Channel</a>
@@ -1929,6 +1931,8 @@ void handleIperfStart() {
             <a href="/analysis">🔬 Analysis</a>
             <div class="dropdown-content">
                 <a href="/analysis">📊 Dashboard</a>
+                <a href="/signal">📶 Signal</a>
+                <a href="/portscan">🔒 Port Scanner</a>
                 <a href="/iperf">⚡ iPerf</a>
                 <a href="/latency">📉 Latency</a>
                 <a href="/channel">📡 Channel</a>
@@ -2054,6 +2058,8 @@ void handleLatency() {
             <a href="/analysis">🔬 Analysis</a>
             <div class="dropdown-content">
                 <a href="/analysis">📊 Dashboard</a>
+                <a href="/signal">📶 Signal</a>
+                <a href="/portscan">🔒 Port Scanner</a>
                 <a href="/iperf">⚡ iPerf</a>
                 <a href="/latency">📉 Latency</a>
                 <a href="/channel">📡 Channel</a>
@@ -2367,6 +2373,8 @@ void handleLatencyStart() {
             <a href="/analysis">🔬 Analysis</a>
             <div class="dropdown-content">
                 <a href="/analysis">📊 Dashboard</a>
+                <a href="/signal">📶 Signal</a>
+                <a href="/portscan">🔒 Port Scanner</a>
                 <a href="/iperf">⚡ iPerf</a>
                 <a href="/latency">📉 Latency</a>
                 <a href="/channel">📡 Channel</a>
