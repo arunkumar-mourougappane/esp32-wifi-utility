@@ -191,6 +191,10 @@ static void drawQRCode(const String& qrData, int offsetX, int offsetY) {
 static void displayAPInfoInternal(const TFTAPInfo& apInfo) {
     if (!tft) return;
     
+    // Clear the info section (preserve QR code on left side)
+    // Clear from x=TFT_INFO_X_OFFSET to right edge, full height
+    tft->fillRect(TFT_INFO_X_OFFSET, 0, TFT_WIDTH - TFT_INFO_X_OFFSET, TFT_HEIGHT, ST77XX_BLACK);
+    
     // Display mode indicator
     tft->setTextColor(ST77XX_GREEN);
     tft->setTextSize(1);
@@ -248,6 +252,11 @@ static void displayAPInfoInternal(const TFTAPInfo& apInfo) {
 
 static void displayStationDetailsInternal(const TFTStationInfo& stationInfo) {
     if (!tft) return;
+    
+    // Clear the info section (preserve any QR code or mode indicator)
+    // Clear from x=TFT_INFO_X_OFFSET to right edge, from INFO_START_Y down
+    tft->fillRect(TFT_INFO_X_OFFSET, TFT_INFO_START_Y, TFT_WIDTH - TFT_INFO_X_OFFSET, 
+                  TFT_HEIGHT - TFT_INFO_START_Y, ST77XX_BLACK);
     
     // Display connected network name
     tft->setTextColor(ST77XX_YELLOW);
@@ -386,6 +395,12 @@ static void tftDisplayTask(void* parameter) {
         if (currentMode == TFT_MODE_AP) {
             // Periodic AP info update (keep QR code, update info section only)
             if ((currentTick - lastAPUpdate) >= AP_UPDATE_INTERVAL) {
+                // Get real-time client count for periodic updates
+                wifi_sta_list_t stationList;
+                if (esp_wifi_ap_get_sta_list(&stationList) == ESP_OK) {
+                    lastAPInfo.clients = stationList.num;
+                }
+                
                 displayAPInfoInternal(lastAPInfo);
                 lastAPUpdate = currentTick;
                 Serial.println("🔄 AP Info updated periodically by task");

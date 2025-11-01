@@ -127,9 +127,12 @@ void startAccessPoint() {
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
     // Send AP info to TFT display task via queue
     wifi_sta_list_t stationList;
-    esp_wifi_ap_get_sta_list(&stationList);
+    uint8_t clientCount = 0;
+    if (esp_wifi_ap_get_sta_list(&stationList) == ESP_OK) {
+      clientCount = stationList.num;
+    }
     sendTFTAPUpdate(currentAPSSID.c_str(), currentAPPassword.c_str(), 
-                    WiFi.softAPIP().toString().c_str(), stationList.num);
+                    WiFi.softAPIP().toString().c_str(), clientCount);
 #endif
     
     // Web server will be auto-started by monitorWebServerState()
@@ -188,9 +191,12 @@ void startAccessPoint(const String& ssid, const String& password) {
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
     // Send AP info to TFT display task via queue
     wifi_sta_list_t stationList;
-    esp_wifi_ap_get_sta_list(&stationList);
+    uint8_t clientCount = 0;
+    if (esp_wifi_ap_get_sta_list(&stationList) == ESP_OK) {
+      clientCount = stationList.num;
+    }
     sendTFTAPUpdate(currentAPSSID.c_str(), currentAPPassword.c_str(), 
-                    WiFi.softAPIP().toString().c_str(), stationList.num);
+                    WiFi.softAPIP().toString().c_str(), clientCount);
 #endif
     
     // Web server will be auto-started by monitorWebServerState()
