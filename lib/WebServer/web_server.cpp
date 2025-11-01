@@ -3,6 +3,7 @@
 #ifdef USE_WEBSERVER  // Web server available when enabled
 
 #include "wifi_manager.h"
+#include "wifi_task.h"
 #include "ap_manager.h"
 #include "ap_config.h"
 #include "station_config.h"
@@ -3415,36 +3416,26 @@ void handleModeSwitch() {
     String mode = webServer->arg("mode");
     
     if (mode == "ap") {
-        // Switch to Access Point mode
-        Serial.println("[Web] Switching to Access Point mode");
+        // Request switch to Access Point mode via task
+        Serial.println("[Web] Requesting switch to Access Point mode");
         
-        // Check if we have saved AP config
-        APConfig config;
-        if (loadAPConfig(config)) {
-            // Use saved config
-            startAccessPoint(String(config.ssid), String(config.password));
-            webServer->send(200, "text/plain", "Switched to Access Point mode with saved config");
-            Serial.println("[Web] Switched to AP mode with saved config");
+        if (requestSwitchToAP()) {
+            webServer->send(200, "text/plain", "Access Point mode switch requested. Check status in a moment.");
+            Serial.println("[Web] ✅ AP mode switch request queued");
         } else {
-            // No saved config, use defaults
-            startAccessPoint();
-            webServer->send(200, "text/plain", "Switched to Access Point mode (default config)");
-            Serial.println("[Web] Switched to AP mode with default config");
+            webServer->send(500, "text/plain", "Failed to queue AP mode switch request");
+            Serial.println("[Web] ❌ Failed to queue AP mode request");
         }
     } else if (mode == "station") {
-        // Switch to Station mode
-        Serial.println("[Web] Switching to Station mode");
+        // Request switch to Station mode via task
+        Serial.println("[Web] Requesting switch to Station mode");
         
-        // Check if we have saved Station config
-        StationConfig config;
-        if (loadStationConfig(config)) {
-            // Use saved config
-            connectToNetwork(String(config.ssid), String(config.password));
-            webServer->send(200, "text/plain", "Connecting to Station mode... Check status in a moment");
-            Serial.println("[Web] Initiated Station mode connection");
+        if (requestSwitchToStation()) {
+            webServer->send(200, "text/plain", "Station mode switch requested. Check status in a moment.");
+            Serial.println("[Web] ✅ Station mode switch request queued");
         } else {
-            webServer->send(400, "text/plain", "No saved Station configuration. Please save credentials first.");
-            Serial.println("[Web] No Station config available");
+            webServer->send(500, "text/plain", "Failed to queue Station mode switch request");
+            Serial.println("[Web] ❌ Failed to queue Station mode request");
         }
     } else {
         webServer->send(400, "text/plain", "Invalid mode parameter. Use 'ap' or 'station'");
