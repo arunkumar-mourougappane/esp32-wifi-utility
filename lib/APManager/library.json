@@ -1,0 +1,13 @@
+{
+  "name": "APManager",
+  "version": "1.0.0",
+  "description": "Access Point management for ESP32",
+  "keywords": "ap, access-point, esp32, wifi",
+  "authors": [
+    {
+      "name": "Arunkumar Mourougappane"
+    }
+  ],
+  "frameworks": "arduino",
+  "platforms": "espressif32"
+}

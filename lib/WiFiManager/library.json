@@ -1,0 +1,21 @@
+{
+  "name": "WiFiManager",
+  "version": "1.0.0",
+  "description": "WiFi management for ESP32 with AP and Station mode support",
+  "keywords": "wifi, esp32, access-point, station",
+  "authors": [
+    {
+      "name": "Arunkumar Mourougappane"
+    }
+  ],
+  "dependencies": [
+    {
+      "name": "Config"
+    },
+    {
+      "name": "QRCode"
+    }
+  ],
+  "frameworks": "arduino",
+  "platforms": "espressif32"
+}

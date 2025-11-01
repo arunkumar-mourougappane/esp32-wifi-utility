@@ -6,6 +6,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_ST7789.h>
 #include <qrcode.h>
+#include "config.h"
 
 // TFT Display pins - board specific
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)

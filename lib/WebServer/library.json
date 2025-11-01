@@ -1,0 +1,13 @@
+{
+  "name": "WebServer",
+  "version": "1.0.0",
+  "description": "Web server for ESP32 WiFi utility management",
+  "keywords": "webserver, http, esp32, wifi",
+  "authors": [
+    {
+      "name": "Arunkumar Mourougappane"
+    }
+  ],
+  "frameworks": "arduino",
+  "platforms": "espressif32"
+}

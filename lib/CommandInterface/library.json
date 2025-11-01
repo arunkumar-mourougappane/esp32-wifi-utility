@@ -1,0 +1,13 @@
+{
+  "name": "CommandInterface",
+  "version": "1.0.0",
+  "description": "Serial command interface for ESP32 WiFi utility",
+  "keywords": "command, interface, serial, cli, esp32",
+  "authors": [
+    {
+      "name": "Arunkumar Mourougappane"
+    }
+  ],
+  "frameworks": "arduino",
+  "platforms": "espressif32"
+}
