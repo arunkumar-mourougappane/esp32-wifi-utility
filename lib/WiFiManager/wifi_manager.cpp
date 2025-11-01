@@ -90,6 +90,11 @@ void startStationMode() {
   currentMode = MODE_STATION;
   scanningEnabled = false;
   
+#if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
+  // Show Station mode status on TFT
+  sendTFTStatus("Station Mode\nReady");
+#endif
+  
   Serial.println("✓ Station mode activated - Ready to scan for networks");
   Serial.println("  Use 'scan on' to start scanning");
   Serial.println("  Web server will auto-start upon WiFi connection");
@@ -666,6 +671,11 @@ void connectToNetwork(String ssid, String password) {
   
   Serial.printf("🔗 Connecting to '%s'...\n", ssid.c_str());
   
+#if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
+  // Show connecting status on TFT
+  sendTFTStatus("Connecting...");
+#endif
+  
 #ifdef USE_NEOPIXEL
   // Show yellow while connecting
   setNeoPixelColor(255, 255, 0);
@@ -721,6 +731,12 @@ void connectToNetwork(String ssid, String password) {
     Serial.println();
     Serial.printf("✗ Failed to connect to '%s'\n", ssid.c_str());
     Serial.println("  Check SSID, password, and signal strength");
+    
+#if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
+    // Show connection failed status on TFT
+    sendTFTStatus("Connection\nFailed");
+#endif
+    
 #ifdef USE_NEOPIXEL
     // Show red for connection failure
     setNeoPixelColor(255, 0, 0);
