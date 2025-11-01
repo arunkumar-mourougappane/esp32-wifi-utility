@@ -917,24 +917,11 @@ void handleNetworkAnalysis() {
         <h1>🔬 Network Analysis Dashboard</h1>
         <p>Comprehensive Network Diagnostics & Performance Overview</p>
     </div>
-
-    <div class="nav">
-        <div><a href="/">🏠 Home</a></div>
-        <div><a href="/status">📊 Status</a></div>
-        <div><a href="/scan">🔍 Scan Networks</a></div>
-        <div class="dropdown">
-            <a href="/analysis">🔬 Analysis</a>
-            <div class="dropdown-content">
-                <a href="/analysis">📊 Dashboard</a>
-                <a href="/signal">📶 Signal</a>
-                <a href="/portscan">🔒 Port Scanner</a>
-                <a href="/iperf">⚡ iPerf</a>
-                <a href="/latency">📉 Latency</a>
-                <a href="/channel">📡 Channel</a>
-            </div>
-        </div>
-    </div>
-
+    )rawliteral";
+    
+    html += generateNav();
+    
+    html += R"rawliteral(
     <h2>🎯 Network Analysis Tools</h2>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
         
