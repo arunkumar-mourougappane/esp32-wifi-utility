@@ -2,6 +2,7 @@
 #include "wifi_manager.h"
 #include "ap_config.h"
 #include "station_config.h"
+#include "logging.h"
 
 // ==========================================
 // TASK VARIABLES
@@ -15,32 +16,32 @@ static TaskHandle_t wifiTaskHandle = nullptr;
 static void wifiCommandTask(void* parameter) {
     WiFiCommand cmd;
     
-    Serial.println("🎯 WiFi Command Task started on Core 1");
+    LOG_INFO(TAG_TASK, "WiFi Command Task started on Core 1");
     
     while (true) {
         // Wait for commands (block indefinitely)
         if (xQueueReceive(wifiCommandQueue, &cmd, portMAX_DELAY) == pdTRUE) {
-            Serial.printf("[WiFi Task] Processing command: %d\n", cmd.type);
+            LOG_DEBUG(TAG_TASK, "Processing WiFi command: %d", cmd.type);
             
             switch (cmd.type) {
                 case WIFI_CMD_SWITCH_TO_AP:
                     {
-                        Serial.println("[WiFi Task] Switching to Access Point mode");
+                        LOG_INFO(TAG_TASK, "Switching to Access Point mode");
                         
                         if (strlen(cmd.param1) > 0 && strlen(cmd.param2) > 0) {
                             // Use provided credentials
                             startAccessPoint(String(cmd.param1), String(cmd.param2));
-                            Serial.printf("[WiFi Task] Started AP with SSID: %s\n", cmd.param1);
+                            LOG_DEBUG(TAG_TASK, "Started AP with SSID: %s", cmd.param1);
                         } else {
                             // Try to load saved config
                             APConfig config;
                             if (loadAPConfig(config)) {
                                 startAccessPoint(String(config.ssid), String(config.password));
-                                Serial.printf("[WiFi Task] Started AP with saved config: %s\n", config.ssid);
+                                LOG_DEBUG(TAG_TASK, "Started AP with saved config: %s", config.ssid);
                             } else {
                                 // Use defaults
                                 startAccessPoint();
-                                Serial.println("[WiFi Task] Started AP with default config");
+                                LOG_DEBUG(TAG_TASK, "Started AP with default config");
                             }
                         }
                     }
@@ -48,7 +49,7 @@ static void wifiCommandTask(void* parameter) {
                     
                 case WIFI_CMD_SWITCH_TO_STATION:
                     {
-                        Serial.println("[WiFi Task] Switching to Station mode");
+                        LOG_INFO(TAG_TASK, "Switching to Station mode");
                         
                         // First set to Station mode
                         startStationMode();
@@ -56,36 +57,36 @@ static void wifiCommandTask(void* parameter) {
                         if (strlen(cmd.param1) > 0 && strlen(cmd.param2) > 0) {
                             // Use provided credentials
                             connectToNetwork(String(cmd.param1), String(cmd.param2));
-                            Serial.printf("[WiFi Task] Connecting to: %s\n", cmd.param1);
+                            LOG_DEBUG(TAG_TASK, "Connecting to: %s", cmd.param1);
                         } else {
                             // Try to load saved config
                             StationConfig config;
                             if (loadStationConfig(config)) {
                                 connectToNetwork(String(config.ssid), String(config.password));
-                                Serial.printf("[WiFi Task] Connecting to saved network: %s\n", config.ssid);
+                                LOG_DEBUG(TAG_TASK, "Connecting to saved network: %s", config.ssid);
                             } else {
-                                Serial.println("[WiFi Task] ❌ No saved Station config available");
+                                LOG_ERROR(TAG_TASK, "No saved Station config available");
                             }
                         }
                     }
                     break;
                     
                 case WIFI_CMD_STOP:
-                    Serial.println("[WiFi Task] Stopping WiFi");
+                    LOG_INFO(TAG_TASK, "Stopping WiFi");
                     stopWiFi();
                     break;
                     
                 case WIFI_CMD_IDLE:
-                    Serial.println("[WiFi Task] Setting WiFi to idle mode");
+                    LOG_INFO(TAG_TASK, "Setting WiFi to idle mode");
                     setIdleMode();
                     break;
                     
                 default:
-                    Serial.printf("[WiFi Task] ❌ Unknown command type: %d\n", cmd.type);
+                    LOG_ERROR(TAG_TASK, "Unknown command type: %d", cmd.type);
                     break;
             }
             
-            Serial.println("[WiFi Task] ✅ Command processed");
+            LOG_DEBUG(TAG_TASK, "Command processed");
         }
     }
 }
@@ -97,7 +98,7 @@ bool initWiFiTask() {
     // Create command queue (10 commands max)
     wifiCommandQueue = xQueueCreate(10, sizeof(WiFiCommand));
     if (wifiCommandQueue == nullptr) {
-        Serial.println("❌ Failed to create WiFi command queue");
+        LOG_ERROR(TAG_TASK, "Failed to create WiFi command queue");
         return false;
     }
     
@@ -114,13 +115,13 @@ bool initWiFiTask() {
     );
     
     if (result != pdPASS) {
-        Serial.println("❌ Failed to create WiFi command task");
+        LOG_ERROR(TAG_TASK, "Failed to create WiFi command task");
         vQueueDelete(wifiCommandQueue);
         wifiCommandQueue = nullptr;
         return false;
     }
     
-    Serial.println("✅ WiFi Command Task initialized on Core 1");
+    LOG_INFO(TAG_TASK, "WiFi Command Task initialized on Core 1");
     return true;
 }
 
