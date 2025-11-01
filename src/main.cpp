@@ -3,6 +3,7 @@
 #include "esp_wifi.h"
 #include "config.h"
 #include "wifi_manager.h"
+#include "wifi_task.h"
 #include "ap_manager.h"
 #include "led_controller.h"
 #include "command_interface.h"
@@ -36,6 +37,11 @@ void setup() {
   
   // Initialize WiFi (will be configured by user commands)
   initializeWiFi();
+  
+  // Initialize WiFi command task (FreeRTOS)
+  if (!initWiFiTask()) {
+    Serial.println("❌ Failed to initialize WiFi command task");
+  }
   
   // Initialize iPerf manager
   initializeIperf();
