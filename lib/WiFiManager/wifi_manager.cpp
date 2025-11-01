@@ -3,6 +3,7 @@
 #include "led_controller.h"
 #include "ap_config.h"
 #include "station_config.h"
+#include "logging.h"
 #include <WiFi.h>
 #include <WiFiAP.h>
 #include <WiFiUdp.h>
@@ -53,7 +54,7 @@ void initializeWiFi() {
   // Check for saved AP configuration and auto-start if configured
   APConfig savedAPConfig;
   if (loadAPConfig(savedAPConfig) && savedAPConfig.autoStart) {
-    Serial.println("\n[WiFi] Saved AP configuration found - auto-starting...");
+    LOG_INFO(TAG_WIFI, "Saved AP configuration found - auto-starting...");
     
     // Apply saved configuration
     currentAPSSID = String(savedAPConfig.ssid);
@@ -68,7 +69,7 @@ void initializeWiFi() {
   // Check for saved Station configuration and auto-connect if configured
   StationConfig savedStaConfig;
   if (loadStationConfig(savedStaConfig) && savedStaConfig.autoConnect) {
-    Serial.println("\n[WiFi] Saved Station configuration found - auto-connecting...");
+    LOG_INFO(TAG_WIFI, "Saved Station configuration found - auto-connecting...");
     
     // Start station mode and connect
     WiFi.mode(WIFI_STA);
@@ -101,9 +102,9 @@ void startStationMode() {
   sendTFTStatus("Station Mode\nReady");
 #endif
   
-  Serial.println("✓ Station mode activated - Ready to scan for networks");
-  Serial.println("  Use 'scan on' to start scanning");
-  Serial.println("  Web server will auto-start upon WiFi connection");
+  LOG_INFO(TAG_WIFI, "Station mode activated - Ready to scan for networks");
+  LOG_DEBUG(TAG_WIFI, "Use 'scan on' to start scanning");
+  LOG_DEBUG(TAG_WIFI, "Web server will auto-start upon WiFi connection");
   Serial.flush(); // Ensure output is sent immediately
   
   RESET_PROMPT();
@@ -121,16 +122,12 @@ void startAccessPoint() {
     currentMode = MODE_AP;
     scanningEnabled = false;
     
-    Serial.println("✓ Access Point mode activated");
-    Serial.print("  SSID: ");
-    Serial.println(currentAPSSID);
-    Serial.print("  Password: ");
-    Serial.println(currentAPPassword);
-    Serial.print("  Channel: ");
-    Serial.println(currentAPChannel);
-    Serial.print("  IP Address: ");
-    Serial.println(WiFi.softAPIP());
-    Serial.println("  Use 'ap info' for detailed information");
+    LOG_INFO(TAG_AP, "Access Point mode activated");
+    LOG_INFO(TAG_AP, "SSID: %s", currentAPSSID.c_str());
+    LOG_DEBUG(TAG_AP, "Password: %s", currentAPPassword.c_str());
+    LOG_INFO(TAG_AP, "Channel: %d", currentAPChannel);
+    LOG_INFO(TAG_AP, "IP Address: %s", WiFi.softAPIP().toString().c_str());
+    LOG_DEBUG(TAG_AP, "Use 'ap info' for detailed information");
     
     // Generate and display QR code for easy mobile connection
     generateAPQRCode(currentAPSSID, currentAPPassword, "WPA");
@@ -147,13 +144,13 @@ void startAccessPoint() {
 #endif
     
     // Web server will be auto-started by monitorWebServerState()
-    Serial.println("  Web server will auto-start momentarily");
+    LOG_DEBUG(TAG_WEB, "Web server will auto-start momentarily");
     Serial.flush(); // Ensure output is sent immediately
     
     RESET_PROMPT();
   } else {
     currentMode = MODE_OFF;
-    Serial.println("✗ Failed to start Access Point");
+    LOG_ERROR(TAG_AP, "Failed to start Access Point");
     Serial.flush(); // Ensure error message is sent
     RESET_PROMPT();
   }
@@ -162,12 +159,12 @@ void startAccessPoint() {
 void startAccessPoint(const String& ssid, const String& password) {
   // Validate SSID and password
   if (ssid.length() == 0 || ssid.length() > 32) {
-    Serial.println("✗ Error: SSID must be 1-32 characters long");
+    LOG_ERROR(TAG_AP, "SSID must be 1-32 characters long");
     return;
   }
   
   if (password.length() < 8 || password.length() > 63) {
-    Serial.println("✗ Error: Password must be 8-63 characters long for WPA2");
+    LOG_ERROR(TAG_AP, "Password must be 8-63 characters long for WPA2");
     return;
   }
   
@@ -187,14 +184,11 @@ void startAccessPoint(const String& ssid, const String& password) {
     currentMode = MODE_AP;
     scanningEnabled = false;
     
-    Serial.println("✓ Custom Access Point mode activated");
-    Serial.print("  SSID: ");
-    Serial.println(currentAPSSID);
-    Serial.print("  Password: ");
-    Serial.println(currentAPPassword);
-    Serial.print("  IP Address: ");
-    Serial.println(WiFi.softAPIP());
-    Serial.println("  Use 'ap info' for detailed information");
+    LOG_INFO(TAG_AP, "Custom Access Point mode activated");
+    LOG_INFO(TAG_AP, "SSID: %s", currentAPSSID.c_str());
+    LOG_DEBUG(TAG_AP, "Password: %s", currentAPPassword.c_str());
+    LOG_INFO(TAG_AP, "IP Address: %s", WiFi.softAPIP().toString().c_str());
+    LOG_DEBUG(TAG_AP, "Use 'ap info' for detailed information");
     
     // Generate and display QR code for easy mobile connection
     generateAPQRCode(currentAPSSID, currentAPPassword, "WPA");
@@ -211,13 +205,13 @@ void startAccessPoint(const String& ssid, const String& password) {
 #endif
     
     // Web server will be auto-started by monitorWebServerState()
-    Serial.println("  Web server will auto-start momentarily");
+    LOG_DEBUG(TAG_WEB, "Web server will auto-start momentarily");
     
     RESET_PROMPT();
   } else {
     currentMode = MODE_OFF;
-    Serial.println("✗ Failed to start custom Access Point");
-    Serial.println("  Check SSID and password requirements");
+    LOG_ERROR(TAG_AP, "Failed to start custom Access Point");
+    LOG_WARN(TAG_AP, "Check SSID and password requirements");
     
     // Restore default configuration on failure
     currentAPSSID = AP_SSID;
@@ -231,7 +225,7 @@ void stopWiFi() {
 #ifdef USE_NEOPIXEL
   // Stop web server before disabling WiFi
   if (isWebServerRunning()) {
-    Serial.println("🌐 Stopping web server...");
+    LOG_INFO(TAG_WEB, "Stopping web server...");
     stopWebServer();
   }
 #endif
@@ -251,14 +245,14 @@ void stopWiFi() {
   scanningEnabled = false;
   digitalWrite(LED_PIN, LOW);
   
-  Serial.println("✓ WiFi disabled");
+  LOG_INFO(TAG_WIFI, "WiFi disabled");
 }
 
 void setIdleMode() {
 #ifdef USE_NEOPIXEL
   // Stop web server before setting idle mode
   if (isWebServerRunning()) {
-    Serial.println("🌐 Stopping web server...");
+    LOG_INFO(TAG_WEB, "Stopping web server...");
     stopWebServer();
   }
 #endif
@@ -271,8 +265,8 @@ void setIdleMode() {
   scanningEnabled = false;
   digitalWrite(LED_PIN, LOW);
   
-  Serial.println("🟡 Device set to IDLE mode - Ready for commands");
-  Serial.println("  Use 'mode station' or 'mode ap' to activate WiFi");
+  LOG_INFO(TAG_WIFI, "Device set to IDLE mode - Ready for commands");
+  LOG_DEBUG(TAG_WIFI, "Use 'mode station' or 'mode ap' to activate WiFi");
 }
 
 // ==========================================
@@ -673,7 +667,7 @@ void showNetworkDetails(int networkId) {
  */
 void connectToNetwork(String ssid, String password) {
   if (currentMode != MODE_STATION) {
-    Serial.println("✗ Error: Must be in station mode to connect. Use 'mode station' first");
+    LOG_ERROR(TAG_WIFI, "Must be in station mode to connect. Use 'mode station' first");
     return;
   }
   
@@ -683,7 +677,7 @@ void connectToNetwork(String ssid, String password) {
     isConnecting = false;
   }
   
-  Serial.printf("🔗 Connecting to '%s'...\n", ssid.c_str());
+  LOG_INFO(TAG_WIFI, "Connecting to '%s'...", ssid.c_str());
   
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
   // Show connecting status on TFT
@@ -731,10 +725,10 @@ void handleWiFiConnection() {
   // Check if connected successfully
   if (status == WL_CONNECTED) {
     Serial.println();
-    Serial.printf("✓ Connected to '%s'\n", connectingSSID.c_str());
-    Serial.printf("  IP Address: %s\n", WiFi.localIP().toString().c_str());
-    Serial.printf("  Gateway: %s\n", WiFi.gatewayIP().toString().c_str());
-    Serial.printf("  DNS: %s\n", WiFi.dnsIP().toString().c_str());
+    LOG_INFO(TAG_WIFI, "Connected to '%s'", WiFi.SSID().c_str());
+    LOG_INFO(TAG_WIFI, "IP Address: %s", WiFi.localIP().toString().c_str());
+    LOG_DEBUG(TAG_WIFI, "Gateway: %s", WiFi.gatewayIP().toString().c_str());
+    LOG_DEBUG(TAG_WIFI, "DNS: %s", WiFi.dnsIP().toString().c_str());
     
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
     // Send station mode info to TFT display task via queue
@@ -749,9 +743,9 @@ void handleWiFiConnection() {
 #ifdef USE_WEB_SERVER 
     // Automatically start web server after successful connection
     if (!isWebServerRunning()) {
-      Serial.println("🌐 Starting web server...");
+      LOG_INFO(TAG_WEB, "Starting web server...");
       if (startWebServer()) {
-        Serial.println("✅ Web server is ready at: " + getWebServerURL());
+        LOG_INFO(TAG_WEB, "Web server ready at: %s", getWebServerURL().c_str());
       }
     }
 #endif
@@ -766,8 +760,8 @@ void handleWiFiConnection() {
   unsigned long elapsed = millis() - connectionStartTime;
   if (elapsed > 10000) {
     Serial.println();
-    Serial.printf("✗ Failed to connect to '%s'\n", connectingSSID.c_str());
-    Serial.println("  Connection timeout - Check SSID, password, and signal strength");
+    LOG_ERROR(TAG_WIFI, "Failed to connect to '%s'", WiFi.SSID().c_str());
+    LOG_WARN(TAG_WIFI, "Check SSID, password, and signal strength");
     
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
     // Show connection failed status on TFT
@@ -810,7 +804,7 @@ void handleWiFiConnection() {
  */
 void disconnectFromNetwork() {
   if (currentMode != MODE_STATION) {
-    Serial.println("✗ Error: Must be in station mode");
+    LOG_ERROR(TAG_WIFI, "Must be in station mode");
     return;
   }
   
@@ -820,15 +814,15 @@ void disconnectFromNetwork() {
 #ifdef USE_NEOPIXEL
     // Stop web server before disconnecting
     if (isWebServerRunning()) {
-      Serial.println("🌐 Stopping web server...");
+      LOG_INFO(TAG_WEB, "Stopping web server...");
       stopWebServer();
     }
 #endif
     
     WiFi.disconnect();
-    Serial.printf("✓ Disconnected from '%s'\n", ssid.c_str());
+    LOG_INFO(TAG_WIFI, "Disconnected from '%s'", ssid.c_str());
   } else {
-    Serial.println("ℹ Not connected to any network");
+    LOG_INFO(TAG_WIFI, "Not connected to any network");
   }
   
   RESET_PROMPT();

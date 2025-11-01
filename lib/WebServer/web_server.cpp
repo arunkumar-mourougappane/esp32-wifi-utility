@@ -12,6 +12,7 @@
 #include "latency_analyzer.h"
 #include "signal_monitor.h"
 #include "port_scanner.h"
+#include "logging.h"
 #include <qrcode.h>
 
 // Web server instance
@@ -3417,25 +3418,25 @@ void handleModeSwitch() {
     
     if (mode == "ap") {
         // Request switch to Access Point mode via task
-        Serial.println("[Web] Requesting switch to Access Point mode");
+        LOG_INFO(TAG_WEB, "Requesting switch to Access Point mode");
         
         if (requestSwitchToAP()) {
             webServer->send(200, "text/plain", "Access Point mode switch requested. Check status in a moment.");
-            Serial.println("[Web] ✅ AP mode switch request queued");
+            LOG_DEBUG(TAG_WEB, "AP mode switch request queued");
         } else {
             webServer->send(500, "text/plain", "Failed to queue AP mode switch request");
-            Serial.println("[Web] ❌ Failed to queue AP mode request");
+            LOG_ERROR(TAG_WEB, "Failed to queue AP mode request");
         }
     } else if (mode == "station") {
         // Request switch to Station mode via task
-        Serial.println("[Web] Requesting switch to Station mode");
+        LOG_INFO(TAG_WEB, "Requesting switch to Station mode");
         
         if (requestSwitchToStation()) {
             webServer->send(200, "text/plain", "Station mode switch requested. Check status in a moment.");
-            Serial.println("[Web] ✅ Station mode switch request queued");
+            LOG_DEBUG(TAG_WEB, "Station mode switch request queued");
         } else {
             webServer->send(500, "text/plain", "Failed to queue Station mode switch request");
-            Serial.println("[Web] ❌ Failed to queue Station mode request");
+            LOG_ERROR(TAG_WEB, "Failed to queue Station mode request");
         }
     } else {
         webServer->send(400, "text/plain", "Invalid mode parameter. Use 'ap' or 'station'");
