@@ -1,0 +1,27 @@
+{
+  "name": "TFTDisplay",
+  "version": "1.0.0",
+  "description": "TFT display management for ESP32 with QR code and WiFi status display",
+  "keywords": "tft, display, st7789, qrcode, esp32",
+  "authors": [
+    {
+      "name": "Arunkumar Mourougappane"
+    }
+  ],
+  "dependencies": [
+    {
+      "name": "Config"
+    },
+    {
+      "name": "Adafruit GFX Library"
+    },
+    {
+      "name": "Adafruit ST7735 and ST7789 Library"
+    },
+    {
+      "name": "QRCode"
+    }
+  ],
+  "frameworks": "arduino",
+  "platforms": "espressif32"
+}

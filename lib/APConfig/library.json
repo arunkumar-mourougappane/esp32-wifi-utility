@@ -1,0 +1,24 @@
+{
+  "name": "APConfig",
+  "version": "1.0.0",
+  "description": "Access Point configuration management with persistent storage",
+  "keywords": "ap, config, preferences, esp32",
+  "authors": [
+    {
+      "name": "Arunkumar Mourougappane"
+    }
+  ],
+  "dependencies": [
+    {
+      "name": "Config"
+    },
+    {
+      "name": "Preferences"
+    },
+    {
+      "name": "Utils"
+    }
+  ],
+  "frameworks": "arduino",
+  "platforms": "espressif32"
+}

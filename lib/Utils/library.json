@@ -1,0 +1,13 @@
+{
+  "name": "Utils",
+  "version": "1.0.0",
+  "description": "Utility functions including base64 encoding, logging, and error handling",
+  "keywords": "utils, base64, logging, error-handling, esp32",
+  "authors": [
+    {
+      "name": "Arunkumar Mourougappane"
+    }
+  ],
+  "frameworks": "arduino",
+  "platforms": "espressif32"
+}
