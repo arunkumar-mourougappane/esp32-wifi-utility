@@ -191,9 +191,10 @@ static void drawQRCode(const String& qrData, int offsetX, int offsetY) {
 static void displayAPInfoInternal(const TFTAPInfo& apInfo) {
     if (!tft) return;
     
-    // Clear the info section (preserve QR code on left side)
-    // Clear from x=TFT_INFO_X_OFFSET to right edge, full height
-    tft->fillRect(TFT_INFO_X_OFFSET, 0, TFT_WIDTH - TFT_INFO_X_OFFSET, TFT_HEIGHT, ST77XX_BLACK);
+    // Clear the info section (preserve any QR code or mode indicator)
+    // Clear from x=TFT_INFO_X_OFFSET to right edge, from INFO_START_Y down
+    tft->fillRect(TFT_INFO_X_OFFSET, TFT_INFO_START_Y, TFT_WIDTH - TFT_INFO_X_OFFSET + 5, 
+                  TFT_HEIGHT - TFT_INFO_START_Y, ST77XX_BLACK);
     
     // Display mode indicator
     tft->setTextColor(ST77XX_GREEN);
@@ -246,6 +247,8 @@ static void displayAPInfoInternal(const TFTAPInfo& apInfo) {
     tft->setTextColor(ST77XX_CYAN);
     tft->print("  Clients:");
     tft->setCursor(TFT_INFO_X_OFFSET, TFT_INFO_START_Y + (TFT_LINE_HEIGHT * 6) + (TFT_SECTION_GAP));
+    tft->fillRect(TFT_INFO_X_OFFSET + 5, TFT_INFO_START_Y + (TFT_LINE_HEIGHT * 6) + (TFT_SECTION_GAP), 30, 12, ST77XX_BLACK);
+    tft->setCursor(TFT_INFO_X_OFFSET, TFT_INFO_START_Y + (TFT_LINE_HEIGHT * 6) + (TFT_SECTION_GAP));
     tft->setTextColor(ST77XX_WHITE);
     tft->print("  " + String(apInfo.clients));
 }
@@ -255,7 +258,7 @@ static void displayStationDetailsInternal(const TFTStationInfo& stationInfo) {
     
     // Clear the info section (preserve any QR code or mode indicator)
     // Clear from x=TFT_INFO_X_OFFSET to right edge, from INFO_START_Y down
-    tft->fillRect(TFT_INFO_X_OFFSET, TFT_INFO_START_Y, TFT_WIDTH - TFT_INFO_X_OFFSET, 
+    tft->fillRect(TFT_INFO_X_OFFSET, TFT_INFO_START_Y, TFT_WIDTH - TFT_INFO_X_OFFSET + 5, 
                   TFT_HEIGHT - TFT_INFO_START_Y, ST77XX_BLACK);
     
     // Display connected network name
