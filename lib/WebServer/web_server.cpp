@@ -77,7 +77,9 @@ String getDeviceName() {
     String chipModel = String(ESP.getChipModel());
     
     // Check for specific board types
-    #ifdef ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT
+    #ifdef ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT
+        return "Feather " + chipModel + " Reverse TFT";
+    #elif defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT)
         return "Feather " + chipModel + " TFT";
     #elif defined(ARDUINO_FEATHER_ESP32)
         return "Feather " + chipModel;
