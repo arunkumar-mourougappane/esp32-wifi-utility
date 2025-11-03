@@ -27,6 +27,12 @@ unsigned long lastScan = 0;
 unsigned long lastBlink = 0;
 bool ledState = false;
 
+// Connection state tracking for non-blocking operation
+static bool isConnecting = false;
+static unsigned long connectionStartTime = 0;
+static String connectingSSID = "";
+static int connectionAttempts = 0;
+
 // ==========================================
 // ACCESS POINT CONFIGURATION VARIABLES
 // ==========================================
@@ -645,11 +651,12 @@ void showNetworkDetails(int networkId) {
 // ==========================================
 
 /**
- * @brief Connects to a WiFi network using SSID and password
+ * @brief Connects to a WiFi network using SSID and password (non-blocking)
  * 
- * This function establishes a connection to a specific WiFi network when
- * the ESP32 is in station mode. It handles the connection process and
- * provides feedback on the connection status.
+ * This function initiates a connection to a specific WiFi network when
+ * the ESP32 is in station mode. The connection process is asynchronous -
+ * this function starts the connection and returns immediately. Call
+ * handleWiFiConnection() periodically to monitor connection progress.
  * 
  * @param ssid Network name to connect to
  * @param password Network password for authentication
@@ -659,14 +666,21 @@ void showNetworkDetails(int networkId) {
  * @pre Password must be correct for the target network
  * 
  * @note Connection timeout is set to 10 seconds
- * @note Displays connection progress and final status
+ * @note This is a non-blocking call - returns immediately after initiating connection
+ * @note Use handleWiFiConnection() in main loop to monitor progress
  * 
- * @return void Outputs connection results to Serial
+ * @return void Outputs connection start message to Serial
  */
 void connectToNetwork(String ssid, String password) {
   if (currentMode != MODE_STATION) {
     Serial.println("✗ Error: Must be in station mode to connect. Use 'mode station' first");
     return;
+  }
+  
+  // Cancel any existing connection attempt
+  if (isConnecting) {
+    Serial.println("⚠️  Canceling previous connection attempt");
+    isConnecting = false;
   }
   
   Serial.printf("🔗 Connecting to '%s'...\n", ssid.c_str());
@@ -681,44 +695,58 @@ void connectToNetwork(String ssid, String password) {
   setNeoPixelColor(255, 255, 0);
 #endif
   
+  // Start connection asynchronously
   WiFi.begin(ssid.c_str(), password.c_str());
   
-  int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED && attempts < 20) {  // 10 seconds timeout
-    Serial.print(".");
-#ifdef USE_NEOPIXEL
-    // Blink yellow during connection attempts
-    if (attempts % 2 == 0) {
-      setNeoPixelColor(255, 255, 0); // Yellow
-    } else {
-      setNeoPixelColor(100, 100, 0); // Dim yellow
-    }
-#endif
-    attempts++;
-    
-    // Check heap during connection attempts
-    if (attempts % 5 == 0) {
-      Serial.printf("\n[HEAP] Free heap during connect: %u bytes\n", ESP.getFreeHeap());
-    }
+  // Track connection state
+  isConnecting = true;
+  connectionStartTime = millis();
+  connectingSSID = ssid;
+  connectionAttempts = 0;
+  
+  Serial.println("  Connection initiated (non-blocking)");
+  Serial.println("  Monitoring connection progress...");
+}
+
+/**
+ * @brief Monitors and handles WiFi connection progress (non-blocking)
+ * 
+ * This function should be called periodically from the main loop to monitor
+ * the progress of an ongoing WiFi connection attempt. It provides visual
+ * feedback and handles connection success/failure without blocking.
+ * 
+ * @note Call this from main loop when isConnecting is true
+ * @note Automatically times out after 10 seconds
+ * @note Provides visual feedback during connection attempts
+ * 
+ * @return void Updates connection state and outputs progress to Serial
+ */
+void handleWiFiConnection() {
+  if (!isConnecting) {
+    return; // Nothing to do
   }
   
-  if (WiFi.status() == WL_CONNECTED) {
+  wl_status_t status = WiFi.status();
+  
+  // Check if connected successfully
+  if (status == WL_CONNECTED) {
     Serial.println();
-    Serial.printf("✓ Connected to '%s'\n", ssid.c_str());
+    Serial.printf("✓ Connected to '%s'\n", connectingSSID.c_str());
     Serial.printf("  IP Address: %s\n", WiFi.localIP().toString().c_str());
     Serial.printf("  Gateway: %s\n", WiFi.gatewayIP().toString().c_str());
     Serial.printf("  DNS: %s\n", WiFi.dnsIP().toString().c_str());
     
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
     // Send station mode info to TFT display task via queue
-    sendTFTStationUpdate(ssid.c_str(), WiFi.localIP().toString().c_str(), WiFi.RSSI());
+    sendTFTStationUpdate(connectingSSID.c_str(), WiFi.localIP().toString().c_str(), WiFi.RSSI());
 #endif
     
 #ifdef USE_NEOPIXEL
     // Show solid green for successful connection
     setNeoPixelColor(0, 255, 0);
-    delay(1000); // Show success for 1 second
-    
+#endif
+
+#ifdef USE_WEB_SERVER 
     // Automatically start web server after successful connection
     if (!isWebServerRunning()) {
       Serial.println("🌐 Starting web server...");
@@ -727,10 +755,19 @@ void connectToNetwork(String ssid, String password) {
       }
     }
 #endif
-  } else {
+    
+    // Reset connection state
+    isConnecting = false;
+    RESET_PROMPT();
+    return;
+  }
+  
+  // Check for timeout (10 seconds)
+  unsigned long elapsed = millis() - connectionStartTime;
+  if (elapsed > 10000) {
     Serial.println();
-    Serial.printf("✗ Failed to connect to '%s'\n", ssid.c_str());
-    Serial.println("  Check SSID, password, and signal strength");
+    Serial.printf("✗ Failed to connect to '%s'\n", connectingSSID.c_str());
+    Serial.println("  Connection timeout - Check SSID, password, and signal strength");
     
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
     // Show connection failed status on TFT
@@ -740,11 +777,29 @@ void connectToNetwork(String ssid, String password) {
 #ifdef USE_NEOPIXEL
     // Show red for connection failure
     setNeoPixelColor(255, 0, 0);
-    delay(2000); // Show error for 2 seconds
 #endif
+    
+    // Reset connection state
+    isConnecting = false;
+    WiFi.disconnect();
+    RESET_PROMPT();
+    return;
   }
   
-  RESET_PROMPT();
+  // Provide periodic visual feedback (every 100ms)
+  if (elapsed / 100 > connectionAttempts) {
+    Serial.print(".");
+    connectionAttempts = elapsed / 100;
+    
+#ifdef USE_NEOPIXEL
+    // Blink yellow during connection attempts
+    if (connectionAttempts % 2 == 0) {
+      setNeoPixelColor(255, 255, 0); // Yellow
+    } else {
+      setNeoPixelColor(100, 100, 0); // Dim yellow
+    }
+#endif
+  }
 }
 
 /**
