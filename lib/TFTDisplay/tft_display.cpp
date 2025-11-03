@@ -365,7 +365,7 @@ static void tftDisplayTask(void* parameter) {
                     break;
                     
                 case TFT_MODE_STATION:
-                    // Full display update with QR code
+                    // Full display update with QR code (only if connected)
                     clearTFT();
                     
                     // Display mode indicator
@@ -374,8 +374,9 @@ static void tftDisplayTask(void* parameter) {
                     tft->setCursor(TFT_INFO_X_OFFSET, TFT_MODE_Y_OFFSET);
                     tft->print("  Station Mode");
                     
-                    // Create WiFi connection string for QR code
-                    {
+                    // Only show QR code if device is currently connected
+                    if (WiFi.status() == WL_CONNECTED) {
+                        // Create WiFi connection string for QR code
                         String qrData = "WIFI:T:WPA;S:" + String(msg.data.station.ssid) + 
                                        ";P:" + String(msg.data.station.password) + ";;";
                         
@@ -424,8 +425,23 @@ static void tftDisplayTask(void* parameter) {
                 Serial.println("🔄 AP Info updated periodically by task");
             }
         } else if (currentMode == TFT_MODE_STATION) {
-            // Periodic Station info update
+            // Periodic Station info update - check if still connected
             if ((currentTick - lastStationUpdate) >= STATION_UPDATE_INTERVAL) {
+                // Check if WiFi is still connected
+                if (WiFi.status() != WL_CONNECTED) {
+                    // Device disconnected - clear QR code area
+                    int moduleSize = 4;
+                    int qrSize = 25 * moduleSize;
+                    int offsetX = (TFT_WIDTH - qrSize) / 2;
+                    int offsetY = 5;
+                    int borderSize = 8;
+                    
+                    // Clear QR code area (fill with black)
+                    tft->fillRect(offsetX - borderSize, offsetY - borderSize, 
+                                qrSize + (borderSize * 2), qrSize + (borderSize * 2), 
+                                ST77XX_BLACK);
+                }
+                
                 displayStationDetailsInternal(lastStationInfo);
                 lastStationUpdate = currentTick;
                 Serial.println("🔄 Station Info updated periodically by task");
