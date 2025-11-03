@@ -32,6 +32,7 @@ bool ledState = false;
 static bool isConnecting = false;
 static unsigned long connectionStartTime = 0;
 static String connectingSSID = "";
+static String connectingPassword = "";
 static int connectionAttempts = 0;
 
 // ==========================================
@@ -696,6 +697,7 @@ void connectToNetwork(String ssid, String password) {
   isConnecting = true;
   connectionStartTime = millis();
   connectingSSID = ssid;
+  connectingPassword = password;
   connectionAttempts = 0;
   
   Serial.println("  Connection initiated (non-blocking)");
@@ -731,8 +733,9 @@ void handleWiFiConnection() {
     LOG_DEBUG(TAG_WIFI, "DNS: %s", WiFi.dnsIP().toString().c_str());
     
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
-    // Send station mode info to TFT display task via queue
-    sendTFTStationUpdate(connectingSSID.c_str(), WiFi.localIP().toString().c_str(), WiFi.RSSI());
+    // Send station mode info to TFT display task via queue (with password for QR code)
+    sendTFTStationUpdate(connectingSSID.c_str(), connectingPassword.c_str(), 
+                        WiFi.localIP().toString().c_str(), WiFi.RSSI());
 #endif
     
 #ifdef USE_NEOPIXEL

@@ -60,6 +60,7 @@ struct TFTAPInfo {
 // Station information structure (for queue)
 struct TFTStationInfo {
     char ssid[33];       // Connected network SSID
+    char password[64];   // WiFi password (for QR code generation)
     char ip[16];         // Assigned IP address
     int8_t rssi;         // Signal strength in dBm
 };
@@ -106,11 +107,12 @@ bool sendTFTAPUpdate(const char* ssid, const char* password, const char* ip, uin
 /**
  * @brief Send Station mode information to TFT display task
  * @param ssid Connected WiFi network SSID
+ * @param password WiFi network password (for QR code)
  * @param ip IP address string
  * @param rssi Signal strength in dBm
  * @return true if message was sent successfully, false if queue is full
  */
-bool sendTFTStationUpdate(const char* ssid, const char* ip, int8_t rssi);
+bool sendTFTStationUpdate(const char* ssid, const char* password, const char* ip, int8_t rssi);
 
 /**
  * @brief Send status message to TFT display task

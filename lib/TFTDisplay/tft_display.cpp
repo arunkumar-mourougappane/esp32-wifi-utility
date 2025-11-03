@@ -97,7 +97,7 @@ bool sendTFTAPUpdate(const char* ssid, const char* password, const char* ip, uin
     return xQueueSend(tftQueue, &msg, 0) == pdTRUE;
 }
 
-bool sendTFTStationUpdate(const char* ssid, const char* ip, int8_t rssi) {
+bool sendTFTStationUpdate(const char* ssid, const char* password, const char* ip, int8_t rssi) {
     if (tftQueue == nullptr) return false;
     
     TFTMessage msg;
@@ -106,6 +106,9 @@ bool sendTFTStationUpdate(const char* ssid, const char* ip, int8_t rssi) {
     // Copy strings safely
     strncpy(msg.data.station.ssid, ssid, sizeof(msg.data.station.ssid) - 1);
     msg.data.station.ssid[sizeof(msg.data.station.ssid) - 1] = '\0';
+    
+    strncpy(msg.data.station.password, password, sizeof(msg.data.station.password) - 1);
+    msg.data.station.password[sizeof(msg.data.station.password) - 1] = '\0';
     
     strncpy(msg.data.station.ip, ip, sizeof(msg.data.station.ip) - 1);
     msg.data.station.ip[sizeof(msg.data.station.ip) - 1] = '\0';
@@ -273,8 +276,8 @@ static void displayStationDetailsInternal(const TFTStationInfo& stationInfo) {
     
     // Truncate SSID if too long
     String displaySSID = String(stationInfo.ssid);
-    if (displaySSID.length() > 20) {
-        displaySSID = displaySSID.substring(0, 17) + "...";
+    if (displaySSID.length() > 14) {
+        displaySSID = displaySSID.substring(0, 11) + "...";
     }
     tft->print("  " + displaySSID);
     
@@ -362,7 +365,7 @@ static void tftDisplayTask(void* parameter) {
                     break;
                     
                 case TFT_MODE_STATION:
-                    // Full display update
+                    // Full display update with QR code
                     clearTFT();
                     
                     // Display mode indicator
@@ -371,8 +374,21 @@ static void tftDisplayTask(void* parameter) {
                     tft->setCursor(TFT_INFO_X_OFFSET, TFT_MODE_Y_OFFSET);
                     tft->print("  Station Mode");
                     
-                    // Create WiFi connection string for QR code (if we had password)
-                    // For now, just show station details
+                    // Create WiFi connection string for QR code
+                    {
+                        String qrData = "WIFI:T:WPA;S:" + String(msg.data.station.ssid) + 
+                                       ";P:" + String(msg.data.station.password) + ";;";
+                        
+                        // Calculate QR code position (centered horizontally)
+                        int moduleSize = 4;
+                        int qrSize = 25 * moduleSize; // QR code version 3
+                        int offsetX = (TFT_WIDTH - qrSize) / 2;
+                        int offsetY = 5; // Top margin
+                        
+                        // Draw QR code
+                        drawQRCode(qrData, offsetX, offsetY);
+                    }
+                    
                     displayStationDetailsInternal(msg.data.station);
                     
                     // Save for periodic updates
@@ -382,7 +398,6 @@ static void tftDisplayTask(void* parameter) {
                     
                     Serial.println("✅ Station Mode displayed via task");
                     break;
-                    
                 case TFT_MODE_STATUS:
                     clearTFT();
                     displayStatus(String(msg.data.status.message), false);
