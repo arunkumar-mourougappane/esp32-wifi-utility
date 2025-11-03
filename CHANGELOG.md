@@ -5,6 +5,210 @@ All notable changes to the ESP32 WiFi Utility project are documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.0.0] - 2025-11-02
+
+### 🎯 Major Enhancements Release
+
+This release introduces **TFT display enhancements**, **non-blocking WiFi operations**, **structured logging**, and **QR code functionality** for improved user experience and system responsiveness.
+
+#### Added
+
+##### TFT Display Enhancements
+
+- **QR Code Support for Station Mode**
+  - Automatic QR code generation when connected to WiFi networks
+  - WiFi credential sharing via scannable QR codes (WIFI:T:WPA;S:<SSID>;P:<password>;;)
+  - Conditional display: QR code only shown when actively connected
+  - Automatic clearing on disconnection, reappears on reconnection
+  - Consistent QR code experience between AP and Station modes
+  - White border around QR code for better mobile scanning
+  - Centered positioning with 4-pixel module size
+
+##### FreeRTOS Task Architecture
+
+- **WiFi Command Task**
+  - Asynchronous WiFi mode switching via FreeRTOS task
+  - Task-based command queue for non-blocking operations
+  - Proper sequencing: stop WiFi → start new mode → connect
+  - Core 1 pinned, Priority 2, 8KB stack size
+  - Background processing without blocking main loop
+
+##### Non-Blocking WiFi Connection
+
+- **Asynchronous Connection Management**
+  - Split `connectToNetwork()` into initiate and monitor functions
+  - Removed blocking `while` loop with `vTaskDelay()`
+  - New `handleWiFiConnection()` for periodic status monitoring
+  - Connection state tracking (SSID, password, start time, attempts)
+  - Main loop remains responsive during 10-second connection timeout
+  - Visual feedback every 100ms without blocking
+  - All existing features preserved (LED, TFT, web server auto-start)
+
+##### Structured Logging System
+
+- **LOG\_\* Macro System**
+  - Four log levels: LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR
+  - Component tags: TAG_WIFI, TAG_AP, TAG_WEB, TAG_TASK
+  - Replaced ~73 Serial.print statements across codebase
+  - Runtime-configurable log levels
+  - Consistent formatting with timestamps and severity
+  - Preserved user-facing interface messages (connection progress dots)
+  - Files updated: wifi_manager.cpp, wifi_task.cpp, web_server.cpp
+
+##### Enhanced Status Command
+
+- **Comprehensive Station Mode Information**
+  - Connection status (Connected/Not Connected)
+  - Network details: SSID, IP, subnet, gateway, DNS, MAC address
+  - Signal strength with quality indicators and emoji bars
+  - WiFi channel and connection uptime (HH:MM:SS format)
+  - Detailed WiFi status codes when disconnected
+  - Color-coded signal quality (Excellent/Good/Fair/Weak)
+  - Lease information when available
+
+#### Changed
+
+##### WiFi Connection Flow
+
+- **Station Mode Connection Process**
+  - Connection now fully non-blocking (10ms loop delay vs 100ms)
+  - WiFi task properly calls `startStationMode()` before `connectToNetwork()`
+  - Web server auto-start moved outside USE_NEOPIXEL conditional
+  - Enhanced `monitorWebServerState()` with proactive logic
+  - 100ms delay after `webServer->begin()` for network stack initialization
+
+##### TFT Display Updates
+
+- **Station Mode Display**
+  - Real-time QR code updates based on connection status
+  - Periodic updates check WiFi.status() and clear QR if disconnected
+  - Password field added to TFTStationInfo structure
+  - Updated `sendTFTStationUpdate()` signature to include password
+  - Mode indicator positioning standardized across AP/Station modes
+
+##### Web Server Responsiveness
+
+- **Request Handling Optimization**
+  - Main loop delay reduced from 100ms to 10ms
+  - `handleClient()` frequency increased from 10 Hz to ~100 Hz
+  - Added `yield()` after `handleWebServerRequests()` for CPU sharing
+  - Eliminated "HTTP requests stuck at pending" issue
+  - Nmap confirms port 80 open and responsive
+
+#### Fixed
+
+##### WiFi Connection Issues
+
+- **Connection Timing Bug**
+  - Added missing `delay(500)` in WiFi connection loop
+  - WiFi.begin() is asynchronous, needed proper negotiation time
+  - Fixed false "Connection Failed" reports with valid credentials
+  - Changed from `delay()` to `vTaskDelay()` for FreeRTOS compatibility
+
+##### Web Server Issues
+
+- **Station Mode Web Server**
+  - Web server now starts in Station mode for all board variants
+  - Fixed conditional compilation issue (USE_NEOPIXEL → USE_WEBSERVER)
+  - TFT boards without NeoPixel now properly start web server
+  - Enhanced monitoring with 2-second throttling to prevent spam
+
+##### TFT Display Issues
+
+- **Display Update Fixes**
+  - Fixed TFT not updating during Station mode connection
+  - Added connection status messages to TFT queue
+  - Proper display clearing and refresh during mode transitions
+  - QR code area properly cleared on disconnection
+
+#### Refactored
+
+##### Code Organization
+
+- **WiFi Manager**
+  - Connection state tracking with static variables
+  - Separated connection initiation from monitoring logic
+  - Improved function documentation with detailed Doxygen comments
+  - Better error handling and user feedback
+
+##### Logging Integration
+
+- **System-Wide Logging**
+  - Migrated from ad-hoc Serial.print to structured logging
+  - Consistent log format across all modules
+  - Component-based filtering capability
+  - Maintained backward compatibility with user interface
+
+#### Technical Details
+
+##### Memory Impact
+
+- **Flash Usage**: 1,161,085 bytes (+2,004 bytes from 4.3.1)
+  - QR code logic: +1,692 bytes
+  - Conditional display: +48 bytes
+  - Non-blocking connection: +264 bytes
+- **RAM Usage**: 53,072 bytes (16.2% of 327,680 bytes)
+  - Connection state tracking: minimal increase
+  - TFT password field: +64 bytes per structure
+
+##### Performance Improvements
+
+- **Responsiveness**
+  - Main loop: 100ms → 10ms (10x faster iteration)
+  - Web server: 10 Hz → 100 Hz handleClient() calls
+  - WiFi connection: Non-blocking (device remains interactive)
+  - TFT updates: Asynchronous via FreeRTOS task queue
+
+##### Build System
+
+- **Compilation**
+  - All 6 environments compile successfully
+  - Build time: ~11 seconds (adafruit_feather_esp32s3_tft)
+  - No warnings or errors
+  - Consistent behavior across board variants
+
+#### Documentation Updates
+
+##### Code Documentation
+
+- **Function Documentation**
+  - Enhanced Doxygen comments for `connectToNetwork()`
+  - New documentation for `handleWiFiConnection()`
+  - Updated TFT display function signatures
+  - Improved parameter descriptions and return values
+
+##### Architecture Documentation
+
+- **System Design**
+  - FreeRTOS task architecture documented
+  - Non-blocking operation flow diagrams
+  - Connection state machine documentation
+  - Queue communication patterns
+
+### Breaking Changes
+
+None. All changes are backward compatible with v4.3.1.
+
+### Migration Notes
+
+For users upgrading from v4.3.1:
+
+- No action required - all changes are transparent
+- WiFi connection may feel more responsive
+- Station mode now shows QR codes automatically
+- Web interface more responsive in Station mode
+- Logs are now structured with component tags
+
+### Known Issues
+
+None reported.
+
+### Contributors
+
+- Arunkumar Mourougappane (@arunkumar-mourougappane)
+
+---
+
 ## [4.3.1] - 2025-10-25
 
 ### 📚 Documentation Update Release
@@ -14,6 +218,7 @@ This patch release focuses on comprehensive Wiki documentation improvements and 
 #### Added - Wiki Documentation
 
 ##### Port Scanner Documentation
+
 - **New Wiki Page**: `Port-Scanner.md` (1,400+ lines)
   - Complete port scanning fundamentals and concepts
   - Four scan types documentation (Common, Well-Known, Custom, All Ports)
@@ -29,6 +234,7 @@ This patch release focuses on comprehensive Wiki documentation improvements and 
   - Quick reference guide
 
 ##### Signal Strength Monitor Documentation
+
 - **New Wiki Page**: `Signal-Strength-Monitor.md` (1,100+ lines)
   - Complete RSSI reference guide with signal quality interpretation
   - Serial command documentation (signal show/scan/monitor) with examples
@@ -41,16 +247,19 @@ This patch release focuses on comprehensive Wiki documentation improvements and 
 #### Updated - Wiki Navigation
 
 ##### Home Page
+
 - Added Port Scanner to Network Analysis & Testing section
 - Added Signal Strength Monitor to navigation
 - Updated documentation structure
 
 ##### Sidebar Navigation
+
 - Added Port Scanner link in Features section
 - Added Signal Strength Monitor link in Features section
 - Improved navigation hierarchy
 
 ##### Web Configuration Interface
+
 - Updated page count from 8 to 10 pages
 - Added `/portscan` page description and features
 - Added `/signal` page description and features
@@ -58,11 +267,13 @@ This patch release focuses on comprehensive Wiki documentation improvements and 
 - Added Signal Strength Monitor API endpoints documentation
 
 ##### Command Reference
+
 - Added signal monitoring commands (signal show/scan/monitor)
 - Detailed examples and use cases for signal commands
 - Signal quality reference tables
 
 ##### Quick Start Guide
+
 - Added Signal Strength Monitor to essential features list
 - Added signal commands to quick reference table
 - Updated feature count and descriptions
@@ -79,6 +290,7 @@ This patch release focuses on comprehensive Wiki documentation improvements and 
 #### Quality Improvements
 
 ##### Documentation Enhancements
+
 - Professional formatting with tables and code blocks
 - Clear section hierarchy and navigation
 - Comprehensive cross-referencing between pages
@@ -86,6 +298,7 @@ This patch release focuses on comprehensive Wiki documentation improvements and 
 - Consistent styling across all pages
 
 ##### User Experience
+
 - Step-by-step guides for common tasks
 - Visual indicators and formatting for clarity
 - Quick reference sections for experienced users
@@ -95,12 +308,14 @@ This patch release focuses on comprehensive Wiki documentation improvements and 
 ### Changed
 
 #### Version Management
+
 - Bumped version to 4.3.1 in all platformio.ini environments
 - Updated version strings across all build configurations
 
 ### Removed
 
 #### Legacy Documentation
+
 - Removed outdated `RELEASE_NOTES_V4.3.0.md` (superseded by Wiki)
 - Removed old `RELEASE_SUMMARY.txt` (consolidated into CHANGELOG)
 - Removed `docs/MIGRATION_GUIDE_V4.2.0.md` (integrated into Wiki)
@@ -108,6 +323,7 @@ This patch release focuses on comprehensive Wiki documentation improvements and 
 - Removed `docs/technical/CODE_IMPROVEMENTS_V4.2.0.md` (archived)
 
 #### Documentation Consolidation
+
 - Migrated all release documentation to structured Wiki format
 - Centralized feature documentation in dedicated Wiki pages
 - Improved documentation discoverability and maintenance
@@ -134,6 +350,7 @@ This major version introduces **professional network analysis tools**, **TFT dis
 #### Added - Signal Strength Monitor
 
 ##### Real-Time Signal Monitoring
+
 - **Files**: `signal_monitor.h/.cpp`, `docs/SIGNAL_STRENGTH_MONITOR.md`
 - **Web Interface**: `/signal` - Professional signal monitoring page
 - **Features**:
@@ -155,6 +372,7 @@ This major version introduces **professional network analysis tools**, **TFT dis
 #### Added - Port Scanner
 
 ##### Network Security Auditing
+
 - **Files**: `port_scanner.h/.cpp`
 - **Web Interface**: `/portscan` - Professional security audit page
 - **Scan Types**:
@@ -182,13 +400,14 @@ This major version introduces **professional network analysis tools**, **TFT dis
 #### Added - Channel Graph Visualization
 
 ##### Visual Spectrum Analysis
+
 - **Web Interface**: `/channel/graph` - Interactive channel graph
 - **Features**:
   - HTML5 Canvas-based bar chart for 2.4GHz spectrum
   - Color-coded congestion levels:
-    * Green: Low congestion (0-40%)
-    * Yellow: Medium congestion (40-70%)
-    * Red: High congestion (70-100%)
+    - Green: Low congestion (0-40%)
+    - Yellow: Medium congestion (40-70%)
+    - Red: High congestion (70-100%)
   - Network count overlays on each channel bar
   - Recommended channels marked with stars (⭐)
   - Best channel automatic identification
@@ -203,6 +422,7 @@ This major version introduces **professional network analysis tools**, **TFT dis
 #### Added - TFT Display Support
 
 ##### Built-in Screen Support for Feather Boards
+
 - **Files**: `tft_display.h/.cpp`
 - **Hardware Support**:
   - Adafruit Feather ESP32-S3 TFT
@@ -220,9 +440,9 @@ This major version introduces **professional network analysis tools**, **TFT dis
   - Local IP address
   - Real-time signal strength (RSSI in dBm)
   - Color-coded signal quality:
-    * Green: Strong signal (-60 dBm or better)
-    * Yellow: Medium signal (-60 to -70 dBm)
-    * Red: Weak signal (below -70 dBm)
+    - Green: Strong signal (-60 dBm or better)
+    - Yellow: Medium signal (-60 to -70 dBm)
+    - Red: Weak signal (below -70 dBm)
   - Visual signal quality bar graph (0-100%)
 - **Features**:
   - Automatic mode detection using esp_wifi_get_mode()
@@ -237,6 +457,7 @@ This major version introduces **professional network analysis tools**, **TFT dis
 #### Changed - Web Interface Enhancements
 
 ##### Analysis Dashboard Updates
+
 - Added Signal Monitor card with cyan gradient theme
 - Added Port Scanner card with purple gradient theme
 - Added Channel Graph button to Channel Analysis page
@@ -246,6 +467,7 @@ This major version introduces **professional network analysis tools**, **TFT dis
 - Consistent gradient styling across all analysis tools
 
 ##### Navigation Updates
+
 - Added "📶 Signal" to Analysis dropdown
 - Added "🔒 Port Scanner" to Analysis dropdown
 - Maintained "📡 Channel" with added graph option
@@ -254,6 +476,7 @@ This major version introduces **professional network analysis tools**, **TFT dis
 #### Changed - Library Dependencies
 
 ##### New Dependencies Added
+
 - `Adafruit ST7735 and ST7789 Library@^1.10.0` - TFT display driver
 - `Adafruit GFX Library@^1.11.0` - Graphics support
 - Added to all Feather ESP32-S3 TFT board configurations
@@ -261,6 +484,7 @@ This major version introduces **professional network analysis tools**, **TFT dis
 #### Changed - Build Configuration
 
 ##### Flash Usage
+
 - ESP32dev: 90.7% (1,188,777 bytes) - increased due to new features
 - Feather ESP32-S3 TFT: 80.0% (1,153,357 bytes)
 - All 6 environments build successfully
@@ -268,11 +492,13 @@ This major version introduces **professional network analysis tools**, **TFT dis
 #### Documentation
 
 ##### New Documentation
+
 - `docs/SIGNAL_STRENGTH_MONITOR.md` - Complete signal monitor guide
 - Updated README.md with v4.3.0 features
 - Updated CHANGELOG.md with detailed changes
 
 ##### Updated Documentation
+
 - README.md: Added v4.3.0 features section
 - README.md: Updated version badge to 4.3.0
 - README.md: Enhanced feature descriptions
@@ -286,6 +512,7 @@ This major version represents an **architectural simplification** with removal o
 #### Removed - RTOS Architecture Simplification
 
 ##### Code Simplification
+
 - **RTOS Removed**: Eliminated FreeRTOS task-based architecture for easier development
 - **Simplified Architecture**: Returned to direct loop-based processing for clearer code flow
 - **Reduced Complexity**: Removed task management, queue systems, and mutex handling
@@ -294,6 +521,7 @@ This major version represents an **architectural simplification** with removal o
 - **Same Features**: All user-facing functionality retained with enhanced reliability
 
 ##### Files Removed
+
 - Removed all RTOS-related source files and headers
 - Removed RTOS task implementations (Command, WiFi, LED, Analysis, WebServer tasks)
 - Removed queue and mutex management systems
@@ -302,6 +530,7 @@ This major version represents an **architectural simplification** with removal o
 - **Total Cleanup**: ~11,000+ lines of RTOS infrastructure removed
 
 ##### Benefits
+
 - **Simpler Codebase**: Direct, easy-to-follow execution flow
 - **Faster Development**: Easier to add features without RTOS constraints
 - **Better Debugging**: Standard debugging tools work without RTOS complexity
@@ -311,6 +540,7 @@ This major version represents an **architectural simplification** with removal o
 #### Added - Configuration Persistence System
 
 ##### Access Point Configuration Persistence
+
 - **File**: `ap_config.h/.cpp` - Complete AP configuration management
 - **NVS Storage**: Persistent storage using ESP32 Non-Volatile Storage
 - **Configuration Structure**: `APConfig` with SSID, password, channel, auto-start flag
@@ -327,6 +557,7 @@ This major version represents an **architectural simplification** with removal o
 - **Serial Commands**: `ap config <ssid> <password> [channel] [auto]`
 
 ##### Station Configuration Persistence
+
 - **File**: `station_config.h/.cpp` - Complete Station configuration management
 - **NVS Storage**: Persistent WiFi credential storage
 - **Configuration Structure**: `StationConfig` with SSID, password, auto-connect flag
@@ -342,6 +573,7 @@ This major version represents an **architectural simplification** with removal o
 - **Serial Commands**: `station config <ssid> <password> [auto]`
 
 ##### Base64 Password Encryption
+
 - **File**: `base64_utils.h/.cpp` - Secure password encoding/decoding
 - **mbedtls Integration**: Uses ESP32's built-in mbedtls library
 - **API Functions**:
@@ -352,9 +584,11 @@ This major version represents an **architectural simplification** with removal o
 - **Efficient**: Zero-copy operations with proper memory management
 
 ##### Boot Behavior (Priority Order)
+
 1. **Check AP Config**: If saved AP config exists and auto-start enabled → Start AP mode
 2. **Check Station Config**: If saved Station config exists and auto-connect enabled → Connect to WiFi
 3. **Default IDLE**: No saved config or auto-start/connect disabled → Start in IDLE mode
+
 - **Implementation**: `initializeWiFi()` in `wifi_manager.cpp`
 - **Automatic**: No user intervention required for configured devices
 - **Flexible**: Can disable auto-start/connect while keeping credentials saved
@@ -362,6 +596,7 @@ This major version represents an **architectural simplification** with removal o
 #### Added - Web Configuration Interface
 
 ##### Configuration Page (`/config`)
+
 - **File**: `web_server.cpp` - `handleConfig()` function (400+ lines)
 - **Sections**:
   - **AP Configuration**: SSID, password, channel (1-13), auto-start toggle
@@ -377,6 +612,7 @@ This major version represents an **architectural simplification** with removal o
   - Touch-friendly buttons (minimum 44px targets)
 
 ##### Reboot Modal System
+
 - **File**: `web_server.cpp` - JavaScript modal implementation
 - **Features**:
   - **10-Second Countdown**: Visual countdown timer with cancellation
@@ -392,6 +628,7 @@ This major version represents an **architectural simplification** with removal o
   - Error handling for reboot failures
 
 ##### Mode Switching Without Reboot
+
 - **File**: `web_server.cpp` - `handleModeSwitch()` function
 - **Endpoint**: `POST /mode/switch?mode=<ap|station>`
 - **Features**:
@@ -408,6 +645,7 @@ This major version represents an **architectural simplification** with removal o
   - Page updates reflect new mode immediately
 
 ##### Configuration API Endpoints
+
 - **GET /config**: Display configuration page UI
 - **POST /config/ap**: Save AP configuration
   - Parameters: `ssid`, `password`, `channel`, `auto_start`
@@ -431,6 +669,7 @@ This major version represents an **architectural simplification** with removal o
 #### Added - Responsive Navigation Menu
 
 ##### Hamburger Menu for Mobile
+
 - **File**: `web_server.cpp` - NAV_MENU constant
 - **Features**:
   - **Desktop View** (≥768px): Horizontal navigation bar
@@ -457,6 +696,7 @@ This major version represents an **architectural simplification** with removal o
   - State management for open/closed
 
 ##### Navigation Structure
+
 - **🏠 Home**: System overview and quick stats
 - **📊 Status**: Detailed device information
 - **🔍 Scan**: WiFi network scanning
@@ -470,6 +710,7 @@ This major version represents an **architectural simplification** with removal o
 #### Changed
 
 ##### WiFi Manager Enhanced
+
 - **File**: `wifi_manager.cpp`
 - **Modified**: `initializeWiFi()` function
 - **Changes**:
@@ -481,6 +722,7 @@ This major version represents an **architectural simplification** with removal o
   - Automatic mode activation based on saved settings
 
 ##### Web Server Configuration Routes
+
 - **File**: `web_server.cpp`
 - **Modified**: `startWebServer()` function
 - **Changes**:
@@ -492,6 +734,7 @@ This major version represents an **architectural simplification** with removal o
   - Added `/mode/switch` POST handler
 
 ##### Command Interface Updates
+
 - **File**: `command_interface.cpp`
 - **Modified**: Command processing for AP and Station
 - **Changes**:
@@ -503,6 +746,7 @@ This major version represents an **architectural simplification** with removal o
   - Help text updated with new commands
 
 ##### Documentation Updates
+
 - **File**: `README.md` (updated comprehensively)
 - **Changes**:
   - Added "What's New in v4.2.0" section
@@ -516,6 +760,7 @@ This major version represents an **architectural simplification** with removal o
   - Updated all version references to 4.2.0
 
 ##### Version Bumps
+
 - **File**: `platformio.ini`
 - **Changes**:
   - Updated all environments to VERSION="4.2.0"
@@ -527,6 +772,7 @@ This major version represents an **architectural simplification** with removal o
 #### Security
 
 ##### Password Protection
+
 - **Base64 Encoding**: All passwords encoded before NVS storage
 - **Never Displayed**: Saved passwords shown as asterisks on web UI
 - **Masked Input**: Password input fields use type="password"
@@ -534,6 +780,7 @@ This major version represents an **architectural simplification** with removal o
 - **Memory Safety**: Temporary password strings cleared after use
 
 ##### Configuration Validation
+
 - **Server-Side**: All inputs validated before storage
 - **SSID Validation**: 1-32 characters for AP, max 32 for Station
 - **Password Validation**: 8-63 characters for AP (WPA2), 0-63 for Station
@@ -543,18 +790,21 @@ This major version represents an **architectural simplification** with removal o
 #### Performance
 
 ##### Memory Usage (No RTOS Overhead)
+
 - **ESP32dev**: Flash ~77%, RAM ~16% (reduced from RTOS version)
 - **Feather ESP32-S3**: Flash ~69%, RAM ~16% (reduced from RTOS version)
 - **NVS Storage**: Minimal overhead (~1KB per configuration)
 - **Base64 Encoding**: Zero-copy operations, efficient memory use
 
 ##### Web Interface
+
 - **Page Load**: <50ms response time
 - **Configuration Save**: <100ms including NVS write
 - **Mode Switch**: 2-3 seconds vs 10+ seconds for reboot
 - **Reboot**: 1 second delay for proper shutdown
 
 ##### Boot Time
+
 - **No Saved Config**: 2-3 seconds to IDLE mode
 - **AP Auto-Start**: 3-4 seconds to AP mode ready
 - **Station Auto-Connect**: 4-8 seconds depending on WiFi availability
@@ -562,6 +812,7 @@ This major version represents an **architectural simplification** with removal o
 #### Bug Fixes
 
 ##### Critical Fixes
+
 - **Heap Corruption**: Fixed WiFi operation crashes with better memory management
 - **NVS Operations**: Enhanced error checking and recovery for configuration storage
 - **Web Server Stability**: Improved handling of concurrent requests
@@ -569,6 +820,7 @@ This major version represents an **architectural simplification** with removal o
 - **String Handling**: Better buffer management prevents overflows
 
 ##### Minor Fixes
+
 - **Configuration Validation**: Added bounds checking for all parameters
 - **Error Messages**: Clearer feedback for user errors
 - **Web UI**: Fixed form submission issues on mobile devices
@@ -577,6 +829,7 @@ This major version represents an **architectural simplification** with removal o
 #### Technical Details
 
 ##### Files Added
+
 - `include/ap_config.h` - AP configuration API (77 lines)
 - `src/ap_config.cpp` - AP configuration implementation (207 lines)
 - `include/station_config.h` - Station configuration API (70 lines)
@@ -585,6 +838,7 @@ This major version represents an **architectural simplification** with removal o
 - `src/base64_utils.cpp` - Base64 implementation (84 lines)
 
 ##### Files Modified
+
 - `src/wifi_manager.cpp` - Added configuration loading on boot (40+ lines changed)
 - `src/web_server.cpp` - Added configuration pages and handlers (600+ lines added)
 - `src/command_interface.cpp` - Added configuration commands (150+ lines added)
@@ -593,6 +847,7 @@ This major version represents an **architectural simplification** with removal o
 - `CHANGELOG.md` - This changelog entry (300+ lines)
 
 ##### Lines of Code Summary
+
 - **Configuration System**: ~650 lines (AP + Station + Base64)
 - **Web Configuration UI**: ~600 lines (pages, handlers, modal)
 - **Command Interface**: ~150 lines (serial commands)
@@ -620,12 +875,14 @@ This major version represents an **architectural simplification** with removal o
 #### Breaking Changes
 
 **None for Users:**
+
 - ✅ All serial commands work identically (new commands added)
 - ✅ Web interface enhanced (all old routes work)
 - ✅ Configuration files compatible
 - ✅ WiFi operations unchanged
 
 **For Developers Extending Code:**
+
 - **RTOS Removed**: No more task-based architecture
 - **Direct Loop**: Back to simple setup()/loop() model
 - **No Queues/Mutexes**: Direct function calls
@@ -636,6 +893,7 @@ This major version represents an **architectural simplification** with removal o
 **From v4.1.0 (RTOS) to v4.2.0 (Simplified):**
 
 **For Users (No Action Required):**
+
 1. Update firmware to v4.2.0
 2. All functionality works the same
 3. New features available immediately:
@@ -645,6 +903,7 @@ This major version represents an **architectural simplification** with removal o
    - Responsive mobile UI
 
 **For Developers:**
+
 1. **Architecture Change**: RTOS tasks → loop() functions
 2. **No Queue Calls**: Direct function invocation
 3. **No Mutexes**: Synchronous execution (no race conditions)
@@ -654,16 +913,19 @@ This major version represents an **architectural simplification** with removal o
 **New Feature Usage:**
 
 **Save AP Configuration:**
+
 ```cpp
 ap config "MyHotspot" "SecurePass123" 6 auto
 ```
 
 **Save Station Configuration:**
+
 ```cpp
 station config "HomeWiFi" "MyPassword" auto
 ```
 
 **Use Web Configuration:**
+
 1. Start AP mode: `mode ap`
 2. Connect to ESP32 AP
 3. Open browser: `http://192.168.4.1/config`
@@ -671,6 +933,7 @@ station config "HomeWiFi" "MyPassword" auto
 5. Optionally reboot to apply
 
 **Instant Mode Switch:**
+
 1. Visit web interface `/config`
 2. Click "Switch to AP" or "Switch to Station"
 3. Mode changes in ~2 seconds

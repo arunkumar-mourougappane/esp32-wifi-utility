@@ -1,7 +1,7 @@
 # ESP32 WiFi Utility Suite
 
 ![Build Status](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/actions/workflows/build.yml/badge.svg)
-![Version](https://img.shields.io/badge/version-4.3.1-blue.svg)
+![Version](https://img.shields.io/badge/version-5.0.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-ESP32-blue.svg)
 ![Framework](https://img.shields.io/badge/framework-Arduino-green.svg)
 ![PlatformIO](https://img.shields.io/badge/build-PlatformIO-orange.svg)
@@ -9,7 +9,107 @@
 ![Boards](https://img.shields.io/badge/boards-ESP32dev%20|%20Feather%20ESP32--S3%20|%20Reverse%20TFT-brightgreen.svg)
 [![Changelog](https://img.shields.io/badge/changelog-available-brightgreen.svg)](CHANGELOG.md)
 
-A professional-grade ESP32 WiFi analysis and management suite featuring comprehensive network scanning, signal strength monitoring, port scanning, visual spectrum analysis, TFT display support, performance testing, tri-board support, persistent configuration storage, instant mode switching via web interface, and simplified architecture.
+A professional-grade ESP32 WiFi analysis and management suite featuring comprehensive network scanning, signal strength monitoring, port scanning, visual spectrum analysis, TFT display support with QR codes, performance testing, tri-board support, persistent configuration storage, instant mode switching via web interface, non-blocking operations, structured logging, and FreeRTOS task-based architecture.
+
+## 🎉 What's New in v5.0.0
+
+Version 5.0.0 introduces **TFT display enhancements**, **non-blocking WiFi operations**, **structured logging system**, and **QR code functionality** for significantly improved user experience and system responsiveness.
+
+### 🔗 **QR Code Support for Station Mode**
+
+Share WiFi credentials instantly with scannable QR codes:
+
+- **Automatic QR Code Generation**: Creates QR code when connected to WiFi networks
+- **WiFi Credential Sharing**: Mobile devices can scan and auto-connect to networks
+- **Conditional Display**: QR code only shown when actively connected
+- **Dynamic Updates**: Automatically clears on disconnection, reappears on reconnection
+- **Consistent UX**: Same QR code experience for both AP and Station modes
+- **Optimized Scanning**: White border and centered positioning for better mobile camera recognition
+- **Standard Format**: Uses WIFI:T:WPA;S:<SSID>;P:<password>;; format
+- **TFT Integration**: Displayed on both normal and reverse TFT variants
+
+### ⚡ **Non-Blocking WiFi Connection**
+
+Enhanced responsiveness with asynchronous WiFi operations:
+
+- **Asynchronous Connection**: WiFi.begin() no longer blocks main loop for 10 seconds
+- **Responsive Main Loop**: Device remains interactive during connection attempts
+- **Dual Function Design**: `connectToNetwork()` initiates, `handleWiFiConnection()` monitors
+- **Connection State Tracking**: SSID, password, start time, and attempt count tracked
+- **Visual Feedback**: Progress indicators update every 100ms without blocking
+- **10-Second Timeout**: Automatic failure detection with status reporting
+- **Preserved Features**: All LED indicators, TFT updates, and web server auto-start maintained
+- **FreeRTOS Compatible**: Uses proper task delay mechanisms for cooperative multitasking
+
+### 📋 **Structured Logging System**
+
+Professional logging framework with severity levels and component tags:
+
+- **Four Log Levels**: LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR
+- **Component Tags**: TAG_WIFI, TAG_AP, TAG_WEB, TAG_TASK for easy filtering
+- **Runtime Configuration**: Adjustable log levels without recompilation
+- **Consistent Formatting**: Timestamps and severity indicators
+- **System-Wide Migration**: ~73 Serial.print statements replaced across codebase
+- **User Interface Preserved**: Connection progress dots and user messages maintained
+- **Enhanced Debugging**: Easier troubleshooting with filterable, structured logs
+- **Production Ready**: Clean logs without excessive debug information
+
+### 📊 **Enhanced Status Command**
+
+Comprehensive network information at your fingertips:
+
+- **Connection Status**: Clear Connected/Not Connected display
+- **Network Details**: SSID, IP address, subnet mask, gateway, DNS servers
+- **MAC Address**: Device hardware address for network identification
+- **Signal Strength**: RSSI in dBm with quality indicators and emoji bars
+- **Quality Classification**: Excellent/Good/Fair/Weak with visual feedback
+- **WiFi Channel**: Current operating channel
+- **Connection Uptime**: Time connected in HH:MM:SS format
+- **Detailed Status Codes**: WiFi status codes when disconnected for troubleshooting
+- **Lease Information**: DHCP lease details when available
+
+### 🚀 **FreeRTOS Task Architecture**
+
+Enhanced multi-tasking with dedicated WiFi command task:
+
+- **WiFi Command Task**: Asynchronous mode switching and command processing
+- **Task-Based Queue**: Non-blocking command execution
+- **Proper Sequencing**: Stop WiFi → Start Mode → Connect flow
+- **Core 1 Pinned**: Dedicated processing core for WiFi operations
+- **Priority 2**: Higher priority than display, lower than network stack
+- **8KB Stack**: Sufficient memory for WiFi operations
+- **Background Processing**: Commands execute without blocking main loop
+
+### 🌐 **Web Server Improvements**
+
+Enhanced responsiveness and broader compatibility:
+
+- **10x Faster**: Main loop reduced from 100ms to 10ms delay
+- **100 Hz handleClient()**: Up from 10 Hz for instant web response
+- **CPU Sharing**: yield() calls for better task cooperation
+- **No More Pending**: Eliminated "HTTP requests stuck at pending" issue
+- **All Board Support**: Web server works on all variants including TFT-only boards
+- **Station Mode Fix**: Web server properly starts in Station mode
+- **Enhanced Monitoring**: Proactive state monitoring with 2-second throttling
+
+### 🔧 **Bug Fixes & Refinements**
+
+Critical fixes for reliability and consistency:
+
+- **Connection Timing**: Fixed false "Connection Failed" with valid credentials
+- **Proper Delays**: Added delay(500) in connection loop for WiFi negotiation
+- **TFT Updates**: Fixed display not updating during Station mode connection
+- **Mode Switching**: Proper startStationMode() call before connectToNetwork()
+- **Conditional Compilation**: Fixed USE_NEOPIXEL → USE_WEBSERVER logic
+- **QR Code Clearing**: Automatic removal when WiFi disconnects
+
+### 🔗 **Quick Links**
+
+- **GitHub Wiki**: [Complete Documentation](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/wiki)
+- **Release Notes**: [v5.0.0 Details](docs/RELEASE_NOTES_V5.0.0.md)
+- **Changelog**: [Full Version History](CHANGELOG.md)
+
+---
 
 ## 🎉 What's New in v4.3.1
 
@@ -20,6 +120,7 @@ Version 4.3.1 is a **documentation-focused patch release** providing comprehensi
 **New Wiki Pages** (2,500+ lines of documentation):
 
 - **[Port Scanner Documentation](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/wiki/Port-Scanner)** (1,400+ lines)
+
   - Port scanning fundamentals and TCP connection concepts
   - Four scan types: Common (16 ports), Well-Known (1-1024), Custom Range, All Ports (65,535)
   - 25+ service identifications (HTTP, SSH, MySQL, RDP, VNC, etc.)
@@ -39,6 +140,7 @@ Version 4.3.1 is a **documentation-focused patch release** providing comprehensi
   - Technical specifications, performance metrics, memory usage
 
 **Updated Wiki Pages**:
+
 - [Home](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/wiki/Home) - Added navigation to new tools
 - [Web Configuration Interface](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/wiki/Web-Configuration-Interface) - Updated to 10 pages, added API endpoints
 - [Command Reference](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/wiki/Command-Reference) - Added signal commands
@@ -125,7 +227,7 @@ Visual WiFi spectrum analysis with interactive graph:
 Built-in screen support for Adafruit Feather ESP32-S3 TFT boards:
 
 - **Mode-Specific Displays**:
-  - **AP Mode**: 
+  - **AP Mode**:
     - Green "AP Mode" indicator
     - QR code for easy device connection
     - SSID and password display
@@ -166,7 +268,7 @@ Expanded Analysis Dashboard with new tools:
 - **Quick Actions**: One-click access to all diagnostic features
 - **Tips Section**: Educational content for each tool
 - **Status Cards**: Real-time status display for each tool
-- **Color Themes**: 
+- **Color Themes**:
   - Cyan: Signal Monitor
   - Purple: Port Scanner
   - Green: Channel Graph
@@ -188,11 +290,12 @@ Version 4.2.0 represents a **major architectural simplification** with removal o
 - **Enhanced Stability**: More predictable behavior with synchronous operations
 - **Same Features**: All user-facing functionality retained and enhanced
 
-### 💾 **Configuration Persistence System** 
+### 💾 **Configuration Persistence System**
 
 Complete NVS-based storage for Access Point and Station configurations with base64 password encryption:
 
 #### Access Point Configuration
+
 - **Persistent Settings**: SSID, password (base64 encoded), channel, auto-start
 - **Survives Reboots**: Configuration stored securely in non-volatile memory
 - **Default Fallback**: Automatic defaults if no config saved
@@ -200,7 +303,8 @@ Complete NVS-based storage for Access Point and Station configurations with base
 - **Web Interface**: Full configuration via `/config` page
 - **Secure Storage**: Passwords encoded in base64 before NVS storage
 
-#### Station Configuration  
+#### Station Configuration
+
 - **WiFi Credentials**: SSID and password (base64 encoded) storage
 - **Auto-Connect**: Automatic connection on boot when enabled
 - **Secure Storage**: Passwords never exposed in plain text, encoded in base64
@@ -209,6 +313,7 @@ Complete NVS-based storage for Access Point and Station configurations with base
 - **Password Privacy**: Saved passwords never displayed on web interface
 
 #### Boot Behavior (Priority Order)
+
 1. Check for saved AP config with auto-start enabled → Start AP mode
 2. Check for saved Station config with auto-connect enabled → Connect to WiFi
 3. No saved config or auto-start/connect disabled → Start in IDLE mode
@@ -218,36 +323,38 @@ Complete NVS-based storage for Access Point and Station configurations with base
 Professional web-based configuration and management system:
 
 #### Configuration Page Features (`/config`)
-- **AP Configuration Section**: 
+
+- **AP Configuration Section**:
   - SSID, password, channel (1-13), auto-start toggle
   - Save configuration that persists across reboots
   - Clear saved configuration option
-- **Station Configuration Section**: 
+- **Station Configuration Section**:
   - WiFi network credentials (SSID/password)
   - Auto-connect on boot toggle
   - Save configuration for automatic connection
   - Clear saved configuration option
-- **Quick Mode Switch**: 
+- **Quick Mode Switch**:
   - Toggle between AP and Station modes without rebooting
   - Instant activation using saved configurations
   - Status display showing current mode
-- **Reboot Modal**: 
+- **Reboot Modal**:
   - Countdown timer (10 seconds) with visual progress
   - Confirm/Cancel options for user control
   - Automatic page reload after reboot
-- **Responsive Design**: 
+- **Responsive Design**:
   - Works seamlessly on desktop, tablet, and mobile devices
   - Touch-friendly buttons and inputs
-- **Password Security**: 
+- **Password Security**:
   - Passwords masked in input fields
   - Saved passwords never displayed (shown as asterisks)
   - Base64 encoding for storage security
-- **Real-time Validation**: 
+- **Real-time Validation**:
   - Immediate feedback on input errors
   - Form validation before submission
   - Clear error messages
 
 #### API Endpoints
+
 ```
 GET  /config              # Configuration page UI
 POST /config/ap           # Save AP configuration
@@ -269,6 +376,7 @@ Switch between Access Point and Station modes without device reboot:
 - **Fallback Handling**: Clear messaging if no saved configuration exists
 
 **Quick Mode Toggle Benefits:**
+
 - 📡 **Switch to Access Point** - Activates AP mode with saved config immediately
 - 📶 **Switch to Station** - Connects to saved WiFi network instantly
 - Current mode prominently displayed
@@ -288,6 +396,7 @@ Mobile-optimized interface with adaptive navigation:
 - **Accessible**: Clear labeling and keyboard navigation support
 
 **Responsive Navigation Features:**
+
 - Hamburger icon automatically shown on screens < 768px width
 - Click/tap to toggle mobile menu visibility
 - Smooth slide-in/out animations
@@ -391,17 +500,17 @@ Comprehensive test coverage ensuring reliability and performance:
 Professional documentation suite (~5000 lines) for developers:
 
 - **[RTOS Architecture Guide](docs/technical/RTOS_ARCHITECTURE.md)** (~800 lines): Complete system design, task structure,
-queue flows with diagrams, synchronization primitives, CPU core assignments, memory management
+  queue flows with diagrams, synchronization primitives, CPU core assignments, memory management
 - **[RTOS API Reference](docs/technical/RTOS_API_REFERENCE.md)** (~1400 lines): 100% API coverage with examples for
-RTOSManager, QueueManager, MutexManager, TaskBase, and all task classes
+  RTOSManager, QueueManager, MutexManager, TaskBase, and all task classes
 - **[RTOS Migration Guide](docs/user-guides/RTOS_MIGRATION_GUIDE.md)** (~850 lines): v3.x to v4.x upgrade guide with
-behavioral changes, API changes, step-by-step migration, troubleshooting
+  behavioral changes, API changes, step-by-step migration, troubleshooting
 - **[Tutorial: Creating a New Task](docs/technical/RTOS_TUTORIAL_NEW_TASK.md)** (~500 lines): Step-by-step
-task implementation with complete example
+  task implementation with complete example
 - **[Tutorial: Using Queues](docs/technical/RTOS_TUTORIAL_QUEUES.md)** (~450 lines): Inter-task communication patterns
-and best practices
+  and best practices
 - **[Tutorial: Debugging RTOS](docs/technical/RTOS_TUTORIAL_DEBUGGING.md)** (~400 lines): Tools, techniques,
-and common issue resolution
+  and common issue resolution
 - **[RTOS FAQ](docs/user-guides/RTOS_FAQ.md)** (~550 lines): 40+ common questions answered
 
 ### ✅ **Backward Compatibility**
@@ -742,7 +851,7 @@ This project includes professional-grade documentation covering all features and
 
 - **[📚 Documentation Portal](docs/README.md)** - **Central hub for all documentation**
 - **[Channel Analysis Quick Start](docs/user-guides/CHANNEL_GUIDE.md#quick-start)** - `channel scan`, `channel recommend`
-with AI-powered analysis
+  with AI-powered analysis
 - **[Latency Testing Quick Start](docs/user-guides/LATENCY_GUIDE.md#basic-usage)** - Network performance and jitter measurement
 - **[Dual-Board Setup](docs/technical/TEST_INFRASTRUCTURE.md#dual-board-support)** - ESP32dev and Feather ESP32-S3 TFT configuration
 - **[Test Suite Execution](docs/technical/TEST_INFRASTRUCTURE.md#running-tests)** - Automated testing and validation procedures
@@ -991,20 +1100,22 @@ See [Test Documentation](test/TEST_DOCUMENTATION.md) for detailed information.
 
 ### 🆕 Access Point Configuration Commands (v4.2.0)
 
-| Command                                        | Description                                        |
-| ---------------------------------------------- | -------------------------------------------------- |
-| `ap config <ssid> <password> [channel] [auto]` | Save AP configuration (persistent across reboots)  |
-| `ap config load`                               | Display current saved AP configuration             |
-| `ap config clear`                              | Clear saved AP configuration                       |
-| `ap start`                                     | Start AP with saved config (or defaults if none)   |
+| Command                                        | Description                                       |
+| ---------------------------------------------- | ------------------------------------------------- |
+| `ap config <ssid> <password> [channel] [auto]` | Save AP configuration (persistent across reboots) |
+| `ap config load`                               | Display current saved AP configuration            |
+| `ap config clear`                              | Clear saved AP configuration                      |
+| `ap start`                                     | Start AP with saved config (or defaults if none)  |
 
 **Parameters:**
+
 - `ssid`: Network name (1-32 characters)
-- `password`: WPA2 password (8-63 characters)  
+- `password`: WPA2 password (8-63 characters)
 - `channel`: WiFi channel 1-13 (optional, default: 1)
 - `auto`: Enable auto-start on boot (optional, default: false)
 
 **Examples:**
+
 ```bash
 ap config "MyHotspot" "SecurePass123" 6 auto  # Save with auto-start
 ap start                                       # Start with saved config
@@ -1014,19 +1125,21 @@ ap config clear                                # Clear configuration
 
 ### 🆕 Station Configuration Commands (v4.2.0)
 
-| Command                                   | Description                                         |
-| ----------------------------------------- | --------------------------------------------------- |
-| `station config <ssid> <password> [auto]` | Save station config (persistent across reboots)     |
-| `station config load`                     | Display current saved station configuration         |
-| `station config clear`                    | Clear saved station configuration                   |
-| `station connect`                         | Connect using saved config (or prompt if none)      |
+| Command                                   | Description                                     |
+| ----------------------------------------- | ----------------------------------------------- |
+| `station config <ssid> <password> [auto]` | Save station config (persistent across reboots) |
+| `station config load`                     | Display current saved station configuration     |
+| `station config clear`                    | Clear saved station configuration               |
+| `station connect`                         | Connect using saved config (or prompt if none)  |
 
 **Parameters:**
+
 - `ssid`: Network name to connect to
 - `password`: Network password
 - `auto`: Enable auto-connect on boot (optional, default: false)
 
 **Examples:**
+
 ```bash
 station config "HomeNetwork" "WiFiPass123" auto  # Save with auto-connect
 station connect                                   # Connect with saved config
