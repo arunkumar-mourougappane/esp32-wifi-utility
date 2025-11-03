@@ -7,6 +7,7 @@ The ESP32 WiFi Utility web interface features a fully responsive navigation menu
 ## Features
 
 ### Desktop/Tablet (> 768px)
+
 - **Horizontal Menu Bar**: All items displayed in a single row
 - **Hover Dropdowns**: Analysis submenu appears on hover
 - **Full Text Labels**: Complete navigation labels with emojis
@@ -14,6 +15,7 @@ The ESP32 WiFi Utility web interface features a fully responsive navigation menu
 - **Centered Layout**: Menu centered on the page
 
 ### Mobile (≤ 768px)
+
 - **Hamburger Menu**: 3-line icon in top-right corner
 - **Collapsible Menu**: Menu hidden by default, toggles on tap
 - **Vertical Stack**: All items stacked vertically when open
@@ -22,29 +24,32 @@ The ESP32 WiFi Utility web interface features a fully responsive navigation menu
 - **Touch-Friendly**: Larger tap targets for fingers
 
 ### Tablet Landscape (769px - 1024px)
+
 - **Compact Horizontal**: Reduced spacing and font size
 - **Optimized Layout**: Fits more items in limited space
 - **All Features Active**: Full desktop functionality
 
 ## Screen Size Breakpoints
 
-| Screen Width | Layout | Menu Style | Dropdown Behavior |
-|--------------|--------|------------|-------------------|
-| ≤ 768px | Mobile | Hamburger + Vertical | Tap to expand |
-| 769px - 1024px | Tablet | Horizontal Compact | Hover to show |
-| > 1024px | Desktop | Horizontal Full | Hover to show |
+| Screen Width   | Layout  | Menu Style           | Dropdown Behavior |
+| -------------- | ------- | -------------------- | ----------------- |
+| ≤ 768px        | Mobile  | Hamburger + Vertical | Tap to expand     |
+| 769px - 1024px | Tablet  | Horizontal Compact   | Hover to show     |
+| > 1024px       | Desktop | Horizontal Full      | Hover to show     |
 
 ## Mobile Menu Features
 
 ### Hamburger Icon
 
 **Visual Design:**
+
 - 3 horizontal lines (bars)
 - White color on purple background
 - Animated transformation to X when active
 - Position: Top-right corner of navigation area
 
 **Animation:**
+
 - Top bar rotates 45° and moves down
 - Middle bar fades out
 - Bottom bar rotates -45° and moves up
@@ -53,11 +58,13 @@ The ESP32 WiFi Utility web interface features a fully responsive navigation menu
 ### Menu Toggle Behavior
 
 **Closed State:**
+
 - Only hamburger icon visible
 - Navigation items hidden
 - Minimal screen space used
 
 **Open State:**
+
 - Hamburger transforms to X
 - Full menu slides down
 - Vertical stack of all items
@@ -66,12 +73,14 @@ The ESP32 WiFi Utility web interface features a fully responsive navigation menu
 ### Touch Optimization
 
 **Tap Targets:**
+
 - Minimum 44px height (iOS/Android standard)
 - Full-width clickable areas
 - Adequate spacing between items
 - No hover required
 
 **Dropdown Interaction:**
+
 - Analysis menu tap to toggle
 - Arrow indicator (▼) shows expandable items
 - Submenu indented for visual hierarchy
@@ -82,12 +91,14 @@ The ESP32 WiFi Utility web interface features a fully responsive navigation menu
 ### Horizontal Layout
 
 **Design:**
+
 - Flexbox-based responsive layout
 - Auto-wrapping if too many items
 - Centered alignment
 - 10px gaps between items
 
 **Hover Effects:**
+
 - Background color change (purple → darker purple)
 - Subtle upward lift (2px translateY)
 - Drop shadow appears
@@ -98,12 +109,14 @@ The ESP32 WiFi Utility web interface features a fully responsive navigation menu
 **Trigger:** Hover over "🔬 Analysis"
 **Display:** Absolute positioned submenu below parent
 **Items:**
+
 - 📊 Dashboard
 - ⚡ iPerf
 - 📉 Latency
 - 📡 Channel
 
 **Styling:**
+
 - Minimum 200px width
 - Rounded corners (top and bottom items)
 - Box shadow for depth
@@ -127,25 +140,30 @@ Navigation Bar
 ## CSS Classes Reference
 
 ### Main Navigation
+
 - `.nav` - Navigation container
 - `.nav-items` - Items wrapper (responsive)
 - `.hamburger` - Mobile menu toggle button
 
 ### Menu Items
+
 - `.nav > div` - Individual menu item containers
 - `.nav a` - Navigation links
 - `.dropdown` - Dropdown menu container
 - `.dropdown-content` - Submenu items container
 
 ### State Classes
+
 - `.active` - Applied when hamburger menu is open
 - `.dropdown.active` - Applied when dropdown is expanded (mobile)
 
 ## JavaScript Functions
 
 ### toggleMenu()
+
 **Purpose:** Toggle hamburger menu open/closed
 **Behavior:**
+
 - Toggles `.active` class on hamburger icon
 - Toggles `.active` class on nav-items
 - Animates icon to X and back
@@ -153,8 +171,10 @@ Navigation Bar
 **Usage:** Called on hamburger button click
 
 ### toggleDropdown(e)
+
 **Purpose:** Handle dropdown toggle on mobile
 **Behavior:**
+
 - Only active on screens ≤ 768px
 - Prevents default link navigation
 - Toggles dropdown open/closed
@@ -246,30 +266,35 @@ Navigation Bar
 ## Browser Compatibility
 
 ✓ **Modern Browsers**: Full support
-  - Chrome/Edge 90+
-  - Firefox 88+
-  - Safari 14+
-  
+
+- Chrome/Edge 90+
+- Firefox 88+
+- Safari 14+
+
 ✓ **Mobile Browsers**: Full support
-  - iOS Safari 14+
-  - Chrome Mobile 90+
-  - Samsung Internet 14+
+
+- iOS Safari 14+
+- Chrome Mobile 90+
+- Samsung Internet 14+
 
 ✓ **Features Used**:
-  - CSS Flexbox (widely supported)
-  - CSS Transforms (widely supported)
-  - CSS Media Queries (widely supported)
-  - Vanilla JavaScript (no dependencies)
+
+- CSS Flexbox (widely supported)
+- CSS Transforms (widely supported)
+- CSS Media Queries (widely supported)
+- Vanilla JavaScript (no dependencies)
 
 ## Performance
 
 **Lightweight:**
+
 - CSS only ~2KB (minified, in HTML_HEADER)
 - JavaScript ~1KB (minified, in HTML_HEADER)
 - No external dependencies
 - No images (emoji + CSS shapes)
 
 **Fast Rendering:**
+
 - Pure CSS animations
 - No jQuery or framework overhead
 - Minimal DOM manipulation
@@ -282,7 +307,7 @@ Navigation Bar
 Edit in `HTML_HEADER` CSS:
 
 ```css
-@media(max-width:768px){
+@media (max-width: 768px) {
   /* Change 768px to your desired breakpoint */
 }
 ```
@@ -301,8 +326,12 @@ Edit `NAV_MENU` constant:
 Edit in `HTML_HEADER` CSS:
 
 ```css
-.nav a{background:#667eea;} /* Main color */
-.nav a:hover{background:#764ba2;} /* Hover color */
+.nav a {
+  background: #667eea;
+} /* Main color */
+.nav a:hover {
+  background: #764ba2;
+} /* Hover color */
 ```
 
 ### Change Animation Speed
@@ -310,13 +339,18 @@ Edit in `HTML_HEADER` CSS:
 Edit transition timing:
 
 ```css
-.nav a{transition:all .3s;} /* Change .3s */
-.hamburger span{transition:all .3s;} /* Change .3s */
+.nav a {
+  transition: all 0.3s;
+} /* Change .3s */
+.hamburger span {
+  transition: all 0.3s;
+} /* Change .3s */
 ```
 
 ## Testing Checklist
 
 ### Desktop Testing
+
 □ Menu displays horizontally
 □ All items visible
 □ Hover effects work
@@ -324,12 +358,14 @@ Edit transition timing:
 □ Links navigate correctly
 
 ### Tablet Testing
+
 □ Menu fits in available space
 □ Items properly sized
 □ Hover still works
 □ No overflow issues
 
 ### Mobile Testing
+
 □ Hamburger icon appears
 □ Menu hidden by default
 □ Tap hamburger opens menu
@@ -342,6 +378,7 @@ Edit transition timing:
 □ No horizontal scrolling
 
 ### Cross-Browser Testing
+
 □ Chrome (desktop + mobile)
 □ Firefox
 □ Safari (iOS + macOS)
@@ -349,6 +386,7 @@ Edit transition timing:
 □ Samsung Internet
 
 ### Orientation Testing
+
 □ Portrait mode (mobile)
 □ Landscape mode (mobile)
 □ Tablet portrait
@@ -361,6 +399,7 @@ Edit transition timing:
 **Problem:** Menu doesn't change on small screens
 
 **Solutions:**
+
 - Check viewport meta tag in HTML
 - Clear browser cache
 - Test in incognito/private mode
@@ -371,6 +410,7 @@ Edit transition timing:
 **Problem:** No hamburger icon on mobile
 
 **Solutions:**
+
 - Check screen width (should be ≤ 768px)
 - Verify `.hamburger` CSS display property
 - Check z-index conflicts
@@ -381,6 +421,7 @@ Edit transition timing:
 **Problem:** Analysis dropdown doesn't expand
 
 **Solutions:**
+
 - Desktop: Check hover CSS (`:hover` pseudo-class)
 - Mobile: Verify `toggleDropdown()` function loaded
 - Check JavaScript console for errors
@@ -391,6 +432,7 @@ Edit transition timing:
 **Problem:** Items stack incorrectly or overlap
 
 **Solutions:**
+
 - Check flexbox properties
 - Verify width settings (100% on mobile)
 - Check for conflicting CSS
