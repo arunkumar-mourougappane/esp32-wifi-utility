@@ -57,12 +57,20 @@ void showNetworkDetails(int networkId);
 // ==========================================
 
 /**
- * @brief Connects to a WiFi network using SSID and password
+ * @brief Connects to a WiFi network using SSID and password (non-blocking)
  * @param ssid Network name to connect to
  * @param password Network password for authentication
+ * @note This is non-blocking - call handleWiFiConnection() in main loop
  * @see wifi_manager.cpp for detailed implementation documentation
  */
 void connectToNetwork(String ssid, String password);
+
+/**
+ * @brief Monitors WiFi connection progress (call from main loop)
+ * @note Only active when a connection attempt is in progress
+ * @see wifi_manager.cpp for detailed implementation documentation
+ */
+void handleWiFiConnection();
 
 /**
  * @brief Disconnects from current WiFi network

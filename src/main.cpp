@@ -68,6 +68,9 @@ void loop() {
   // Handle serial commands directly in loop
   handleSerialCommands();
   
+  // Handle WiFi connection monitoring (non-blocking)
+  handleWiFiConnection();
+  
   // Handle iPerf background tasks
   handleIperfTasks();
   
