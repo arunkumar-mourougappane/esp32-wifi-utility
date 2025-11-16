@@ -33,6 +33,11 @@ static void tftDisplayTask(void* parameter);
 // TFT DISPLAY INITIALIZATION
 // ==========================================
 void initializeTFT() {
+    // Enable TFT I2C power (required for both TFT and Reverse TFT boards)
+    pinMode(TFT_I2C_POWER, OUTPUT);
+    digitalWrite(TFT_I2C_POWER, HIGH);
+    delay(10);  // Wait for power to stabilize
+    
     // Initialize TFT display
     tft = new Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
     tft->init(TFT_WIDTH, TFT_HEIGHT);

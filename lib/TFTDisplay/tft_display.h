@@ -13,16 +13,18 @@
 
 // TFT Display pins - board specific
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
-  // Reverse TFT board pins
+  // Reverse TFT board pins (official Adafruit pinout)
+  #define TFT_I2C_POWER  7
   #define TFT_CS        42
-  #define TFT_DC        40
   #define TFT_RST       41
+  #define TFT_DC        40
   #define TFT_BACKLIGHT 45
 #else
   // Normal TFT board pins (ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT)
-  #define TFT_CS        7
-  #define TFT_DC        39
+  #define TFT_I2C_POWER 21
+  #define TFT_CS         7
   #define TFT_RST       40
+  #define TFT_DC        39
   #define TFT_BACKLIGHT 45
 #endif
 
