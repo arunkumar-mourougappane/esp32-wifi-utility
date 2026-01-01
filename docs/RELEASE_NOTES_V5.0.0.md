@@ -14,7 +14,7 @@ Version 5.0.0 represents a significant advancement in system responsiveness, use
 - **⚡ Non-Blocking Operations**: WiFi connections no longer freeze the device for 10 seconds
 - **📋 Structured Logging**: Professional logging system with severity levels and component tags
 - **📊 Enhanced Status**: Comprehensive network information including signal quality and uptime
-- **🚀 Task Architecture**: Dedicated FreeRTOS task for WiFi command processing
+- ** Task Architecture**: Dedicated FreeRTOS task for WiFi command processing
 - **🌐 Web Server Speed**: 10x faster response times with optimized main loop
 - **🔧 Critical Fixes**: Resolved connection timing, TFT updates, and web server issues
 
@@ -207,7 +207,7 @@ Uptime: 01:23:45
 
 ---
 
-### 🚀 FreeRTOS Task Architecture
+###  FreeRTOS Task Architecture
 
 Dedicated WiFi command processing with asynchronous execution.
 

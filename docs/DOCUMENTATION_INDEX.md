@@ -17,7 +17,7 @@
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 **Essential reading for new users:**
 

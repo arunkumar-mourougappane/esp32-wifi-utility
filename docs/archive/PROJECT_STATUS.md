@@ -57,7 +57,7 @@ This ESP32 WiFi Utility Suite has been successfully enhanced and is now a
 - **Efficiency**: Optimized scanning with minimal memory footprint
 - **Reliability**: Comprehensive error handling and recovery mechanisms
 
-## 🚀 Ready for Production
+##  Ready for Production
 
 This ESP32 WiFi Utility Suite is now **production-ready** and suitable for:
 

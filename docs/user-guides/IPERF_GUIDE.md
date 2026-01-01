@@ -95,7 +95,7 @@ The ESP32 displays comprehensive results after each test:
 ═══════════════════════
 📦 Bytes transferred: 15.2 MB
 ⏱️ Duration: 10.00 seconds
-🚀 Throughput: 12.16 Mbps
+ Throughput: 12.16 Mbps
 📊 Packets: 15625 total, 23 lost (0.15%)
 📈 Jitter: 1.23 ms
 ═══════════════════════

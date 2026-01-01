@@ -170,7 +170,7 @@ docs/technical/
 
 ---
 
-## 🚀 How to Use
+##  How to Use
 
 ### 1. Error Handling
 ```cpp

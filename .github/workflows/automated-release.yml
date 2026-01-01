@@ -170,7 +170,7 @@ jobs:
         
         ${CHANGES}
         
-        ### 🚀 Core Features
+        ###  Core Features
         - ✅ Professional WiFi Channel Analysis with AI-powered congestion scoring (0-100%)
         - ✅ Dual-board support: ESP32dev + Adafruit Feather ESP32-S3 TFT
         - ✅ Advanced network scanning with spectrum analysis and interference detection
@@ -306,7 +306,7 @@ jobs:
         TAG_NAME="v${VERSION}"
         RELEASE_NAME="ESP32 WiFi Utility v${VERSION}"
         
-        echo "🚀 Creating automated release: $TAG_NAME"
+        echo " Creating automated release: $TAG_NAME"
         
         # Prepare firmware files with proper names
         mkdir -p release_assets

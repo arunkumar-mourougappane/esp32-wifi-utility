@@ -24,7 +24,7 @@ device features through an intuitive, mobile-responsive interface with interacti
 - **Smart caching** stores up to 50 networks for 5 minutes
 - **Visual indicators** with emoji icons and color-coded ratings
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Starting the Web Server
 

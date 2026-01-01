@@ -20,7 +20,7 @@
 ### Main Application Integration
 - **📁 `src/main.cpp`** - Added initialization and background task handling
 - **🔄 Loop Integration**: Non-blocking latency task processing in main loop
-- **🚀 Startup**: Automatic latency analyzer initialization
+- ** Startup**: Automatic latency analyzer initialization
 
 ### Build System Updates
 - **📁 `platformio.ini`** - Added ESP Async UDP library dependency for all environments
@@ -158,7 +158,7 @@ ESP32> jitter
 4. **View Results**: `latency results` (comprehensive analysis)
 5. **Quick Check**: `jitter` (fast network stability test)
 
-## 🚀 Advanced Capabilities
+##  Advanced Capabilities
 
 ### Network Quality Assessment
 - **Scoring Algorithm**: Combines latency, jitter, and packet loss

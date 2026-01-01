@@ -6,7 +6,7 @@ The ESP32 WiFi Utility now features **automatic web server lifecycle management*
 
 ## ✨ Automatic Behavior
 
-### 🚀 Web Server Auto-Start
+###  Web Server Auto-Start
 
 The web server **automatically starts** in the following scenarios:
 
@@ -273,7 +273,7 @@ All automatic web server management is wrapped in `#ifdef USE_NEOPIXEL`:
 
 Only includes web server header when building for Feather board.
 
-## 🚀 Usage Workflows
+##  Usage Workflows
 
 ### Workflow 1: Quick AP Testing
 ```bash

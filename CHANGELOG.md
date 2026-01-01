@@ -343,7 +343,7 @@ This release focuses entirely on documentation improvements following the v4.3.0
 
 ## [4.3.0] - 2025-10-25
 
-### 🚀 MAJOR: Advanced Network Analysis & TFT Display Release
+###  MAJOR: Advanced Network Analysis & TFT Display Release
 
 This major version introduces **professional network analysis tools**, **TFT display support**, and **visual spectrum analysis** for comprehensive WiFi diagnostics and security auditing.
 
@@ -505,7 +505,7 @@ This major version introduces **professional network analysis tools**, **TFT dis
 
 ## [4.2.0] - 2025-10-25
 
-### 🚀 MAJOR: Architecture Simplification & Configuration Persistence Release
+###  MAJOR: Architecture Simplification & Configuration Persistence Release
 
 This major version represents an **architectural simplification** with removal of RTOS complexity while introducing comprehensive configuration persistence, web-based configuration management, responsive UI improvements, base64 password security, and instant WiFi mode switching capabilities.
 
@@ -954,7 +954,7 @@ station config "HomeWiFi" "MyPassword" auto
 
 ## [4.1.0] - 2025-10-19
 
-### 🚀 MAJOR: FreeRTOS Architecture Transformation
+###  MAJOR: FreeRTOS Architecture Transformation
 
 This major version represents a **complete architectural reimplementation** with professional FreeRTOS task-based design,
 delivering unprecedented performance (500× faster commands), true concurrent operations, smooth 60 FPS animations,
@@ -2125,7 +2125,7 @@ making all network analysis tools accessible via web browser on mobile and deskt
 
 ## [2.1.0] - 2025-10-15
 
-### 🚀 Added
+###  Added
 
 #### Professional Channel Analysis System
 
@@ -2204,7 +2204,7 @@ making all network analysis tools accessible via web browser on mobile and deskt
 - **Documentation**: 1000+ pages across 9 comprehensive guides
 - **Platform Support**: 100% dual-board compilation success with feature parity
 
-### 🚀 Migration Guide
+###  Migration Guide
 
 **For Users:**
 

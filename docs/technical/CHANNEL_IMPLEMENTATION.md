@@ -20,7 +20,7 @@
 ### Main Application Integration
 - **📁 `src/main.cpp`** - Added initialization and background monitoring task handling
 - **🔄 Background Processing**: Non-blocking channel monitoring with configurable intervals
-- **🚀 Startup Integration**: Automatic channel analyzer initialization
+- ** Startup Integration**: Automatic channel analyzer initialization
 
 ### Build System Compatibility
 - **📁 `platformio.ini`** - Verified compatibility with existing library dependencies
@@ -179,7 +179,7 @@ ESP32> channel monitor start
 - **🌈 NeoPixel Integration**: Hardware status indicators on Feather boards
 - **📈 Progress Indicators**: Real-time scan progress and completion feedback
 
-## 🚀 Advanced Capabilities
+##  Advanced Capabilities
 
 ### Professional Spectrum Analysis
 - **Enterprise-Grade Accuracy**: Sub-millisecond timing, ±2dBm precision

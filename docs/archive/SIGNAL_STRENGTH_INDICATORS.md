@@ -178,7 +178,7 @@ Network E    ● ○ ○ ○ ○ -82 dBm     (Poor - Red)
 - Cordless phones
 - USB 3.0 devices (near 2.4GHz)
 
-## 🚀 Usage Tips
+##  Usage Tips
 
 ### For Network Selection
 1. **Prioritize Green (5-4 circles):** Best performance

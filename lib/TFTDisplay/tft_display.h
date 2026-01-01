@@ -19,6 +19,10 @@
   #define TFT_RST       41
   #define TFT_DC        40
   #define TFT_BACKLIGHT 45
+  // SPI pins for Reverse TFT
+  #define TFT_MOSI      35
+  #define TFT_MISO      37
+  #define TFT_SCK       36
 #else
   // Normal TFT board pins (ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT)
   #define TFT_I2C_POWER 21
@@ -26,6 +30,10 @@
   #define TFT_RST       40
   #define TFT_DC        39
   #define TFT_BACKLIGHT 45
+  // SPI pins for Normal TFT
+  #define TFT_MOSI      35
+  #define TFT_MISO      37
+  #define TFT_SCK       36
 #endif
 
 // Display dimensions

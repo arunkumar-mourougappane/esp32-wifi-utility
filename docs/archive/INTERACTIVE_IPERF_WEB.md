@@ -6,7 +6,7 @@ The web server now features a **fully interactive iPerf testing interface** allo
 
 ## ✨ New Capabilities
 
-### 🚀 Start iPerf Tests from Browser
+###  Start iPerf Tests from Browser
 - **Interactive Configuration Form**: Professional form with validation
 - **Server Mode**: ESP32 listens for incoming iPerf connections
 - **Client Mode**: ESP32 connects to external iPerf server
@@ -311,7 +311,7 @@ if (!success) {
 - Clear error descriptions
 - Actionable feedback
 
-## 🚀 Usage Examples
+##  Usage Examples
 
 ### Example 1: TCP Server Test
 ```

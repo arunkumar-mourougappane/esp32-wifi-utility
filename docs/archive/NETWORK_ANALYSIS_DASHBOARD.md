@@ -31,7 +31,7 @@ The Network Analysis page (`/analysis`) serves as the central hub for:
 - Latency test results
 - Congestion metrics
 
-### 🚀 Quick Actions
+###  Quick Actions
 
 One-click buttons for:
 - 🔄 Scan Channels - Immediate spectrum analysis
@@ -370,7 +370,7 @@ webServer->on("/analysis", handleNetworkAnalysis);
 - ✅ **Conditional Display** - Smart showing of available data
 - ✅ **Maintainable** - Clear separation of concerns
 
-## 🚀 Future Enhancements
+##  Future Enhancements
 
 ### Potential Additions
 

@@ -314,7 +314,7 @@ The `channel export` command produces structured data suitable for:
 }
 ```
 
-## 🚀 Advanced Features
+##  Advanced Features
 
 ### Interference Pattern Recognition
 - **Microwave Interference**: Periodic signal disruption patterns

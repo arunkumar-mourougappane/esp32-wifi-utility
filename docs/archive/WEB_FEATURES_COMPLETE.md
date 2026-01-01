@@ -361,7 +361,7 @@ Impact: No change (conditional compilation)
 - Clear active states
 - Responsive form inputs
 
-## 🚀 Usage Workflows
+##  Usage Workflows
 
 ### Workflow 1: Network Quality Assessment
 

@@ -189,7 +189,7 @@ No change (conditional compilation)
 - [x] No memory leaks detected
 - [x] Responsive design maintained
 
-## 🚀 Usage Examples
+##  Usage Examples
 
 ### Scenario 1: TCP Bandwidth Test
 ```bash

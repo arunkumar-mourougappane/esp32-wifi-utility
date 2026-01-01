@@ -48,7 +48,7 @@ In-depth technical information for developers and advanced users:
 - **[AP Configuration Persistence](AP_CONFIG_PERSISTENCE.md)** - Access Point configuration system details
 - **[Station Configuration Persistence](STATION_CONFIG_PERSISTENCE.md)** - Station configuration system details
 
-## 🚀 Quick Start
+##  Quick Start
 
 New to the ESP32 WiFi Utility? Start here:
 

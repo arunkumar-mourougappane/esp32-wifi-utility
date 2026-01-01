@@ -113,7 +113,7 @@ This fix ensures compliance with:
 - **WPA/WPA2/WPA3**: Passwords are case-sensitive
 - **Best Practices**: Preserve user input for network credentials
 
-## 🚀 Benefits
+##  Benefits
 
 1. **✅ Correct WiFi Behavior**: Matches actual WiFi specification
 2. **✅ User Expectations**: Users can use exact SSID case

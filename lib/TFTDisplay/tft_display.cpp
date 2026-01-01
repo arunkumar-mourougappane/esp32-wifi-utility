@@ -12,6 +12,7 @@
 
 #include "wifi_manager.h"
 #include <WiFi.h>
+#include <SPI.h>
 #include "esp_wifi.h"
 
 // TFT display instance
@@ -37,7 +38,10 @@ void initializeTFT() {
     pinMode(TFT_I2C_POWER, OUTPUT);
     digitalWrite(TFT_I2C_POWER, HIGH);
     delay(10);  // Wait for power to stabilize
-    
+
+    // Initialize SPI with correct pins for Feather ESP32-S3 TFT boards
+    SPI.begin(TFT_SCK, TFT_MISO, TFT_MOSI, TFT_CS);
+
     // Initialize TFT display
     tft = new Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
     tft->init(TFT_WIDTH, TFT_HEIGHT);

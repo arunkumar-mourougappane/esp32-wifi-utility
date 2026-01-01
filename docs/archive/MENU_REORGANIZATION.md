@@ -238,7 +238,7 @@ Change: -240 bytes (-0.02%)
 3. **Accessibility**: Clear tap/click targets
 4. **Responsiveness**: Works on all screen sizes
 
-## 🚀 Future Enhancements
+##  Future Enhancements
 
 ### Potential Improvements
 

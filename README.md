@@ -68,7 +68,7 @@ Comprehensive network information at your fingertips:
 - **Detailed Status Codes**: WiFi status codes when disconnected for troubleshooting
 - **Lease Information**: DHCP lease details when available
 
-### 🚀 **FreeRTOS Task Architecture**
+###  **FreeRTOS Task Architecture**
 
 Enhanced multi-tasking with dedicated WiFi command task:
 
@@ -280,7 +280,7 @@ Expanded Analysis Dashboard with new tools:
 
 Version 4.2.0 represents a **major architectural simplification** with removal of RTOS complexity and introduction of comprehensive configuration persistence, web-based configuration management, responsive UI improvements, and instant mode switching capabilities.
 
-### 🚀 **Architecture Simplification & Stability**
+###  **Architecture Simplification & Stability**
 
 **Streamlined codebase** for better maintainability and reliability:
 
@@ -430,7 +430,7 @@ Version 4.1.0 represented a **major architectural transformation** with the intr
 Version 4.1.0 represents a **major architectural transformation** with the introduction of FreeRTOS, delivering unprecedented
 performance, responsiveness, and reliability.
 
-### 🚀 **MAJOR: FreeRTOS-Based Architecture** (Issues #12-#20)
+###  **MAJOR: FreeRTOS-Based Architecture** (Issues #12-#20)
 
 Complete reimplementation with **professional FreeRTOS task-based architecture**:
 
@@ -571,7 +571,7 @@ Flash and RAM savings through compiler optimizations:
 Version 4.1.0 introduces a comprehensive **FreeRTOS-based architecture**, transforming the ESP32 WiFi Utility from synchronous
 blocking operations to **asynchronous, concurrent task-based processing**.
 
-### 🚀 Key RTOS Features
+###  Key RTOS Features
 
 - **Asynchronous Command Execution**: Commands return immediately, operations run in background
 - **Concurrent Operations**: WiFi scanning, web server, and LED animations all run simultaneously
@@ -649,7 +649,7 @@ blocking operations to **asynchronous, concurrent task-based processing**.
 - Event-driven architecture replaces polling
 - Better error recovery and system stability
 
-## �🚀 Features
+## � Features
 
 ### 🎯 **NEW: Professional Channel Analysis System**
 
@@ -1385,7 +1385,7 @@ Scanning for available networks...
 ├─────────────────────────────────────────────────────────┤
 │ 💡 Connection Analysis:                              │
 │ 📶 Excellent signal strength for stable connection   │
-│ 🚀 Est. Speed:   50-150 Mbps (802.11n)               │
+│  Est. Speed:   50-150 Mbps (802.11n)               │
 └─────────────────────────────────────────────────────────┘
 💡 To connect: connect "HomeWiFi" <password>
 ```

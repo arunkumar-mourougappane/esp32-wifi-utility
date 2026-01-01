@@ -174,7 +174,7 @@ Impact:  +2.8% flash, no RAM change
 - Consider network isolation
 - Monitor connected clients
 
-## 🚀 Future Enhancements
+##  Future Enhancements
 
 **Potential Additions:**
 - WebSocket for real-time updates

@@ -156,7 +156,7 @@ Auto-generated release notes include:
 - System prevents duplicate releases for same version
 - Use different version number or delete existing release
 
-## 🚀 Best Practices
+##  Best Practices
 
 ### Version Bumping Strategy
 - **Patch** (x.x.X): Bug fixes, documentation updates

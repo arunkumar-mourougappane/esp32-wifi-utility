@@ -319,7 +319,7 @@ $ pio run -e esp32dev
 - Testing verification
 - Integration summary
 
-## 🚀 Future Enhancement Ideas
+##  Future Enhancement Ideas
 
 ### Potential Additions
 

@@ -116,7 +116,7 @@ When using the Adafruit Feather ESP32-S3 TFT board with NeoPixel:
 ## 📊 Sample Output
 
 ```
-🚀 Starting Latency & Jitter Analysis...
+ Starting Latency & Jitter Analysis...
 📊 === Latency Test Configuration ===
 Target: 8.8.8.8:7
 Test Type: UDP Echo
@@ -214,7 +214,7 @@ ESP32> latency status
 ESP32> latency results
 ```
 
-## 🚀 Integration with Other Features
+##  Integration with Other Features
 
 ### iPerf3 Compatibility
 The latency analyzer works alongside iPerf3 testing:

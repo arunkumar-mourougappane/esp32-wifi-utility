@@ -79,7 +79,7 @@ jobs:
         cat > release_notes.md << EOF
         ## ESP32 WiFi Utility v${{ inputs.version }}
         
-        ### 🚀 Features
+        ###  Features
         - ✅ Enhanced WiFi scanning with visual indicators and signal quality analysis
         - ✅ Complete iPerf network performance testing (TCP/UDP client/server modes)
         - ✅ Access Point management with QR code generation for easy mobile connection
