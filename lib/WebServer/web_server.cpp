@@ -109,99 +109,313 @@ const char HTML_HEADER[] PROGMEM = R"rawliteral(
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ESP32 WiFi</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#333;padding:20px;min-height:100vh}
-.container{max-width:1200px;margin:0 auto;background:#fff;border-radius:15px;box-shadow:0 10px 40px rgba(0,0,0,.2);padding:30px}
-h1{color:#667eea;margin-bottom:10px;font-size:2em}
-h2{color:#764ba2;margin:30px 0 15px;font-size:1.5em;border-bottom:2px solid #667eea;padding-bottom:10px}
-.header{text-align:center;margin-bottom:30px}
-.badge{display:inline-block;padding:8px 15px;border-radius:20px;font-weight:bold;margin:5px;font-size:.9em}
-.badge.success{background:#10b981;color:#fff}
-.badge.warning{background:#f59e0b;color:#fff}
-.badge.info{background:#3b82f6;color:#fff}
-.badge.danger{background:#ef4444;color:#fff}
-.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin:20px 0}
-.stat-card{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:20px;border-radius:10px;text-align:center}
-.stat-value{font-size:2em;font-weight:bold;margin:10px 0}
-.stat-label{font-size:.9em;opacity:.9}
-.network-list{list-style:none;margin:20px 0}
-.network-item{background:#f8f9fa;padding:15px;margin:10px 0;border-radius:8px;border-left:4px solid #667eea;display:flex;justify-content:space-between;align-items:center}
-.network-info{flex-grow:1}
-.network-name{font-weight:bold;font-size:1.1em;margin-bottom:5px}
-.network-details{color:#666;font-size:.9em}
-.signal-strength{font-size:1.5em;margin-left:20px}
-button,.btn{padding:10px 20px;background:#667eea;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:1em;font-weight:500;transition:all .3s;text-decoration:none;display:inline-block}
-button:hover,.btn:hover{background:#764ba2;transform:translateY(-2px);box-shadow:0 4px 8px rgba(0,0,0,.2)}
-button:active,.btn:active{transform:translateY(0);box-shadow:0 2px 4px rgba(0,0,0,.2)}
-.footer{text-align:center;margin-top:30px;padding-top:20px;border-top:1px solid #e0e0e0;color:#666;font-size:.9em}
-.nav{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:20px 0;position:relative;align-items:center}
-.nav>div{position:relative}
-.nav a{text-decoration:none;padding:10px 20px;background:#667eea;color:#fff;border-radius:5px;transition:all .3s;display:block;white-space:nowrap}
-.nav a:hover{background:#764ba2;transform:translateY(-2px);box-shadow:0 4px 8px rgba(0,0,0,.2)}
-.dropdown{position:relative;display:inline-block}
-.dropdown-content{display:none;position:absolute;background-color:#667eea;min-width:200px;box-shadow:0 8px 16px rgba(0,0,0,.3);z-index:1000;border-radius:5px;margin-top:5px;left:0}
-.dropdown-content a{color:#fff;padding:12px 16px;text-decoration:none;display:block;border-radius:0;margin:0}
-.dropdown-content a:first-child{border-radius:5px 5px 0 0}
-.dropdown-content a:last-child{border-radius:0 0 5px 5px}
-.dropdown-content a:hover{background-color:#764ba2;transform:none}
-.dropdown:hover .dropdown-content{display:block}
-.dropdown>a::after{content:' ▼';font-size:.8em}
-.hamburger{display:none;flex-direction:column;cursor:pointer;padding:10px;background:#667eea;border-radius:5px;position:absolute;right:0;top:0;z-index:1001}
-.hamburger span{width:25px;height:3px;background:#fff;margin:3px 0;border-radius:2px;transition:all .3s}
-.hamburger.active span:nth-child(1){transform:rotate(45deg) translate(7px,7px)}
-.hamburger.active span:nth-child(2){opacity:0}
-.hamburger.active span:nth-child(3){transform:rotate(-45deg) translate(7px,-7px)}
-.nav-items{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:100%}
-.progress-backdrop{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:9999;justify-content:center;align-items:center}
-.progress-container{background:#fff;padding:30px;border-radius:15px;box-shadow:0 10px 40px rgba(0,0,0,.3);text-align:center;min-width:300px;max-width:500px}
-.progress-title{color:#667eea;font-size:1.5em;margin-bottom:20px;font-weight:bold}
-.spinner{border:4px solid #f3f3f3;border-top:4px solid #667eea;border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin:20px auto}
-@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-@media(max-width:768px){
-body{padding:10px}
-.container{padding:15px;border-radius:10px}
-h1{font-size:1.5em}
-h2{font-size:1.2em}
-.stat-grid{grid-template-columns:1fr}
-.hamburger{display:flex}
-.nav{padding-top:50px}
-.nav-items{display:none;flex-direction:column;width:100%;gap:5px}
-.nav-items.active{display:flex}
-.nav>div{width:100%}
-.nav a{padding:12px 15px;text-align:center}
-.dropdown{width:100%}
-.dropdown>a{width:100%}
-.dropdown-content{position:static;margin-top:5px;width:100%;box-shadow:none;background:#5a6dd8}
-.dropdown-content a{padding-left:30px}
-.dropdown:hover .dropdown-content,.dropdown:focus-within .dropdown-content{display:none}
-.dropdown.active .dropdown-content{display:block}
-.dropdown>a::after{float:right}
+:root {
+    --bs-blue: #0d6efd;
+    --bs-indigo: #6610f2;
+    --bs-purple: #6f42c1;
+    --bs-pink: #d63384;
+    --bs-red: #dc3545;
+    --bs-orange: #fd7e14;
+    --bs-yellow: #ffc107;
+    --bs-green: #198754;
+    --bs-teal: #20c997;
+    --bs-cyan: #0dcaf0;
+    --bs-white: #fff;
+    --bs-gray: #6c757d;
+    --bs-gray-dark: #343a40;
+    --bs-primary: #0d6efd;
+    --bs-secondary: #6c757d;
+    --bs-success: #198754;
+    --bs-info: #0dcaf0;
+    --bs-warning: #ffc107;
+    --bs-danger: #dc3545;
+    --bs-light: #f8f9fa;
+    --bs-dark: #212529;
+    --bs-body-font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
-@media(min-width:769px) and (max-width:1024px){
-.container{padding:20px}
-.nav{gap:8px}
-.nav a{padding:8px 15px;font-size:0.9em}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: var(--bs-body-font-family);
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Keeping original brand gradient */
+    min-height: 100vh;
+    padding: 20px;
 }
+
+h1, h2, h3, h4, h5, h6 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+h1 { font-size: 2.5rem; margin-bottom: 1rem; color: var(--bs-primary); }
+h2 { font-size: 2rem; margin-top: 2rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #dee2e6; color: var(--bs-dark); }
+h3 { font-size: 1.75rem; }
+
+a { color: var(--bs-primary); text-decoration: none; }
+a:hover { color: #0a58ca; text-decoration: underline; }
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: var(--bs-white);
+    padding: 2rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.header { text-align: center; margin-bottom: 2rem; }
+
+/* Buttons */
+.btn, button, .submit-btn {
+    display: inline-block;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    text-align: center;
+    text-decoration: none;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    background-color: transparent;
+    border: 1px solid transparent;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    border-radius: 0.25rem;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+
+.btn-primary, .submit-btn, .nav a {
+    color: #fff;
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+.btn-primary:hover, .submit-btn:hover, .nav a:hover {
+    color: #fff;
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+    text-decoration: none;
+}
+
+.btn-secondary { color: #fff; background-color: var(--bs-secondary); border-color: var(--bs-secondary); }
+.btn-secondary:hover { color: #fff; background-color: #5c636a; border-color: #565e64; }
+
+.btn-success { color: #fff; background-color: var(--bs-success); border-color: var(--bs-success); }
+.btn-success:hover { color: #fff; background-color: #157347; border-color: #146c43; }
+
+.btn-danger { color: #fff; background-color: var(--bs-danger); border-color: var(--bs-danger); }
+.btn-danger:hover { color: #fff; background-color: #bb2d3b; border-color: #b02a37; }
+
+.submit-btn { width: 100%; padding: 0.75rem; font-size: 1.25rem; margin-top: 1rem; background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-purple) 100%); border: none; }
+
+/* Forms */
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: inline-block; margin-bottom: 0.5rem; font-weight: 500; }
+.form-group input, .form-group select, .form-control {
+    display: block;
+    width: 100%;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    appearance: none;
+    border-radius: 0.25rem;
+    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+.form-group input:focus, .form-group select:focus {
+    color: #212529;
+    background-color: #fff;
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+.form-row { display: flex; flex-wrap: wrap; margin-right: -0.5rem; margin-left: -0.5rem; }
+.form-row > .form-group { flex: 0 0 auto; width: 50%; padding-right: 0.5rem; padding-left: 0.5rem; }
+
+/* Components */
+.card, .stat-card, .config-section {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    word-wrap: break-word;
+    background-color: #fff;
+    background-clip: border-box;
+    border: 1px solid rgba(0,0,0,.125);
+    border-radius: 0.25rem;
+    margin-bottom: 1rem;
+}
+.stat-card {
+    background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-purple) 100%);
+    color: #fff;
+    border: none;
+    padding: 1.5rem;
+}
+.config-section { padding: 1.5rem; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); border: none; }
+
+.alert, .info-box, .warning-box {
+    position: relative;
+    padding: 1rem 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+    border-radius: 0.25rem;
+}
+.info-box { color: #055160; background-color: #cff4fc; border-color: #b6effb; }
+.warning-box { color: #664d03; background-color: #fff3cd; border-color: #ffecb5; }
+
+.badge {
+    display: inline-block;
+    padding: 0.35em 0.65em;
+    font-size: 0.75em;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.25rem;
+}
+.badge.success { background-color: var(--bs-success); }
+.badge.warning { background-color: var(--bs-warning); color: #000; }
+.badge.danger { background-color: var(--bs-danger); }
+.badge.info { background-color: var(--bs-info); color: #000; }
+
+/* Grid & Layout */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+
+/* Network List */
+.network-list { padding-left: 0; margin-bottom: 0; list-style: none; }
+.network-item {
+    position: relative;
+    display: block;
+    padding: 0.5rem 1rem;
+    color: #212529;
+    text-decoration: none;
+    background-color: #fff;
+    border: 1px solid rgba(0,0,0,.125);
+    margin-bottom: -1px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.network-item:first-child { border-top-left-radius: inherit; border-top-right-radius: inherit; }
+.network-item:last-child { border-bottom-right-radius: inherit; border-bottom-left-radius: inherit; margin-bottom: 1rem; }
+.network-item:hover { z-index: 2; color: #495057; text-decoration: none; background-color: #f8f9fa; }
+
+/* Nav */
+.nav { display: flex; flex-wrap: wrap; padding-left: 0; margin-bottom: 0; list-style: none; justify-content: center; gap: 0.5rem; margin-bottom: 2rem; position: relative; }
+.nav a { display: block; padding: 0.5rem 1rem; border-radius: 0.25rem; }
+.nav-items { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; align-items: center; }
+.hamburger { display: none; cursor: pointer; padding: 0.5rem; border: 1px solid transparent; border-radius: 0.25rem; }
+.hamburger span { display: block; width: 25px; height: 3px; background-color: #212529; margin: 5px 0; transition: all 0.3s; }
+
+.dropdown { position: relative; display: inline-block; }
+.dropdown-content { display: none; position: absolute; background-color: var(--bs-primary); min-width: 200px; box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15); z-index: 1000; border-radius: 0.25rem; margin-top: 0; left: 0; transform: none; }
+.dropdown-content a { color: #fff; padding: 0.5rem 1rem; text-decoration: none; display: block; border-radius: 0; margin: 0; }
+.dropdown-content a:hover { background-color: rgba(255,255,255,0.1); }
+.dropdown:hover .dropdown-content { display: block; }
+
+/* Utilities */
+.text-center { text-align: center !important; }
+.mb-3 { margin-bottom: 1rem !important; }
+.d-none { display: none !important; }
+
+/* Modals */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1055;
+    display: none;
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background-color: rgba(0,0,0,0.5);
+    outline: 0;
+}
+.modal-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    pointer-events: auto;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid rgba(0,0,0,.2);
+    border-radius: 0.3rem;
+    outline: 0;
+    margin: 1.75rem auto;
+    max-width: 500px;
+    padding: 1rem;
+}
+.modal-header { display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; padding: 1rem 1rem; border-bottom: 1px solid #dee2e6; border-top-left-radius: calc(0.3rem - 1px); border-top-right-radius: calc(0.3rem - 1px); margin-bottom: 0; }
+.modal-body { position: relative; flex: 1 1 auto; padding: 1rem; }
+.modal-buttons { display: flex; flex-wrap: wrap; flex-shrink: 0; align-items: center; justify-content: flex-end; padding: 0.75rem; border-top: 1px solid #dee2e6; border-bottom-right-radius: calc(0.3rem - 1px); border-bottom-left-radius: calc(0.3rem - 1px); gap: 0.5rem; }
+
+/* Config specific */
+.mode-toggle-section { background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-purple) 100%); color: #fff; padding: 2rem; border-radius: 0.5rem; margin: 2rem 0; text-align: center; }
+.mode-buttons { justify-content: center; }
+.mode-btn { border: 2px solid rgba(255,255,255,0.5); background: transparent; color: #fff; margin: 0 0.5rem; padding: 0.5rem 1rem; border-radius: 0.25rem; transition: all 0.2s; }
+.mode-btn:hover { background: rgba(255,255,255,0.2); }
+.mode-btn.active { background: #fff; color: var(--bs-primary); border-color: #fff; }
+
+/* Spinner */
+.spinner { border: 0.25em solid currentcolor; border-right-color: transparent; border-radius: 50%; width: 2rem; height: 2rem; animation: 0.75s linear infinite spinner-border; color: var(--bs-primary); margin: 1rem auto; display: block; }
+@keyframes spinner-border { 100% { transform: rotate(360deg); } }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container { padding: 1rem; width: 100%; max-width: 100%; }
+    .form-row > .form-group { width: 100%; }
+    .nav { flex-direction: column; }
+    .nav a { width: 100%; text-align: center; }
+    .network-item { flex-direction: column; align-items: flex-start; }
+    .signal-strength { margin-top: 0.5rem; align-self: flex-end; }
+    
+    .hamburger { display: block; position: absolute; right: 20px; top: 20px; z-index: 1030; }
+    .nav-items { display: none; }
+    .nav-items.active { display: flex; }
+    .nav a, .dropdown { width: 100%; text-align: center; }
+    .dropdown-content { position: static; transform: none; width: 100%; box-shadow: none; margin-top: 0; display: none; }
+    .dropdown.active .dropdown-content { display: block; }
+}
+
+/* Animations */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.progress-backdrop { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1060; justify-content: center; align-items: center; }
+.progress-container { background: #fff; padding: 2rem; border-radius: 0.5rem; box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15); text-align: center; max-width: 500px; width: 90%; }
 </style>
 <script>
 function showProgress(t,m){const b=document.getElementById('progressBackdrop'),ti=document.getElementById('progressTitle'),me=document.getElementById('progressMessage');if(ti)ti.textContent=t;if(me)me.textContent=m;if(b)b.style.display='flex'}
 function hideProgress(){const b=document.getElementById('progressBackdrop');if(b)b.style.display='none'}
 function startScan(u,t,m){showProgress(t,m);window.location.href=u}
-function toggleMenu(){const hamburger=document.querySelector('.hamburger');const navItems=document.querySelector('.nav-items');hamburger.classList.toggle('active');navItems.classList.toggle('active')}
-function toggleDropdown(e){if(window.innerWidth<=768){e.preventDefault();const dropdown=e.target.closest('.dropdown');dropdown.classList.toggle('active')}}
-document.addEventListener('DOMContentLoaded',function(){const dropdownLinks=document.querySelectorAll('.dropdown>a');dropdownLinks.forEach(link=>{link.addEventListener('click',toggleDropdown)})})
+function toggleMenu(){const h=document.querySelector('.hamburger'),n=document.querySelector('.nav-items');h.classList.toggle('active');n.classList.toggle('active')}
+function toggleDropdown(e){if(window.innerWidth<=768){e.preventDefault();const d=e.target.closest('.dropdown');d.classList.toggle('active')}}
+document.addEventListener('DOMContentLoaded',function(){const dl=document.querySelectorAll('.dropdown > a');dl.forEach(l=>{l.addEventListener('click',toggleDropdown)})})
 </script>
 </head>
 <body>
 <div id="progressBackdrop" class="progress-backdrop"><div class="progress-container"><div id="progressTitle" class="progress-title">Scanning...</div><div class="spinner"></div><div id="progressMessage" class="progress-message">Please wait...</div></div></div>
 <div class="container">
 )rawliteral";
-
 // Generate dynamic HTML footer - optimized with F() macro
 String generateHtmlFooter() {
     String footer;
     footer.reserve(256);
-    footer = F("<div class=\"footer\"><p>🚀 ESP32 WiFi v");
+    footer = F("<div class=\"footer\"><p>ESP32 WiFi v");
     footer += getVersionString();
     footer += F(" | ");
     footer += getDeviceName();
@@ -411,7 +625,7 @@ void handleRoot() {
     html.reserve(4096);  // Pre-allocate to reduce heap fragmentation
     html = FPSTR(HTML_HEADER);  // Read from PROGMEM
     
-    html += F("<div class=\"header\"><h1>🚀 ESP32 WiFi</h1><p>Network Analysis & Testing</p><div><span class=\"badge info\">");
+    html += F("<div class=\"header\"><h1>ESP32 WiFi</h1><p>Network Analysis & Testing</p><div><span class=\"badge info\">");
     html += getDeviceName();
     html += F("</span>");
     
@@ -425,7 +639,7 @@ void handleRoot() {
     
     html += F("</div></div>");
     html += generateNav();
-    html += F("<h2>📊 Stats</h2><div class=\"stat-grid\"><div class=\"stat-card\"><div class=\"stat-label\">Mode</div><div class=\"stat-value\">");
+    html += F("<h2>📊 Stats</h2><div class=\"stat-grid\"><div class=\"stat-card\"><div class=\"stat-label\">📡 Mode</div><div class=\"stat-value\">");
     
     switch (currentMode) {
         case MODE_IDLE: html += F("IDLE"); break;
@@ -434,7 +648,7 @@ void handleRoot() {
         case MODE_OFF: html += F("OFF"); break;
     }
     
-    html += F("</div></div><div class=\"stat-card\"><div class=\"stat-label\">IP Address</div><div class=\"stat-value\" style=\"font-size:1.2em\">");
+    html += F("</div></div><div class=\"stat-card\"><div class=\"stat-label\">🌐 IP Address</div><div class=\"stat-value\" style=\"font-size:1.2em\">");
     
     if (currentMode == MODE_AP) {
         html += WiFi.softAPIP().toString();
@@ -444,9 +658,9 @@ void handleRoot() {
         html += F("N/A");
     }
     
-    html += F("</div></div><div class=\"stat-card\"><div class=\"stat-label\">Free Heap</div><div class=\"stat-value\">");
+    html += F("</div></div><div class=\"stat-card\"><div class=\"stat-label\">🧠 Free Heap</div><div class=\"stat-value\">");
     html += ESP.getFreeHeap() / 1024;
-    html += F(" KB</div></div><div class=\"stat-card\"><div class=\"stat-label\">Clients</div><div class=\"stat-value\">");
+    html += F(" KB</div></div><div class=\"stat-card\"><div class=\"stat-label\">👥 Clients</div><div class=\"stat-value\">");
     
     if (currentMode == MODE_AP) {
         html += WiFi.softAPgetStationNum();
@@ -474,74 +688,80 @@ void handleRoot() {
 
 void handleStatus() {
     String html;
-    html.reserve(4096);  // Pre-allocate to reduce heap fragmentation
-    html = FPSTR(HTML_HEADER);  // Read from PROGMEM
+    html.reserve(4096);
+    html = FPSTR(HTML_HEADER);
     
-    html += F("<div class=\"header\"><h1>📊 Status</h1></div>");
+    html += F("<div class=\"header\"><h1>📊 Status</h1><p>System & Network Health</p></div>");
     html += generateNav();
-    html += F("<h2>🔧 System Info</h2><div style=\"background:#f8f9fa;padding:20px;border-radius:10px;margin:20px 0\">");
     
-    html += F("<p><strong>WiFi Mode:</strong> ");
+    html += F("<div class=\"card\"><h2 style=\"margin-top:0;border-bottom:1px solid #dee2e6;padding-bottom:10px;margin-bottom:20px\">🔧 System Information</h2>");
+    html += F("<div style=\"display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2rem\">");
+    
+    // Column 1: Network Status
+    html += F("<div><h3 style=\"color:var(--bs-primary);font-size:1.2rem;border-bottom:2px solid #f8f9fa;padding-bottom:0.5rem;margin-bottom:1rem\">📡 Network Status</h3><ul class=\"network-list\">");
+    
+    html += F("<li class=\"network-item\"><span class=\"network-name\">WiFi Mode</span><span>");
     switch (currentMode) {
-        case MODE_IDLE:
-            html += F("⚪ Idle (Ready)");
-            break;
-        case MODE_STATION:
-            html += F("🔍 Station (Scanner)");
-            break;
-        case MODE_AP:
-            html += F("📡 Access Point");
-            break;
-        case MODE_OFF:
-            html += F("🔴 Disabled");
-            break;
+        case MODE_IDLE: html += F("<span class=\"badge secondary\">Idle</span>"); break;
+        case MODE_STATION: html += F("<span class=\"badge info\">Station</span>"); break;
+        case MODE_AP: html += F("<span class=\"badge success\">Access Point</span>"); break;
+        case MODE_OFF: html += F("<span class=\"badge danger\">Disabled</span>"); break;
     }
-    html += F("</p>");
+    html += F("</span></li>");
     
-    html += F("<p><strong>Scanning:</strong> ");
-    html += scanningEnabled ? F("✅ Enabled") : F("❌ Disabled");
-    html += F("</p>");
-    
+    html += F("<li class=\"network-item\"><span class=\"network-name\">Scanning</span><span>");
+    html += scanningEnabled ? F("<span class=\"badge success\">Enabled</span>") : F("<span class=\"badge secondary\">Disabled</span>");
+    html += F("</span></li>");
+
     if (currentMode == MODE_AP) {
-        html += F("<p><strong>AP SSID:</strong> ");
+        html += F("<li class=\"network-item\"><span class=\"network-name\">AP SSID</span><span>");
         html += currentAPSSID;
-        html += F("</p><p><strong>AP IP:</strong> ");
+        html += F("</span></li><li class=\"network-item\"><span class=\"network-name\">AP IP</span><span>");
         html += WiFi.softAPIP().toString();
-        html += F("</p><p><strong>Connected Clients:</strong> ");
+        html += F("</span></li><li class=\"network-item\"><span class=\"network-name\">Clients</span><span>");
         html += WiFi.softAPgetStationNum();
-        html += F("</p>");
+        html += F("</span></li>");
     } else if (WiFi.status() == WL_CONNECTED) {
-        html += F("<p><strong>Connected to:</strong> ");
+        html += F("<li class=\"network-item\"><span class=\"network-name\">Connected to</span><span>");
         html += WiFi.SSID();
-        html += F("</p><p><strong>IP Address:</strong> ");
+        html += F("</span></li><li class=\"network-item\"><span class=\"network-name\">IP Address</span><span>");
         html += WiFi.localIP().toString();
-        html += F("</p><p><strong>Signal Strength:</strong> ");
+        html += F("</span></li><li class=\"network-item\"><span class=\"network-name\">Signal</span><span>");
         html += WiFi.RSSI();
-        html += F(" dBm</p>");
+        html += F(" dBm</span></li>");
     }
+    html += F("</ul></div>");
     
-    html += F("<p><strong>Free Heap:</strong> ");
-    html += ESP.getFreeHeap();
-    html += F(" bytes</p><p><strong>Chip Model:</strong> ");
+    // Column 2: Hardware Stats
+    html += F("<div><h3 style=\"color:var(--bs-purple);font-size:1.2rem;border-bottom:2px solid #f8f9fa;padding-bottom:0.5rem;margin-bottom:1rem\">💻 Hardware Stats</h3><ul class=\"network-list\">");
+    
+    html += F("<li class=\"network-item\"><span class=\"network-name\">🧠 Free Heap</span><span>");
+    html += String(ESP.getFreeHeap() / 1024) + " KB";
+    html += F("</span></li>");
+    
+    html += F("<li class=\"network-item\"><span class=\"network-name\">🏷️ Chip Model</span><span>");
     html += ESP.getChipModel();
-    html += F("</p><p><strong>CPU Frequency:</strong> ");
-    html += ESP.getCpuFreqMHz();
-    html += F(" MHz</p><p><strong>Flash Size:</strong> ");
-    html += ESP.getFlashChipSize() / 1024 / 1024;
-    html += F(" MB</p></div>");
+    html += F("</span></li>");
+    
+    html += F("<li class=\"network-item\"><span class=\"network-name\">⚡ CPU Freq</span><span>");
+    html += String(ESP.getCpuFreqMHz()) + " MHz";
+    html += F("</span></li>");
+    
+    html += F("<li class=\"network-item\"><span class=\"network-name\">💾 Flash Size</span><span>");
+    html += String(ESP.getFlashChipSize() / (1024 * 1024)) + " MB";
+    html += F("</span></li>");
+    
+    html += F("</ul></div></div></div>");
     
     // QR Code for AP mode
     if (currentMode == MODE_AP) {
-        html += F("<h2>📱 Connect</h2><div style=\"background:#f8f9fa;padding:30px;border-radius:10px;text-align:center\"><p style=\"font-size:1.2em;margin-bottom:20px;color:#667eea;font-weight:bold\">Scan QR to connect</p><div style=\"display:inline-block;background:#fff;padding:20px;border-radius:10px\">");
-        html += F("<div style='width:300px;height:300px'>");
+        html += F("<div class=\"card\" style=\"text-align:center;background:linear-gradient(135deg,var(--bs-primary) 0%,var(--bs-purple) 100%);color:#fff;border:none\"><h2 style=\"color:#fff;border-bottom:1px solid rgba(255,255,255,0.2);padding-bottom:15px;margin-bottom:20px;\">📱 Connect via QR</h2>");
+        html += F("<div style=\"background:#fff;padding:15px;border-radius:10px;display:inline-block;margin-bottom:15px;box-shadow:0 10px 25px rgba(0,0,0,0.2)\">");
+        html += F("<div style='width:250px;height:250px'>");
         html += generateQRCodeSVG(currentAPSSID, currentAPPassword, "WPA");
-        html += F("</div></div><div style=\"margin-top:20px;padding:20px;background:#fff;border-radius:8px;display:inline-block;text-align:left\"><p><strong>SSID:</strong> ");
+        html += F("</div></div><p style=\"font-size:1.2em;margin-top:10px\">Scan to connect to <strong>");
         html += currentAPSSID;
-        html += F("</p><p><strong>Password:</strong> ");
-        html += currentAPPassword;
-        html += F("</p><p><strong>Security:</strong> WPA2</p><p><strong>IP:</strong> ");
-        html += WiFi.softAPIP().toString();
-        html += F("</p></div></div>");
+        html += F("</strong></p></div>");
     }
     
     html += generateHtmlFooter();
@@ -1754,7 +1974,7 @@ void handleIperf() {
     } else {
         html += R"rawliteral(
         <button onclick="location.href='/iperf/start'" style="padding: 15px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 5px; font-size: 1.1em; cursor: pointer; font-weight: bold;">
-            🚀 Start New Test
+            Start New Test
         </button>
         )rawliteral";
     }
@@ -1851,64 +2071,9 @@ void handleIperfStart() {
     // Show configuration form (GET request)
     String html = HTML_HEADER;
     
-    html += R"rawliteral(
-    <style>
-        .form-group {
-            margin: 20px 0;
-        }
-        .form-group label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 5px;
-            color: #333;
-        }
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 5px;
-            font-size: 1em;
-            box-sizing: border-box;
-        }
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        .submit-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px 40px;
-            border: none;
-            border-radius: 5px;
-            font-size: 1.2em;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 20px;
-        }
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-        .info-box {
-            background: #e3f2fd;
-            padding: 15px;
-            border-left: 4px solid #2196f3;
-            border-radius: 5px;
-            margin: 20px 0;
-        }
-        @media (max-width: 768px) {
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+
     
+    html += R"rawliteral(
     <div class="header">
         <h1>⚡ Start iPerf Test</h1>
         <p>Configure and Launch Network Performance Test</p>
@@ -1974,7 +2139,7 @@ void handleIperfStart() {
             • <strong>Client Mode:</strong> ESP32 connects to an external iPerf server for testing
         </div>
         
-        <button type="submit" class="submit-btn">🚀 Start iPerf Test</button>
+        <button type="submit" class="submit-btn">Start iPerf Test</button>
     </form>
     
     <script>
@@ -2200,7 +2365,7 @@ void handleLatency() {
     } else {
         html += R"rawliteral(
         <button onclick="location.href='/latency/start'" style="padding: 15px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 5px; font-size: 1.1em; cursor: pointer; font-weight: bold;">
-            🚀 Start New Test
+            Start New Test
         </button>
         )rawliteral";
     }
@@ -2293,64 +2458,9 @@ void handleLatencyStart() {
     // Show configuration form (GET request)
     String html = HTML_HEADER;
     
-    html += R"rawliteral(
-    <style>
-        .form-group {
-            margin: 20px 0;
-        }
-        .form-group label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 5px;
-            color: #333;
-        }
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 5px;
-            font-size: 1em;
-            box-sizing: border-box;
-        }
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        .submit-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px 40px;
-            border: none;
-            border-radius: 5px;
-            font-size: 1.2em;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 20px;
-        }
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-        .info-box {
-            background: #e3f2fd;
-            padding: 15px;
-            border-left: 4px solid #2196f3;
-            border-radius: 5px;
-            margin: 20px 0;
-        }
-        @media (max-width: 768px) {
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+
     
+    html += R"rawliteral(
     <div class="header">
         <h1>📉 Start Latency Test</h1>
         <p>Configure and Launch Network Quality Test</p>
@@ -2410,7 +2520,7 @@ void handleLatencyStart() {
             • <strong>HTTP Request:</strong> Real-world application latency including HTTP overhead
         </div>
         
-        <button type="submit" class="submit-btn">🚀 Start Latency Test</button>
+        <button type="submit" class="submit-btn">Start Latency Test</button>
     </form>
     )rawliteral";
     
@@ -2442,202 +2552,9 @@ void handleConfig() {
     
     html += FPSTR(NAV_MENU);
     
-    html += R"rawliteral(
-    <style>
-        .config-section {
-            background: white;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .config-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #4CAF50;
-        }
-        .config-header h2 {
-            margin: 0;
-            color: #333;
-        }
-        .config-status {
-            background: #f0f0f0;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            font-family: monospace;
-        }
-        .status-saved {
-            color: #4CAF50;
-            font-weight: bold;
-        }
-        .status-none {
-            color: #999;
-        }
-        .form-group {
-            margin: 15px 0;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #555;
-        }
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 14px;
-        }
-        .form-group small {
-            color: #666;
-            font-size: 12px;
-        }
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        .btn {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
-            transition: all 0.3s;
-        }
-        .btn-save {
-            background: #4CAF50;
-            color: white;
-        }
-        .btn-save:hover {
-            background: #45a049;
-        }
-        .btn-clear {
-            background: #f44336;
-            color: white;
-        }
-        .btn-clear:hover {
-            background: #da190b;
-        }
-        .info-box {
-            background: #e7f3ff;
-            border-left: 4px solid #2196F3;
-            padding: 10px;
-            margin: 15px 0;
-            border-radius: 4px;
-        }
-        .warning-box {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 10px;
-            margin: 15px 0;
-            border-radius: 4px;
-        }
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            margin: 10px 0;
-        }
-        .checkbox-group input {
-            width: auto;
-            margin-right: 10px;
-        }
-        .mode-toggle-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-            text-align: center;
-        }
-        .mode-toggle-section h3 {
-            margin: 0 0 15px 0;
-            color: white;
-        }
-        .toggle-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            margin: 15px 0;
-        }
-        .mode-label {
-            font-size: 1.1em;
-            font-weight: bold;
-        }
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 80px;
-            height: 40px;
-        }
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        .toggle-slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #4CAF50;
-            transition: .4s;
-            border-radius: 40px;
-        }
-        .toggle-slider:before {
-            position: absolute;
-            content: "";
-            height: 32px;
-            width: 32px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        input:checked + .toggle-slider {
-            background-color: #2196F3;
-        }
-        input:checked + .toggle-slider:before {
-            transform: translateX(40px);
-        }
-        .mode-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 15px;
-        }
-        .mode-btn {
-            padding: 10px 20px;
-            border: 2px solid white;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
-            transition: all 0.3s;
-        }
-        .mode-btn:hover {
-            background: rgba(255,255,255,0.3);
-        }
-        .mode-btn.active {
-            background: white;
-            color: #667eea;
-        }
-    </style>
+
     
+    html += R"rawliteral(
     <h1>⚙️ Configuration</h1>
     )rawliteral";
     
@@ -2969,83 +2886,7 @@ void handleConfigAP() {
         )rawliteral";
         html += FPSTR(NAV_MENU);
         html += R"rawliteral(
-        <style>
-            .modal {
-                display: none;
-                position: fixed;
-                z-index: 10000;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                background-color: rgba(0,0,0,0.6);
-                animation: fadeIn 0.3s;
-            }
-            @keyframes fadeIn {
-                from { opacity: 0; }
-                to { opacity: 1; }
-            }
-            .modal-content {
-                background-color: white;
-                margin: 10% auto;
-                padding: 30px;
-                border-radius: 15px;
-                width: 90%;
-                max-width: 500px;
-                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-                animation: slideIn 0.3s;
-            }
-            @keyframes slideIn {
-                from { transform: translateY(-50px); opacity: 0; }
-                to { transform: translateY(0); opacity: 1; }
-            }
-            .modal-header {
-                font-size: 1.5em;
-                color: #667eea;
-                margin-bottom: 20px;
-                text-align: center;
-            }
-            .modal-body {
-                color: #666;
-                line-height: 1.6;
-                margin-bottom: 25px;
-                text-align: center;
-            }
-            .modal-buttons {
-                display: flex;
-                gap: 10px;
-                justify-content: center;
-            }
-            .modal-btn {
-                padding: 12px 30px;
-                border: none;
-                border-radius: 5px;
-                cursor: pointer;
-                font-size: 14px;
-                font-weight: bold;
-                transition: all 0.3s;
-            }
-            .modal-btn-primary {
-                background: #4CAF50;
-                color: white;
-            }
-            .modal-btn-primary:hover {
-                background: #45a049;
-            }
-            .modal-btn-secondary {
-                background: #ddd;
-                color: #333;
-            }
-            .modal-btn-secondary:hover {
-                background: #ccc;
-            }
-            .countdown {
-                font-size: 1.2em;
-                font-weight: bold;
-                color: #667eea;
-                margin: 10px 0;
-            }
-        </style>
+
         
         <div style="text-align: center; padding: 40px;">
             <p style="font-size: 16px; color: #666;">
@@ -3196,83 +3037,7 @@ void handleConfigStation() {
         )rawliteral";
         html += FPSTR(NAV_MENU);
         html += R"rawliteral(
-        <style>
-            .modal {
-                display: none;
-                position: fixed;
-                z-index: 10000;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                background-color: rgba(0,0,0,0.6);
-                animation: fadeIn 0.3s;
-            }
-            @keyframes fadeIn {
-                from { opacity: 0; }
-                to { opacity: 1; }
-            }
-            .modal-content {
-                background-color: white;
-                margin: 10% auto;
-                padding: 30px;
-                border-radius: 15px;
-                width: 90%;
-                max-width: 500px;
-                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-                animation: slideIn 0.3s;
-            }
-            @keyframes slideIn {
-                from { transform: translateY(-50px); opacity: 0; }
-                to { transform: translateY(0); opacity: 1; }
-            }
-            .modal-header {
-                font-size: 1.5em;
-                color: #667eea;
-                margin-bottom: 20px;
-                text-align: center;
-            }
-            .modal-body {
-                color: #666;
-                line-height: 1.6;
-                margin-bottom: 25px;
-                text-align: center;
-            }
-            .modal-buttons {
-                display: flex;
-                gap: 10px;
-                justify-content: center;
-            }
-            .modal-btn {
-                padding: 12px 30px;
-                border: none;
-                border-radius: 5px;
-                cursor: pointer;
-                font-size: 14px;
-                font-weight: bold;
-                transition: all 0.3s;
-            }
-            .modal-btn-primary {
-                background: #4CAF50;
-                color: white;
-            }
-            .modal-btn-primary:hover {
-                background: #45a049;
-            }
-            .modal-btn-secondary {
-                background: #ddd;
-                color: #333;
-            }
-            .modal-btn-secondary:hover {
-                background: #ccc;
-            }
-            .countdown {
-                font-size: 1.2em;
-                font-weight: bold;
-                color: #667eea;
-                margin: 10px 0;
-            }
-        </style>
+
         
         <div style="text-align: center; padding: 40px;">
             <p style="font-size: 16px; color: #666;">

@@ -101,7 +101,7 @@ bool startLatencyTest(const LatencyConfig& config) {
   runningStats.packets_received = 0;
   runningStats.packets_lost = 0;
   
-  Serial.println("🚀 Starting Latency & Jitter Analysis...");
+  Serial.println("Starting Latency & Jitter Analysis...");
   printLatencyConfig(config);
   
 #ifdef USE_NEOPIXEL

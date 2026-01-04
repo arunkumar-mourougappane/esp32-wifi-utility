@@ -75,7 +75,7 @@ bool startIperfClient(const IperfConfig& config) {
   packetsLost = 0;
   jitterSum = 0;
   
-  Serial.println("🚀 Starting iPerf client test...");
+  Serial.println("Starting iPerf client test...");
   printIperfConfig(config);
   
   if (config.protocol == IPERF_TCP) {
@@ -448,7 +448,7 @@ void printIperfResults(const IperfResults& results) {
   Serial.print(results.durationMs / 1000.0, 2);
   Serial.println(" seconds");
   
-  Serial.print("🚀 Throughput: ");
+  Serial.print("Throughput: ");
   Serial.println(formatThroughput(results.throughputMbps));
   
   if (results.totalPackets > 0) {

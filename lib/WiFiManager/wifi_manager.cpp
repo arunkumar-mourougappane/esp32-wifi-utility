@@ -623,7 +623,7 @@ void showNetworkDetails(int networkId) {
     estimatedSpeed = "1-10 Mbps (Basic connectivity)";
   }
   
-  Serial.printf("│ 🚀 Est. Speed:   %-40s │\n", estimatedSpeed.c_str());
+  Serial.printf("│ Est. Speed:   %-40s │\n", estimatedSpeed.c_str());
   
   Serial.println("└─────────────────────────────────────────────────────────┘");
   
