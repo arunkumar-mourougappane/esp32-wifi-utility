@@ -2213,8 +2213,6 @@ void handleLatency() {
 
     html += generateNav();
 
-    html += R"rawliteral(
-    
     // Display success/error messages
     if (webServer->hasArg("started")) {
         html += R"rawliteral(

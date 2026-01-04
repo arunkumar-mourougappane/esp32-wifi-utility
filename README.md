@@ -1,7 +1,7 @@
 # ESP32 WiFi Utility Suite
 
 ![Build Status](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/actions/workflows/build.yml/badge.svg)
-![Version](https://img.shields.io/badge/version-5.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-5.1.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-ESP32-blue.svg)
 ![Framework](https://img.shields.io/badge/framework-Arduino-green.svg)
 ![PlatformIO](https://img.shields.io/badge/build-PlatformIO-orange.svg)
@@ -10,6 +10,32 @@
 [![Changelog](https://img.shields.io/badge/changelog-available-brightgreen.svg)](CHANGELOG.md)
 
 A professional-grade ESP32 WiFi analysis and management suite featuring comprehensive network scanning, signal strength monitoring, port scanning, visual spectrum analysis, TFT display support with QR codes, performance testing, tri-board support, persistent configuration storage, instant mode switching via web interface, non-blocking operations, structured logging, and FreeRTOS task-based architecture.
+
+## 🎉 What's New in v5.1.0
+
+Version 5.1.0 adds **real-time Latency Testing UI** improvements, including live progress bars and statistics, along with a modern redesign of the Status page. It also introduces dedicated **Python and C++ UDP servers** for high-precision network testing.
+
+### 📉 **Improved Latency & Jitter Testing**
+
+- **Visual Progress Bar**: Watch tests run in real-time with a smooth progress indicator.
+- **Live Statistics**: See Average Latency and Jitter values update dynamically as packets arrive.
+- **Auto-Refresh**: No need to manually reload; the page updates automatically when tests finish.
+- **Better Defaults**: Updated target ports (UDP:53, TCP:80) for more reliable out-of-the-box testing.
+
+### 🛠️ **External Testing Tools**
+
+Professional-grade tools for accurate network benchmarking:
+
+- **Python Echo Server** (`scripts/udp_echo_server.py`): Quick and portable UDP testing server.
+- **C++ Echo Server** (`pc_test_apps/udp_echo_server`): High-performance, low-latency server for Linux with real-time priority support.
+
+### 📊 **Status Page Redesign**
+
+- **Modern Grid Layout**: Key metrics organized into clean, responsive cards.
+- **Visual Icons**: Intuitive icons for WiFi, Network, System, and Client status.
+- **Improved Readability**: Clearer labels and formatted values for easier diagnostics.
+
+---
 
 ## 🎉 What's New in v5.0.0
 
@@ -68,7 +94,7 @@ Comprehensive network information at your fingertips:
 - **Detailed Status Codes**: WiFi status codes when disconnected for troubleshooting
 - **Lease Information**: DHCP lease details when available
 
-###  **FreeRTOS Task Architecture**
+### **FreeRTOS Task Architecture**
 
 Enhanced multi-tasking with dedicated WiFi command task:
 
@@ -280,7 +306,7 @@ Expanded Analysis Dashboard with new tools:
 
 Version 4.2.0 represents a **major architectural simplification** with removal of RTOS complexity and introduction of comprehensive configuration persistence, web-based configuration management, responsive UI improvements, and instant mode switching capabilities.
 
-###  **Architecture Simplification & Stability**
+### **Architecture Simplification & Stability**
 
 **Streamlined codebase** for better maintainability and reliability:
 
@@ -430,7 +456,7 @@ Version 4.1.0 represented a **major architectural transformation** with the intr
 Version 4.1.0 represents a **major architectural transformation** with the introduction of FreeRTOS, delivering unprecedented
 performance, responsiveness, and reliability.
 
-###  **MAJOR: FreeRTOS-Based Architecture** (Issues #12-#20)
+### **MAJOR: FreeRTOS-Based Architecture** (Issues #12-#20)
 
 Complete reimplementation with **professional FreeRTOS task-based architecture**:
 
@@ -571,7 +597,7 @@ Flash and RAM savings through compiler optimizations:
 Version 4.1.0 introduces a comprehensive **FreeRTOS-based architecture**, transforming the ESP32 WiFi Utility from synchronous
 blocking operations to **asynchronous, concurrent task-based processing**.
 
-###  Key RTOS Features
+### Key RTOS Features
 
 - **Asynchronous Command Execution**: Commands return immediately, operations run in background
 - **Concurrent Operations**: WiFi scanning, web server, and LED animations all run simultaneously
@@ -810,10 +836,10 @@ The command prompt dynamically shows the current device state:
 
 | Prompt       | Mode             | Description                        |
 | ------------ | ---------------- | ---------------------------------- |
-| `🟡 ESP32> ` | **Idle**         | Device ready, WiFi disabled        |
-| `🔍 ESP32> ` | **Station**      | Ready to scan or actively scanning |
-| `📡 ESP32> ` | **Access Point** | WiFi hotspot active                |
-| `🔴 ESP32> ` | **Off**          | WiFi completely disabled           |
+| `🟡 ESP32>` | **Idle**         | Device ready, WiFi disabled        |
+| `🔍 ESP32>` | **Station**      | Ready to scan or actively scanning |
+| `📡 ESP32>` | **Access Point** | WiFi hotspot active                |
+| `🔴 ESP32>` | **Off**          | WiFi completely disabled           |
 
 **Typing Features:**
 
