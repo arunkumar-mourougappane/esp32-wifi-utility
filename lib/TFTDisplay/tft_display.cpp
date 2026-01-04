@@ -453,7 +453,6 @@ static void tftDisplayTask(void* parameter) {
                 
                 displayStationDetailsInternal(lastStationInfo);
                 lastStationUpdate = currentTick;
-                Serial.println("🔄 Station Info updated periodically by task");
             }
         }
         

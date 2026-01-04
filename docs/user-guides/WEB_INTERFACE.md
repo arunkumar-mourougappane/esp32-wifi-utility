@@ -24,7 +24,7 @@ device features through an intuitive, mobile-responsive interface with interacti
 - **Smart caching** stores up to 50 networks for 5 minutes
 - **Visual indicators** with emoji icons and color-coded ratings
 
-##  Quick Start
+## Quick Start
 
 ### Starting the Web Server
 
@@ -138,11 +138,15 @@ All scan operations display a **professional progress overlay**:
 **Content:**
 
 - **WiFi Configuration**:
-  - Current mode (Idle/Station/AP/Off)
+  - Current mode (Idle/Station/AP/Off) with status icons
   - SSID (connected or broadcasting)
   - IP Address, Gateway, Subnet Mask
   - MAC Address
   - Signal strength (when connected)
+- **Visual Design**:
+  - Modern grid layout with stat cards
+  - Icon-based status indicators
+  - Color-coded badges for quick status recognition
 - **Access Point Details** (when active):
   - AP SSID and IP
   - Number of connected clients
@@ -316,6 +320,10 @@ When you click on any network, you'll see:
   - Start test with detailed configuration
   - Stop active tests
   - Form validation
+- **Visual Progress**:
+  - **Progress Bar**: Real-time visual feedback of test progress
+  - **Live Stats**: Dynamic updates for Average Latency and Jitter during test
+  - **Auto-Refresh**: No manual reload required - page updates automatically
 - **Statistics Display**:
   - Average latency (ms)
   - Minimum/Maximum latency

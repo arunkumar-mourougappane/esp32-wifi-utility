@@ -26,7 +26,7 @@ static uint8_t bufferIndex = 0;
 static bool bufferFull = false;
 
 // Running statistics
-static JitterStats runningStats;
+JitterStats runningStats;
 
 // ==========================================
 // INITIALIZATION AND CLEANUP
@@ -57,6 +57,7 @@ void shutdownLatencyAnalysis() {
 // TEST EXECUTION FUNCTIONS
 // ==========================================
 bool startLatencyTest(const LatencyConfig& config) {
+  Serial.println("🔎 Debug: startLatencyTest called");
   if (currentLatencyState == LATENCY_RUNNING) {
     Serial.println("❌ Latency test already running. Stop current test first.");
     return false;
@@ -74,10 +75,13 @@ bool startLatencyTest(const LatencyConfig& config) {
   
   if (!validateLatencyConfig(config)) {
     Serial.println("❌ Invalid latency test configuration");
+    Serial.printf("Debug: Host='%s', Port=%d, Count=%d, Interval=%d, Timeout=%d\n", 
+      config.target_host.c_str(), config.target_port, config.packet_count, config.interval_ms, config.timeout_ms);
     return false;
   }
   
   // Ensure clean state - stop any existing UDP connections
+  Serial.println("Debug: Stopping existing UDP connections...");
   latencyUdp.stop();
   asyncUdp.close();
   
@@ -110,6 +114,8 @@ bool startLatencyTest(const LatencyConfig& config) {
 #endif
   
   bool result = false;
+  Serial.printf("Debug: Dispatching test type %d\n", config.test_type);
+  
   switch (config.test_type) {
     case LATENCY_UDP_ECHO:
       result = executeUdpEchoTest(config);
@@ -125,6 +131,8 @@ bool startLatencyTest(const LatencyConfig& config) {
       currentLatencyState = LATENCY_IDLE;
       return false;
   }
+  
+  Serial.printf("Debug: executeXTest returned %s\n", result ? "true" : "false");
   
   if (!result) {
     currentLatencyState = LATENCY_ERROR;
@@ -188,12 +196,8 @@ void stopLatencyTest() {
   latencyUdp.stop();
   asyncUdp.close();
   
-  // Auto-reset to IDLE after showing results to allow new tests
-  if (currentLatencyState == LATENCY_COMPLETED) {
-    delay(500);  // Brief delay before reset
-    currentLatencyState = LATENCY_IDLE;
-    Serial.println("🔄 Ready for new latency test");
-  }
+  // Auto-reset removed to allow UI to see COMPLETED state
+  // New test start will handle resetting to IDLE or RUNNING
 }
 
 // ==========================================
@@ -480,7 +484,7 @@ void updateRunningStats(const PingResult& result) {
 // ==========================================
 LatencyConfig getDefaultLatencyConfig(LatencyTestType test_type) {
   LatencyConfig config;
-  config.target_host = "8.8.8.8";  // Google DNS
+  config.target_host = "www.google.com";  // Default to a web host
   config.target_port = 53;         // DNS port
   config.test_type = test_type;
   config.packet_count = PING_DEFAULT_COUNT;
@@ -491,7 +495,8 @@ LatencyConfig getDefaultLatencyConfig(LatencyTestType test_type) {
   
   switch (test_type) {
     case LATENCY_UDP_ECHO:
-      config.target_port = 7;  // Echo port
+      config.target_host = "8.8.8.8"; // Revert to IP for UDP
+      config.target_port = 53;  // DNS port (more likely to respond than echo port 7)
       break;
     case LATENCY_TCP_CONNECT:
       config.target_port = 80;  // HTTP port

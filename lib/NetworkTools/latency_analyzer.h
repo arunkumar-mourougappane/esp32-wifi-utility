@@ -82,6 +82,7 @@ struct LatencyTestResults {
 extern LatencyTestState currentLatencyState;
 extern LatencyConfig activeLatencyConfig;
 extern LatencyTestResults lastLatencyResults;
+extern JitterStats runningStats;
 
 // ==========================================
 // CORE FUNCTIONS

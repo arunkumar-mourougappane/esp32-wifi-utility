@@ -58,9 +58,9 @@ ESP32> latency results
 
 ### 1. UDP Echo Test (`latency test`)
 - **Method**: Sends UDP packets and measures round-trip time
-- **Default Target**: 8.8.8.8:7 (Google DNS echo port)
+- **Default Target**: 8.8.8.8:53 (Google DNS)
 - **Best For**: Basic network latency measurement
-- **Packet Count**: 50 packets (configurable)
+- **Packet Count**: 10 packets (default)
 - **Interval**: 1000ms between packets
 
 ### 2. TCP Connect Test (`latency test tcp`)
@@ -158,8 +158,8 @@ Jitter: 3.21 ms (avg), 8.45 ms (max)
 ```cpp
 // UDP Echo Test Defaults
 Target Host: "8.8.8.8"
-Target Port: 7 (Echo)
-Packet Count: 50
+Target Port: 53 (DNS)
+Packet Count: 10
 Packet Size: 32 bytes
 Interval: 1000ms
 Timeout: 5000ms
@@ -214,7 +214,7 @@ ESP32> latency status
 ESP32> latency results
 ```
 
-##  Integration with Other Features
+## Integration with Other Features
 
 ### iPerf3 Compatibility
 The latency analyzer works alongside iPerf3 testing:
@@ -255,6 +255,34 @@ On Feather boards, latency testing automatically provides visual feedback:
 - **IPv6 Support**: Dual-stack testing capabilities
 - **Enhanced Protocols**: ICMP ping, DNS resolution timing
 - **Bandwidth Correlation**: Link latency with throughput data
+
+### Dedicated Testing Tools
+To facilitate accurate latency testing, this utility comes with two external UDP echo server implementations:
+
+#### 1. Python Echo Server (`scripts/udp_echo_server.py`)
+A simple, portable server for quick local testing.
+```bash
+# Run on your PC/Laptop
+python3 scripts/udp_echo_server.py --port 5000
+```
+Then point your ESP32 to your PC's IP:
+`ESP32> latency test <pc_ip>:5000`
+
+#### 2. C++ High-Performance Server (`pc_test_apps/udp_echo_server`)
+An optimized, multi-threaded server for ultra-low latency testing (Linux only).
+```bash
+# Compile
+cd pc_test_apps
+make
+
+# Run (requires sudo for real-time priority)
+sudo ./udp_echo_server 5000
+```
+Features:
+- `SCHED_FIFO` real-time process priority
+- `SO_BUSY_POLL` for reduced interrupt latency
+- Optimized socket buffers
+- Nanosecond-level processing
 
 ---
 

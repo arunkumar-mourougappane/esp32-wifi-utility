@@ -441,6 +441,9 @@ void initializeWebServer() {
 // ==========================================
 // START/STOP WEB SERVER
 // ==========================================
+// Forward declarations
+void handleLatencyStatusJSON();
+
 bool startWebServer() {
     if (webServer != nullptr) {
         Serial.println("⚠️  Web server already running");
@@ -468,8 +471,9 @@ bool startWebServer() {
     webServer->on("/channel/scan", handleChannelScan);
     webServer->on("/channel/graph", handleChannelGraph);
     webServer->on("/latency", handleLatency);
-    webServer->on("/latency/start", handleLatencyStart);
-    webServer->on("/latency/stop", handleLatencyStop);
+    webServer->on("/latency/start", HTTP_POST, handleLatencyStart);
+    webServer->on("/latency/stop", HTTP_GET, handleLatencyStop);
+    webServer->on("/latency/status", HTTP_GET, handleLatencyStatusJSON);
     webServer->on("/iperf", handleIperf);
     webServer->on("/iperf/start", handleIperfStart);
     webServer->on("/iperf/stop", handleIperfStop);
@@ -2205,24 +2209,11 @@ void handleLatency() {
         <h1>📉 Latency & Jitter Testing</h1>
         <p>Network Performance & Quality Analysis</p>
     </div>
-
-    <div class="nav">
-        <div><a href="/">🏠 Home</a></div>
-        <div><a href="/status">📊 Status</a></div>
-        <div><a href="/scan">🔍 Scan Networks</a></div>
-        <div class="dropdown">
-            <a href="/analysis">🔬 Analysis</a>
-            <div class="dropdown-content">
-                <a href="/analysis">📊 Dashboard</a>
-                <a href="/signal">📶 Signal</a>
-                <a href="/portscan">🔒 Port Scanner</a>
-                <a href="/iperf">⚡ iPerf</a>
-                <a href="/latency">📉 Latency</a>
-                <a href="/channel">📡 Channel</a>
-            </div>
-        </div>
-    </div>
     )rawliteral";
+
+    html += generateNav();
+
+    html += R"rawliteral(
     
     // Display success/error messages
     if (webServer->hasArg("started")) {
@@ -2269,25 +2260,128 @@ void handleLatency() {
         html += "<p><strong>Target:</strong> " + activeLatencyConfig.target_host + "</p>";
         html += "<p><strong>Test Type:</strong> ";
         switch (activeLatencyConfig.test_type) {
-            case LATENCY_UDP_ECHO:
-                html += "UDP Echo";
-                break;
-            case LATENCY_TCP_CONNECT:
-                html += "TCP Connect";
-                break;
-            case LATENCY_HTTP_REQUEST:
-                html += "HTTP Request";
-                break;
-            default:
-                html += "ICMP Ping";
-                break;
+            case LATENCY_UDP_ECHO: html += "UDP Echo"; break;
+            case LATENCY_TCP_CONNECT: html += "TCP Connect"; break;
+            case LATENCY_HTTP_REQUEST: html += "HTTP Request"; break;
+            default: html += "ICMP Ping"; break;
         }
         html += "</p>";
-        html += "<p><strong>Packet Count:</strong> " + String(activeLatencyConfig.packet_count) + "</p>";
-        html += "<p><strong>Progress:</strong> " + String(lastLatencyResults.results_count) + " / " + String(activeLatencyConfig.packet_count) + "</p>";
+        
+        // Progress Bar
+        html += R"rawliteral(
+        <div style="margin:20px 0">
+            <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+                <span id="progressLabel">Progress</span>
+                <span id="progressPercent">0%</span>
+            </div>
+            <div style="width:100%;background:#e9ecef;border-radius:0.5rem;height:1.5rem;overflow:hidden">
+                <div id="progressBar" style="width:0%;height:100%;background:linear-gradient(90deg,#667eea 0%,#764ba2 100%);transition:width 0.5s ease"></div>
+            </div>
+            <p style="text-align:center;margin-top:10px;font-size:0.9em;color:#666" id="statusText">Initialized...</p>
+        </div>
+        
+        <div class="stat-grid" style="margin-top:20px;grid-template-columns:repeat(2,1fr)">
+            <div class="stat-card">
+                <div class="stat-label">Avg Latency</div>
+                <div class="stat-value" id="liveLatency">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Jitter</div>
+                <div class="stat-value" id="liveJitter">--</div>
+            </div>
+        </div>
+
+        <script>
+        function updateStatus() {
+            fetch('/latency/status')
+                .then(response => response.json())
+                .then(data => {
+                    // Update Progress
+                    let total = data.total || 100;
+                    let sent = data.sent || 0;
+                    let pct = Math.round((sent / total) * 100);
+                    
+                    document.getElementById('progressBar').style.width = pct + '%';
+                    document.getElementById('progressPercent').innerText = pct + '%';
+                    document.getElementById('statusText').innerText = `Sent: ${sent} | Received: ${data.received} | Lost: ${data.lost}`;
+                    
+                    // Update Live Stats
+                    if(data.avg) document.getElementById('liveLatency').innerText = data.avg + ' ms';
+                    if(data.jitter) document.getElementById('liveJitter').innerText = data.jitter + ' ms';
+                    
+                    // Reload on completion
+                    if (data.state === 'Completed' || data.state === 'Error') {
+                        setTimeout(() => window.location.reload(), 1000);
+                    }
+                })
+                .catch(e => console.error('Polling error:', e));
+        }
+        
+        // Poll every 1 second
+        setInterval(updateStatus, 1000);
+        updateStatus(); // Initial call
+        </script>
+        )rawliteral";
     }
     
     html += "</div>";
+
+    // Show configuration form if not running
+    if (currentLatencyState != LATENCY_RUNNING) {
+        html += R"rawliteral(
+        <h2>🔧 Test Configuration</h2>
+        
+        <form method="POST" action="/latency/start">
+            <div class="form-group">
+                <label for="target">Target Host (IP or Domain)</label>
+                <input type="text" id="target" name="target" placeholder="e.g., google.com or 8.8.8.8" required>
+                <small style="color: #666;">Enter IP address or domain name to test</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="testType">Test Type</label>
+                <select id="testType" name="testType" required>
+                    <option value="udp">UDP Echo (Fast, Low Overhead)</option>
+                    <option value="tcp">TCP Connect (Connection Time)</option>
+                    <option value="http">HTTP Request (Real-World Latency)</option>
+                </select>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="packetCount">Packet Count</label>
+                    <input type="number" id="packetCount" name="packetCount" value="10" min="1" max="100" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="interval">Interval (ms)</label>
+                    <input type="number" id="interval" name="interval" value="1000" min="100" max="10000" required>
+                </div>
+            </div>
+            
+            <div class="info-box">
+                <h3 style="margin-top:0;font-size:1.1em">ℹ️ Guide: Choosing a Test Type</h3>
+                <ul style="margin:5px 0;padding-left:20px;text-align:left">
+                    <li style="margin-bottom:8px">
+                        <strong>UDP Echo</strong>: Best for testing raw network quality (Gaming/VoIP).<br>
+                        <small>Sends minimal packets to measure pure network latency and jitter.</small>
+                    </li>
+                    <li style="margin-bottom:8px">
+                        <strong>TCP Connect</strong>: Best for testing service availability.<br>
+                        <small>Measures time to establish a connection (handshake). Use this to check if a server is online.</small>
+                    </li>
+                    <li style="margin-bottom:8px">
+                        <strong>HTTP Request</strong>: Best for Web/API performance.<br>
+                        <small>Measures full request time including server processing. Mimics real web browsing.</small>
+                    </li>
+                </ul>
+                <p style="margin-top:10px;font-size:0.9em"><strong>💡 Tip:</strong> You can specify a custom port in the host field, e.g., <code>192.168.1.10:8080</code></p>
+            </div>
+            
+            <button type="submit" class="submit-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">Start Latency Test</button>
+        </form>
+        )rawliteral";
+    }
     
     // Display last results if available
     if (lastLatencyResults.test_completed) {
@@ -2347,32 +2441,22 @@ void handleLatency() {
         )rawliteral";
     }
     
-    // Control buttons
-    html += R"rawliteral(
-    <h2>🎮 Test Control</h2>
-    <div style="display: flex; gap: 15px; justify-content: center; margin: 30px 0; flex-wrap: wrap;">
-    )rawliteral";
-    
+    // Control buttons - Only show when running
     if (currentLatencyState == LATENCY_RUNNING) {
         html += R"rawliteral(
-        <button onclick="if(confirm('Stop the running latency test?')) location.href='/latency/stop'" style="padding: 15px 30px; background: #ef4444; color: white; border: none; border-radius: 5px; font-size: 1.1em; cursor: pointer; font-weight: bold;">
-            🛑 Stop Test
-        </button>
-        <button onclick="location.reload()" style="padding: 15px 30px; background: #3b82f6; color: white; border: none; border-radius: 5px; font-size: 1.1em; cursor: pointer; font-weight: bold;">
-            🔄 Refresh Status
-        </button>
-        )rawliteral";
-    } else {
-        html += R"rawliteral(
-        <button onclick="location.href='/latency/start'" style="padding: 15px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 5px; font-size: 1.1em; cursor: pointer; font-weight: bold;">
-            Start New Test
-        </button>
+        <h2>🎮 Test Control</h2>
+        <div style="display: flex; gap: 15px; justify-content: center; margin: 30px 0; flex-wrap: wrap;">
+            <button onclick="if(confirm('Stop the running latency test?')) location.href='/latency/stop'" style="padding: 15px 30px; background: #ef4444; color: white; border: none; border-radius: 5px; font-size: 1.1em; cursor: pointer; font-weight: bold;">
+                🛑 Stop Test
+            </button>
+            <button onclick="location.reload()" style="padding: 15px 30px; background: #3b82f6; color: white; border: none; border-radius: 5px; font-size: 1.1em; cursor: pointer; font-weight: bold;">
+                🔄 Refresh Status
+            </button>
+        </div>
         )rawliteral";
     }
-    
-    html += R"rawliteral(
-    </div>
 
+    html += R"rawliteral(
     <h2>ℹ️ About Latency Testing</h2>
     <ul style="margin: 15px 0 15px 30px; line-height: 1.8;">
         <li><strong>UDP Echo:</strong> Fastest test method with minimal overhead</li>
@@ -2403,25 +2487,35 @@ void handleLatencyStart() {
         
         // Create configuration
         LatencyConfig config;
-        config.target_host = targetHost;
+        // Check for host:port format
+        int colonIndex = targetHost.indexOf(':');
+        int specifiedPort = 0;
+        if (colonIndex > 0) {
+            specifiedPort = targetHost.substring(colonIndex + 1).toInt();
+            targetHost = targetHost.substring(0, colonIndex);
+            config.target_host = targetHost;
+        } else {
+            config.target_host = targetHost;
+        }
+
         config.packet_count = packetCount.length() > 0 ? packetCount.toInt() : PING_DEFAULT_COUNT;
         config.interval_ms = interval.length() > 0 ? interval.toInt() : PING_DEFAULT_INTERVAL;
         config.timeout_ms = PING_DEFAULT_TIMEOUT;
         config.packet_size = 32;
         config.continuous_mode = false;
-        
+
         if (testType == "udp") {
             config.test_type = LATENCY_UDP_ECHO;
-            config.target_port = 7; // Echo port
+            config.target_port = (specifiedPort > 0) ? specifiedPort : 53; // Default UDP to DNS (53) as echo (7) is rare
         } else if (testType == "tcp") {
             config.test_type = LATENCY_TCP_CONNECT;
-            config.target_port = 80;
+            config.target_port = (specifiedPort > 0) ? specifiedPort : 80;
         } else if (testType == "http") {
             config.test_type = LATENCY_HTTP_REQUEST;
-            config.target_port = 80;
+            config.target_port = (specifiedPort > 0) ? specifiedPort : 80;
         } else {
             config.test_type = LATENCY_UDP_ECHO;
-            config.target_port = 7;
+            config.target_port = (specifiedPort > 0) ? specifiedPort : 53;
         }
         
         // Validate and start
@@ -2455,77 +2549,6 @@ void handleLatencyStart() {
         return;
     }
     
-    // Show configuration form (GET request)
-    String html = HTML_HEADER;
-    
-
-    
-    html += R"rawliteral(
-    <div class="header">
-        <h1>📉 Start Latency Test</h1>
-        <p>Configure and Launch Network Quality Test</p>
-    </div>
-
-    <div class="nav">
-        <div><a href="/">🏠 Home</a></div>
-        <div><a href="/status">📊 Status</a></div>
-        <div><a href="/scan">🔍 Scan Networks</a></div>
-        <div class="dropdown">
-            <a href="/analysis">🔬 Analysis</a>
-            <div class="dropdown-content">
-                <a href="/analysis">📊 Dashboard</a>
-                <a href="/signal">📶 Signal</a>
-                <a href="/portscan">🔒 Port Scanner</a>
-                <a href="/iperf">⚡ iPerf</a>
-                <a href="/latency">📉 Latency</a>
-                <a href="/channel">📡 Channel</a>
-            </div>
-        </div>
-    </div>
-
-    <h2>🔧 Test Configuration</h2>
-    
-    <form method="POST" action="/latency/start">
-        <div class="form-group">
-            <label for="target">Target Host (IP or Domain)</label>
-            <input type="text" id="target" name="target" placeholder="e.g., google.com or 8.8.8.8" required>
-            <small style="color: #666;">Enter IP address or domain name to test</small>
-        </div>
-        
-        <div class="form-group">
-            <label for="testType">Test Type</label>
-            <select id="testType" name="testType" required>
-                <option value="udp">UDP Echo (Fast, Low Overhead)</option>
-                <option value="tcp">TCP Connect (Connection Time)</option>
-                <option value="http">HTTP Request (Real-World Latency)</option>
-            </select>
-        </div>
-        
-        <div class="form-row">
-            <div class="form-group">
-                <label for="packetCount">Packet Count</label>
-                <input type="number" id="packetCount" name="packetCount" value="10" min="1" max="100" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="interval">Interval (ms)</label>
-                <input type="number" id="interval" name="interval" value="1000" min="100" max="10000" required>
-            </div>
-        </div>
-        
-        <div class="info-box">
-            <strong>ℹ️ Test Types:</strong><br>
-            • <strong>UDP Echo:</strong> Fastest method, measures round-trip time with minimal protocol overhead<br>
-            • <strong>TCP Connect:</strong> Measures time to establish TCP connection<br>
-            • <strong>HTTP Request:</strong> Real-world application latency including HTTP overhead
-        </div>
-        
-        <button type="submit" class="submit-btn">Start Latency Test</button>
-    </form>
-    )rawliteral";
-    
-    html += generateHtmlFooter();
-    webServer->send(200, "text/html", html);
 }
 
 void handleLatencyStop() {
@@ -2534,6 +2557,35 @@ void handleLatencyStop() {
     // Redirect back to main latency page with stopped message
     webServer->sendHeader("Location", "/latency?stopped=1", true);
     webServer->send(302, "text/plain", "");
+}
+
+// Helper to get status as JSON for polling
+void handleLatencyStatusJSON() {
+    String json = "{";
+    json += "\"state\":\"" + latencyTestStateToString(currentLatencyState) + "\",";
+    
+    if (currentLatencyState == LATENCY_RUNNING) {
+        json += "\"target\":\"" + activeLatencyConfig.target_host + "\",";
+        json += "\"sent\":" + String(runningStats.packets_sent) + ",";
+        json += "\"total\":" + String(activeLatencyConfig.packet_count) + ",";
+        json += "\"received\":" + String(runningStats.packets_received) + ",";
+        json += "\"lost\":" + String(runningStats.packets_lost) + ",";
+        json += "\"avg\":" + String(runningStats.avg_latency_ms, 2) + ",";
+        json += "\"jitter\":" + String(runningStats.jitter_ms, 2);
+    } else if (currentLatencyState == LATENCY_COMPLETED) {
+        json += "\"duration\":" + String(lastLatencyResults.test_duration_ms) + ",";
+        json += "\"sent\":" + String(lastLatencyResults.statistics.packets_sent) + ",";
+        json += "\"received\":" + String(lastLatencyResults.statistics.packets_received) + ",";
+        json += "\"lost\":" + String(lastLatencyResults.statistics.packets_lost) + ",";
+        json += "\"min\":" + String(lastLatencyResults.statistics.min_latency_ms, 2) + ",";
+        json += "\"max\":" + String(lastLatencyResults.statistics.max_latency_ms, 2) + ",";
+        json += "\"avg\":" + String(lastLatencyResults.statistics.avg_latency_ms, 2) + ",";
+        json += "\"jitter\":" + String(lastLatencyResults.statistics.jitter_ms, 2) + ",";
+        json += "\"loss_pct\":" + String(lastLatencyResults.statistics.packet_loss_percent, 1);
+    }
+    
+    json += "}";
+    webServer->send(200, "application/json", json);
 }
 
 // ==========================================

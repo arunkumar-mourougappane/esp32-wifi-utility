@@ -5,6 +5,44 @@ All notable changes to the ESP32 WiFi Utility project are documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.1.0] - 2026-01-03
+
+### 🚀 Latency & UI Improvements Release
+
+This release focuses on significantly improving the **Network Latency Testing** experience with a nicer UI, better default settings, and professional external testing tools.
+
+#### Added
+- **Latency Test UI**:
+  - **Visual Progress Bar**: Real-time progress tracking during tests.
+  - **Live Statistics**: Average Latency and Jitter update dynamically while the test runs.
+  - **Auto-Refresh**: Page automatically polls status and reloads upon completion.
+  - **JSON Endpoint**: `/latency/status` API for integration and frontend polling.
+- **External Testing Tools**:
+  - `scripts/udp_echo_server.py`: Python script for easy local UDP echo testing.
+  - `pc_test_apps/udp_echo_server`: High-performance C++ server for ultra-low latency measurements on Linux.
+
+#### Changed
+- **Status Page Redesign**:
+  - Migrated to a modern **grid layout** with "Stat Cards".
+  - Added **icons** for better visual recognition (📡, 🌐, 🧠, 👥).
+  - Improved readability with clear labels and value formatting.
+- **Latency Test Defaults**:
+  - Changed default **UDP Target Port** to `53` (DNS) as port 7 is often blocked.
+  - Changed default **TCP Target Host** to `www.google.com:80` for better reliability.
+  - Default packet count set to 10 for quicker quick-checks.
+- **Navigation**:
+  - Replaced hardcoded menu in Latency page with standard system navigation.
+
+#### Fixed
+- **Latency Test Bugs**:
+  - Fixed issue where TCP Connect test to `8.8.8.8` (HTTP) would fail (timeout).
+  - Fixed configuration parsing for `host:port` syntax.
+  - Fixed bug where "Completed" state was sometimes missed by the UI, causing it to freeze at 100%.
+- **Compilation**:
+  - Fixed missing forward declarations in `web_server.cpp`.
+
+---
+
 ## [5.0.0] - 2025-11-02
 
 ### 🎯 Major Enhancements Release
@@ -343,7 +381,7 @@ This release focuses entirely on documentation improvements following the v4.3.0
 
 ## [4.3.0] - 2025-10-25
 
-###  MAJOR: Advanced Network Analysis & TFT Display Release
+### MAJOR: Advanced Network Analysis & TFT Display Release
 
 This major version introduces **professional network analysis tools**, **TFT display support**, and **visual spectrum analysis** for comprehensive WiFi diagnostics and security auditing.
 
@@ -505,7 +543,7 @@ This major version introduces **professional network analysis tools**, **TFT dis
 
 ## [4.2.0] - 2025-10-25
 
-###  MAJOR: Architecture Simplification & Configuration Persistence Release
+### MAJOR: Architecture Simplification & Configuration Persistence Release
 
 This major version represents an **architectural simplification** with removal of RTOS complexity while introducing comprehensive configuration persistence, web-based configuration management, responsive UI improvements, base64 password security, and instant WiFi mode switching capabilities.
 
@@ -954,7 +992,7 @@ station config "HomeWiFi" "MyPassword" auto
 
 ## [4.1.0] - 2025-10-19
 
-###  MAJOR: FreeRTOS Architecture Transformation
+### MAJOR: FreeRTOS Architecture Transformation
 
 This major version represents a **complete architectural reimplementation** with professional FreeRTOS task-based design,
 delivering unprecedented performance (500× faster commands), true concurrent operations, smooth 60 FPS animations,
@@ -2125,7 +2163,7 @@ making all network analysis tools accessible via web browser on mobile and deskt
 
 ## [2.1.0] - 2025-10-15
 
-###  Added
+### Added
 
 #### Professional Channel Analysis System
 
@@ -2204,7 +2242,7 @@ making all network analysis tools accessible via web browser on mobile and deskt
 - **Documentation**: 1000+ pages across 9 comprehensive guides
 - **Platform Support**: 100% dual-board compilation success with feature parity
 
-###  Migration Guide
+### Migration Guide
 
 **For Users:**
 

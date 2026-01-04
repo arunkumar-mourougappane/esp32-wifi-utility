@@ -1,6 +1,9 @@
 # Prerequisites
 *.d
 
+# Compile exectuables
+pc_test_apps/udp_echo_server
+
 # Compiled Object files
 *.slo
 *.lo
