@@ -154,6 +154,12 @@ void tftBacklightOff();
  */
 void tftBacklightOn();
 
+/**
+ * @brief Initialize NTP time synchronization
+ * @note Called automatically when WiFi connects, but can be called manually
+ */
+void initializeTFTTime();
+
 // Global TFT instance
 extern Adafruit_ST7789* tft;
 
