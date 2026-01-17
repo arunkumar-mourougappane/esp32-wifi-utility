@@ -11,6 +11,7 @@
 #define TFT_SECTION_GAP 16           // Gap between sections
 
 #include "wifi_manager.h"
+#include "battery_monitor.h"
 #include <WiFi.h>
 #include <SPI.h>
 #include "esp_wifi.h"
@@ -42,10 +43,6 @@ static TaskHandle_t tftTaskHandle = nullptr;
 static bool ntpSynced = false;
 static int lastDisplayedDay = -1;
 
-// Battery monitoring
-static float lastBatteryVoltage = 0.0;
-static uint8_t lastBatteryPercent = 0;
-
 // Forward declarations for internal functions
 static void drawQRCode(const String& qrData, int offsetX, int offsetY);
 static void displayAPInfoInternal(const TFTAPInfo& apInfo);
@@ -54,9 +51,9 @@ static void updateTimeDisplay();
 static void updateDateDisplay();
 static void updateClientsDisplay(uint8_t clients);
 static void updateBatteryDisplay(uint8_t percent);
-static uint8_t readBatteryPercent();
 static void initializeNTP();
 static void tftDisplayTask(void* parameter);
+static void onBatteryUpdate(uint8_t percentage, float voltage);
 
 // ==========================================
 // TFT DISPLAY INITIALIZATION
@@ -79,11 +76,13 @@ void initializeTFT() {
     pinMode(TFT_BACKLIGHT, OUTPUT);
     tftBacklightOn();
     
-    // Initialize battery monitoring pin
-    pinMode(VBAT_PIN, INPUT);
-    
     // Clear screen with black background
     tft->fillScreen(ST77XX_BLACK);
+    
+    // Initialize battery monitor with callback
+    if (!initializeBatteryMonitor(onBatteryUpdate)) {
+        Serial.println("⚠️  Battery monitor initialization failed");
+    }
     
     // Create message queue (5 messages max)
     tftQueue = xQueueCreate(5, sizeof(TFTMessage));
@@ -204,29 +203,11 @@ void initializeTFTTime() {
 }
 
 // ==========================================
-// BATTERY MONITORING
+// BATTERY MONITORING CALLBACK
 // ==========================================
-static uint8_t readBatteryPercent() {
-    // Read battery voltage from ADC
-    // ESP32-S3 ADC: 12-bit (0-4095), reference voltage ~3.3V
-    // Voltage divider: VBAT -> 2x divider -> ADC
-    int adcValue = analogRead(VBAT_PIN);
-    
-    // Convert ADC reading to voltage (with voltage divider factor of 2)
-    float voltage = (adcValue / 4095.0) * 3.3 * 2.0;
-    
-    // Clamp voltage to valid range
-    if (voltage > BATTERY_MAX_VOLTAGE) voltage = BATTERY_MAX_VOLTAGE;
-    if (voltage < BATTERY_MIN_VOLTAGE) voltage = BATTERY_MIN_VOLTAGE;
-    
-    // Calculate percentage
-    float percent = ((voltage - BATTERY_MIN_VOLTAGE) / 
-                     (BATTERY_MAX_VOLTAGE - BATTERY_MIN_VOLTAGE)) * 100.0;
-    
-    // Store for reference
-    lastBatteryVoltage = voltage;
-    
-    return (uint8_t)percent;
+static void onBatteryUpdate(uint8_t percentage, float voltage) {
+    // This callback is called by the battery monitor when battery level changes significantly
+    updateBatteryDisplay(percentage);
 }
 
 static void updateBatteryDisplay(uint8_t percent) {
@@ -409,8 +390,7 @@ static void displayAPInfoInternal(const TFTAPInfo& apInfo) {
     tft->drawBitmap(175, 1, image_download_bits, 60, 21, COLOR_GREEN);
     
     // Display battery percentage
-    uint8_t batteryPercent = readBatteryPercent();
-    lastBatteryPercent = batteryPercent;
+    uint8_t batteryPercent = getLastBatteryPercent();
     updateBatteryDisplay(batteryPercent);
     
     // QR Code area (left side, starting at y=29)
@@ -631,8 +611,7 @@ static void displayStationDetailsInternal(const TFTStationInfo& stationInfo) {
     tft->drawBitmap(175, 1, image_download_bits, 60, 21, COLOR_GREEN);
     
     // Display battery percentage
-    uint8_t batteryPercent = readBatteryPercent();
-    lastBatteryPercent = batteryPercent;
+    uint8_t batteryPercent = getLastBatteryPercent();
     updateBatteryDisplay(batteryPercent);
     
     // QR Code for WiFi credentials (left side, starting at y=29)
@@ -695,11 +674,9 @@ static void tftDisplayTask(void* parameter) {
     TickType_t lastTimeUpdate = 0;
     TickType_t lastClientsCheck = 0;
     TickType_t lastStationUpdate = 0;
-    TickType_t lastBatteryCheck = 0;
     const TickType_t TIME_UPDATE_INTERVAL = pdMS_TO_TICKS(1000);      // 1 second
     const TickType_t CLIENTS_CHECK_INTERVAL = pdMS_TO_TICKS(1000);    // 1 second
     const TickType_t STATION_UPDATE_INTERVAL = pdMS_TO_TICKS(10000);  // 10 seconds
-    const TickType_t BATTERY_CHECK_INTERVAL = pdMS_TO_TICKS(30000);   // 30 seconds
     
     TFTDisplayMode currentMode = TFT_MODE_OFF;
     TFTAPInfo lastAPInfo = {};
@@ -787,16 +764,6 @@ static void tftDisplayTask(void* parameter) {
                 lastTimeUpdate = currentTick;
             }
             
-            // Check battery level every 30 seconds
-            if ((currentTick - lastBatteryCheck) >= BATTERY_CHECK_INTERVAL) {
-                uint8_t currentPercent = readBatteryPercent();
-                if (abs(currentPercent - lastBatteryPercent) >= 5) {  // Update if changed by 5% or more
-                    lastBatteryPercent = currentPercent;
-                    updateBatteryDisplay(currentPercent);
-                }
-                lastBatteryCheck = currentTick;
-            }
-            
             // Check client count every second and update only if changed
             if ((currentTick - lastClientsCheck) >= CLIENTS_CHECK_INTERVAL) {
                 wifi_sta_list_t stationList;
@@ -813,16 +780,6 @@ static void tftDisplayTask(void* parameter) {
             if ((currentTick - lastTimeUpdate) >= TIME_UPDATE_INTERVAL) {
                 updateTimeDisplay();
                 lastTimeUpdate = currentTick;
-            }
-            
-            // Check battery level every 30 seconds
-            if ((currentTick - lastBatteryCheck) >= BATTERY_CHECK_INTERVAL) {
-                uint8_t currentPercent = readBatteryPercent();
-                if (abs(currentPercent - lastBatteryPercent) >= 5) {  // Update if changed by 5% or more
-                    lastBatteryPercent = currentPercent;
-                    updateBatteryDisplay(currentPercent);
-                }
-                lastBatteryCheck = currentTick;
             }
             
             // Periodic Station info update - check if still connected

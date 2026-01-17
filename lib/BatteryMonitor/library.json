@@ -1,0 +1,17 @@
+{
+  "name": "BatteryMonitor",
+  "version": "1.0.0",
+  "description": "Battery voltage monitoring for Adafruit Feather ESP32-S3 boards",
+  "keywords": ["battery", "monitoring", "voltage", "adc", "lipo"],
+  "authors": [
+    {
+      "name": "Arunkumar Mourougappane"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/arunkumar-mourougappane/esp32-wifi-utility"
+  },
+  "frameworks": ["arduino"],
+  "platforms": ["espressif32"]
+}
