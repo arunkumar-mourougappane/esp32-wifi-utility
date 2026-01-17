@@ -37,6 +37,103 @@ Professional-grade tools for accurate network benchmarking:
 
 ---
 
+## 🎉 What's New in v5.2.0
+
+Version 5.2.0 introduces a **complete TFT display UI redesign** with modular architecture, color-coded status screens, and a branded welcome experience.
+
+### 🎨 **TFT Display UI Redesign**
+
+Professional user interface with intuitive visual feedback:
+
+#### Welcome Screen
+
+<p align="center">
+  <img src="docs/images/welcome.png" alt="ESP32 WiFi Utility Welcome Screen" width="300"/>
+</p>
+
+- **Branded Startup**: Purple ESP32 logo with "ESP32 WiFi Utility" title
+- **Professional First Impression**: 2-second welcome screen on device boot
+- **Consistent Branding**: Matches project identity across all interfaces
+
+#### Color-Coded Status Screens
+
+<p align="center">
+  <img src="docs/images/connecting.png" alt="Connecting Screen" width="200"/>
+  <img src="docs/images/initializing_ap.png" alt="Initializing Access Point" width="200"/>
+  <img src="docs/images/disabled.png" alt="Disabled Screen" width="200"/>
+</p>
+
+**Visual Status System**:
+
+| Color     | Status           | Usage                                    | Screen                                                      |
+|-----------|------------------|------------------------------------------|-------------------------------------------------------------|
+| 🔵 Blue   | Connecting/Idle  | Station mode connecting or idle          | "Station Mode" / "Connecting..." or "Station Mode" / "Idle" |
+| 🟢 Green  | Connected/Active | Successful connection or AP initializing | "Connected!" or "Initializing Access Point"                 |
+| 🔴 Red    | Disabled         | WiFi stopped                             | "Disabled!"                                                 |
+| 🟡 Yellow | Idle Mode        | Idle without text                        | WiFi symbol only (centered)                                 |
+
+**Status Screens Include**:
+
+- **Connecting**: Blue WiFi icon with "Station Mode" / "Connecting..." text
+- **Connected**: Green WiFi icon with "Connected!" (1-second confirmation)
+- **Station Idle**: Blue WiFi icon with "Station Mode" / "Idle" text
+- **Mode Idle**: Yellow WiFi icon, centered, no text
+- **Initializing AP**: Green WiFi icon with "Initializing Access Point" text
+- **Disabled**: Red WiFi icon with "Disabled!" text
+
+#### AP Mode Display
+
+<p align="center">
+  <img src="docs/images/ap_mode_qr.png" alt="AP Mode with QR Code" width="300"/>
+</p>
+
+- **Comprehensive Information**: SSID, password, IP address, QR code
+- **Client Count**: Real-time connected devices
+- **Battery Status**: Visual battery indicator with percentage
+- **Current Time**: Display timestamp
+- **QR Code**: Instant device connection via mobile scan
+
+### 🏗️ **Modular Architecture Improvements**
+
+Technical enhancements for maintainability and code quality:
+
+- **Modular `displayWiFiStatusScreen()` Function**:
+  - Configurable icon color, text color, and dual-line text
+  - Automatic vertical centering when text is omitted
+  - Eliminates code duplication across all status screens
+  - Single source of truth for WiFi icon display logic
+
+- **Queue-Based Messaging**:
+  - All TFT updates via FreeRTOS queue system
+  - Non-blocking display operations
+  - Clean separation between UI and business logic
+
+- **Clean Architecture**:
+  - Removed TFT dependencies from command interface
+  - WiFi task handles mode switching and TFT updates
+  - Improved separation of concerns across modules
+
+- **Memory Efficiency**:
+  - Shared bitmap rendering reduces flash usage
+  - Two bitmaps: 50x50 WiFi icon (313 bytes), 60x60 ESP32 logo (450 bytes)
+  - Total flash usage: 85.0% (1,225,857 bytes)
+  - RAM usage: 16.4% (53,592 bytes)
+
+### 📱 **Screen Modes**
+
+Complete display mode system:
+
+- `TFT_MODE_OFF` - Display off
+- `TFT_MODE_AP` - Access Point with full information and QR code
+- `TFT_MODE_STATION` - Connected station with signal strength
+- `TFT_MODE_CONNECTING` - Blue connecting animation
+- `TFT_MODE_IDLE` - Blue station idle with text
+- `TFT_MODE_IDLE_YELLOW` - Yellow WiFi symbol, no text
+- `TFT_MODE_DISABLED` - Red disabled indicator
+- `TFT_MODE_STATUS` - General status display
+
+---
+
 ## 🎉 What's New in v5.0.0
 
 Version 5.0.0 introduces **TFT display enhancements**, **non-blocking WiFi operations**, **structured logging system**, and **QR code functionality** for significantly improved user experience and system responsiveness.
@@ -146,7 +243,6 @@ Version 4.3.1 is a **documentation-focused patch release** providing comprehensi
 **New Wiki Pages** (2,500+ lines of documentation):
 
 - **[Port Scanner Documentation](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/wiki/Port-Scanner)** (1,400+ lines)
-
   - Port scanning fundamentals and TCP connection concepts
   - Four scan types: Common (16 ports), Well-Known (1-1024), Custom Range, All Ports (65,535)
   - 25+ service identifications (HTTP, SSH, MySQL, RDP, VNC, etc.)
@@ -834,8 +930,8 @@ blocking operations to **asynchronous, concurrent task-based processing**.
 
 The command prompt dynamically shows the current device state:
 
-| Prompt       | Mode             | Description                        |
-| ------------ | ---------------- | ---------------------------------- |
+| Prompt      | Mode             | Description                        |
+| ----------- | ---------------- | ---------------------------------- |
 | `🟡 ESP32>` | **Idle**         | Device ready, WiFi disabled        |
 | `🔍 ESP32>` | **Station**      | Ready to scan or actively scanning |
 | `📡 ESP32>` | **Access Point** | WiFi hotspot active                |
