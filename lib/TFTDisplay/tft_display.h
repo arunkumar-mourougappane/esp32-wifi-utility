@@ -36,13 +36,6 @@
   #define TFT_SCK       36
 #endif
 
-// Battery monitoring pin (VBAT on Feather ESP32-S3)
-#define VBAT_PIN 4  // ADC pin for battery voltage
-
-// Battery voltage thresholds (LiPo)
-#define BATTERY_MAX_VOLTAGE 4.2  // Fully charged
-#define BATTERY_MIN_VOLTAGE 3.0  // Empty
-
 // Display dimensions
 #define TFT_WIDTH  135
 #define TFT_HEIGHT 240
