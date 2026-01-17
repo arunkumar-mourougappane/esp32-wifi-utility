@@ -2,6 +2,10 @@
 #include <Wire.h>
 #include "Adafruit_MAX1704X.h"
 #include "Adafruit_LC709203F.h"
+#include "logging.h"
+
+// Component tag for logging
+#define TAG_BATTERY "Battery"
 
 // Battery monitor objects
 static Adafruit_MAX17048 maxlipo;
@@ -126,25 +130,22 @@ bool initializeBatteryMonitor(BatteryUpdateCallback callback) {
     if (maxlipo.begin()) {
         usingMAX17048 = true;
         batteryMonitorFound = true;
-        Serial.println(F("Found MAX17048 battery monitor"));
-        Serial.print(F("Chip ID: 0x"));
-        Serial.println(maxlipo.getChipID(), HEX);
+        LOG_INFO(TAG_BATTERY, "Found MAX17048 battery monitor (Chip ID: 0x%04X)", maxlipo.getChipID());
     }
     // Try LC709203F (address 0x0B)
     else if (lc.begin()) {
         usingMAX17048 = false;
         batteryMonitorFound = true;
-        Serial.println(F("Found LC709203F battery monitor"));
-        Serial.print(F("Version: 0x"));
-        Serial.println(lc.getICversion(), HEX);
+        LOG_INFO(TAG_BATTERY, "Found LC709203F battery monitor (Version: 0x%04X)", lc.getICversion());
         
         // Configure LC709203F
         lc.setThermistorB(3950);
         lc.setPackSize(LC709203F_APA_500MAH);  // Adjust based on your battery
         lc.setAlarmVoltage(3.8);
+        LOG_DEBUG(TAG_BATTERY, "LC709203F configured: Thermistor=3950, PackSize=500mAh, AlarmV=3.8V");
     }
     else {
-        Serial.println(F("No battery monitor found (MAX17048 or LC709203F)"));
+        LOG_ERROR(TAG_BATTERY, "No battery monitor found (MAX17048 or LC709203F)");
         batteryMonitorFound = false;
         return false;
     }
