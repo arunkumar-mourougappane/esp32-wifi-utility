@@ -42,6 +42,10 @@ static TaskHandle_t tftTaskHandle = nullptr;
 static bool ntpSynced = false;
 static int lastDisplayedDay = -1;
 
+// Battery monitoring
+static float lastBatteryVoltage = 0.0;
+static uint8_t lastBatteryPercent = 0;
+
 // Forward declarations for internal functions
 static void drawQRCode(const String& qrData, int offsetX, int offsetY);
 static void displayAPInfoInternal(const TFTAPInfo& apInfo);
@@ -49,6 +53,8 @@ static void displayStationDetailsInternal(const TFTStationInfo& stationInfo);
 static void updateTimeDisplay();
 static void updateDateDisplay();
 static void updateClientsDisplay(uint8_t clients);
+static void updateBatteryDisplay(uint8_t percent);
+static uint8_t readBatteryPercent();
 static void initializeNTP();
 static void tftDisplayTask(void* parameter);
 
@@ -72,6 +78,9 @@ void initializeTFT() {
     // Initialize backlight
     pinMode(TFT_BACKLIGHT, OUTPUT);
     tftBacklightOn();
+    
+    // Initialize battery monitoring pin
+    pinMode(VBAT_PIN, INPUT);
     
     // Clear screen with black background
     tft->fillScreen(ST77XX_BLACK);
@@ -195,6 +204,95 @@ void initializeTFTTime() {
 }
 
 // ==========================================
+// BATTERY MONITORING
+// ==========================================
+static uint8_t readBatteryPercent() {
+    // Read battery voltage from ADC
+    // ESP32-S3 ADC: 12-bit (0-4095), reference voltage ~3.3V
+    // Voltage divider: VBAT -> 2x divider -> ADC
+    int adcValue = analogRead(VBAT_PIN);
+    
+    // Convert ADC reading to voltage (with voltage divider factor of 2)
+    float voltage = (adcValue / 4095.0) * 3.3 * 2.0;
+    
+    // Clamp voltage to valid range
+    if (voltage > BATTERY_MAX_VOLTAGE) voltage = BATTERY_MAX_VOLTAGE;
+    if (voltage < BATTERY_MIN_VOLTAGE) voltage = BATTERY_MIN_VOLTAGE;
+    
+    // Calculate percentage
+    float percent = ((voltage - BATTERY_MIN_VOLTAGE) / 
+                     (BATTERY_MAX_VOLTAGE - BATTERY_MIN_VOLTAGE)) * 100.0;
+    
+    // Store for reference
+    lastBatteryVoltage = voltage;
+    
+    return (uint8_t)percent;
+}
+
+static void updateBatteryDisplay(uint8_t percent) {
+    if (!tft) return;
+    
+    // Battery display configuration
+    const int batteryX = 203;       // X position
+    const int batteryY = 2;         // Y position
+    const int batteryWidth = 28;    // Battery body width
+    const int batteryHeight = 12;   // Battery body height
+    const int terminalWidth = 2;    // Battery terminal width
+    const int terminalHeight = 6;   // Battery terminal height
+    const int numBars = 5;          // Number of internal bars
+    const int barSpacing = 1;       // Spacing between bars
+    const int borderThickness = 1;  // Battery outline thickness
+    
+    // Calculate how many bars to fill based on percentage
+    int filledBars = (percent + 9) / 20;  // 0-20%=1, 21-40%=2, 41-60%=3, 61-80%=4, 81-100%=5
+    if (filledBars > numBars) filledBars = numBars;
+    if (filledBars < 0) filledBars = 0;
+    
+    // Choose color based on battery level
+    uint16_t fillColor;
+    if (percent > 50) {
+        fillColor = 0x07E0;  // Green
+    } else if (percent > 20) {
+        fillColor = 0xFFE0;  // Yellow
+    } else {
+        fillColor = 0xF800;  // Red
+    }
+    
+    uint16_t outlineColor = 0xFFFF;  // White outline
+    uint16_t emptyColor = ST77XX_BLACK;  // Black for empty areas
+    
+    // Clear entire battery area (including terminal)
+    tft->fillRect(batteryX, batteryY, batteryWidth + terminalWidth + 2, batteryHeight, emptyColor);
+    
+    // Draw battery body outline
+    tft->drawRect(batteryX, batteryY, batteryWidth, batteryHeight, outlineColor);
+    
+    // Draw battery terminal (small rectangle on the right)
+    int terminalX = batteryX + batteryWidth;
+    int terminalY = batteryY + (batteryHeight - terminalHeight) / 2;
+    tft->fillRect(terminalX, terminalY, terminalWidth, terminalHeight, outlineColor);
+    
+    // Calculate bar dimensions inside the battery
+    int innerX = batteryX + borderThickness + 1;
+    int innerY = batteryY + borderThickness + 1;
+    int innerWidth = batteryWidth - (2 * borderThickness) - 2;
+    int innerHeight = batteryHeight - (2 * borderThickness) - 2;
+    
+    int barWidth = (innerWidth - (numBars - 1) * barSpacing) / numBars;
+    
+    // Draw battery bars
+    for (int i = 0; i < numBars; i++) {
+        int barX = innerX + i * (barWidth + barSpacing);
+        
+        if (i < filledBars) {
+            // Filled bar - use fill color
+            tft->fillRect(barX, innerY, barWidth, innerHeight, fillColor);
+        }
+        // Empty bars remain black (already cleared)
+    }
+}
+
+// ==========================================
 // QR CODE UTILITIES
 // ==========================================
 static void drawQRCode(const String& qrData, int offsetX, int offsetY) {
@@ -302,10 +400,18 @@ static void displayAPInfoInternal(const TFTAPInfo& apInfo) {
     tft->setCursor(171, 17);
     tft->print("Security:");
     
-    tft->drawBitmap(227, 16, image_Lock_bits, 7, 8, COLOR_LOCK);
+    // Determine lock color based on security (green if password protected, red if open)
+    bool isSecure = (apInfo.password[0] != '\0' && strlen(apInfo.password) > 0);
+    uint16_t lockColor = isSecure ? 0x07E0 : 0xF800;  // Green or Red
+    tft->drawBitmap(227, 16, image_Lock_bits, 7, 8, lockColor);
     
     // Download/battery icon (top right corner)
     tft->drawBitmap(175, 1, image_download_bits, 60, 21, COLOR_GREEN);
+    
+    // Display battery percentage
+    uint8_t batteryPercent = readBatteryPercent();
+    lastBatteryPercent = batteryPercent;
+    updateBatteryDisplay(batteryPercent);
     
     // QR Code area (left side, starting at y=29)
     tft->drawBitmap(4, 29, image_download_1_bits, 100, 100, COLOR_WHITE);
@@ -516,10 +622,18 @@ static void displayStationDetailsInternal(const TFTStationInfo& stationInfo) {
     tft->setCursor(171, 17);
     tft->print("Security:");
     
-    tft->drawBitmap(227, 16, image_Lock_bits, 7, 8, COLOR_LOCK);
+    // Determine lock color based on security (green if password protected, red if open)
+    bool isSecure = (stationInfo.password[0] != '\0' && strlen(stationInfo.password) > 0);
+    uint16_t lockColor = isSecure ? 0x07E0 : 0xF800;  // Green or Red
+    tft->drawBitmap(227, 16, image_Lock_bits, 7, 8, lockColor);
     
     // Download/battery icon (top right corner)
     tft->drawBitmap(175, 1, image_download_bits, 60, 21, COLOR_GREEN);
+    
+    // Display battery percentage
+    uint8_t batteryPercent = readBatteryPercent();
+    lastBatteryPercent = batteryPercent;
+    updateBatteryDisplay(batteryPercent);
     
     // QR Code for WiFi credentials (left side, starting at y=29)
     // Generate QR data for WiFi connection
@@ -581,9 +695,11 @@ static void tftDisplayTask(void* parameter) {
     TickType_t lastTimeUpdate = 0;
     TickType_t lastClientsCheck = 0;
     TickType_t lastStationUpdate = 0;
+    TickType_t lastBatteryCheck = 0;
     const TickType_t TIME_UPDATE_INTERVAL = pdMS_TO_TICKS(1000);      // 1 second
     const TickType_t CLIENTS_CHECK_INTERVAL = pdMS_TO_TICKS(1000);    // 1 second
     const TickType_t STATION_UPDATE_INTERVAL = pdMS_TO_TICKS(10000);  // 10 seconds
+    const TickType_t BATTERY_CHECK_INTERVAL = pdMS_TO_TICKS(30000);   // 30 seconds
     
     TFTDisplayMode currentMode = TFT_MODE_OFF;
     TFTAPInfo lastAPInfo = {};
@@ -671,6 +787,16 @@ static void tftDisplayTask(void* parameter) {
                 lastTimeUpdate = currentTick;
             }
             
+            // Check battery level every 30 seconds
+            if ((currentTick - lastBatteryCheck) >= BATTERY_CHECK_INTERVAL) {
+                uint8_t currentPercent = readBatteryPercent();
+                if (abs(currentPercent - lastBatteryPercent) >= 5) {  // Update if changed by 5% or more
+                    lastBatteryPercent = currentPercent;
+                    updateBatteryDisplay(currentPercent);
+                }
+                lastBatteryCheck = currentTick;
+            }
+            
             // Check client count every second and update only if changed
             if ((currentTick - lastClientsCheck) >= CLIENTS_CHECK_INTERVAL) {
                 wifi_sta_list_t stationList;
@@ -687,6 +813,16 @@ static void tftDisplayTask(void* parameter) {
             if ((currentTick - lastTimeUpdate) >= TIME_UPDATE_INTERVAL) {
                 updateTimeDisplay();
                 lastTimeUpdate = currentTick;
+            }
+            
+            // Check battery level every 30 seconds
+            if ((currentTick - lastBatteryCheck) >= BATTERY_CHECK_INTERVAL) {
+                uint8_t currentPercent = readBatteryPercent();
+                if (abs(currentPercent - lastBatteryPercent) >= 5) {  // Update if changed by 5% or more
+                    lastBatteryPercent = currentPercent;
+                    updateBatteryDisplay(currentPercent);
+                }
+                lastBatteryCheck = currentTick;
             }
             
             // Periodic Station info update - check if still connected
