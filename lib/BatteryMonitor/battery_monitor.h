@@ -4,13 +4,6 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
-// Battery monitoring configuration
-#define VBAT_PIN 4  // ADC pin for battery voltage on Feather ESP32-S3
-
-// Battery voltage thresholds (LiPo)
-#define BATTERY_MAX_VOLTAGE 4.2  // Fully charged
-#define BATTERY_MIN_VOLTAGE 3.0  // Empty
-
 // Battery update interval (ms)
 #define BATTERY_UPDATE_INTERVAL_MS 30000  // 30 seconds
 

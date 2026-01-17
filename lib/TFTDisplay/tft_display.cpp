@@ -387,16 +387,10 @@ static void displayAPInfoInternal(const TFTAPInfo& apInfo) {
     uint16_t lockColor = isSecure ? 0x07E0 : 0xF800;  // Green or Red
     tft->drawBitmap(227, 16, image_Lock_bits, 7, 8, lockColor);
     
-    // Download/battery icon (top right corner)
-    // tft->drawBitmap(175, 1, image_download_bits, 60, 21, COLOR_GREEN);
-    
     // Display battery percentage
     uint8_t batteryPercent = getLastBatteryPercent();
     updateBatteryDisplay(batteryPercent);
-    
-    // QR Code area (left side, starting at y=29)
-    // tft->drawBitmap(4, 29, image_download_1_bits, 100, 100, COLOR_WHITE);
-    
+
     // Right side information panel (starting at x=111)
     // IP: label and value
     tft->setTextColor(COLOR_CYAN);
