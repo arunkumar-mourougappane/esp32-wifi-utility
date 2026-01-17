@@ -681,8 +681,8 @@ void connectToNetwork(String ssid, String password) {
   LOG_INFO(TAG_WIFI, "Connecting to '%s'...", ssid.c_str());
   
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
-  // Show connecting status on TFT
-  sendTFTStatus("Connecting...");
+  // Show connecting animation on TFT
+  sendTFTConnecting();
 #endif
   
 #ifdef USE_NEOPIXEL

@@ -56,6 +56,7 @@ enum TFTDisplayMode {
     TFT_MODE_OFF,        // Display cleared
     TFT_MODE_AP,         // Access Point mode with QR code
     TFT_MODE_STATION,    // Station mode with connection info
+    TFT_MODE_CONNECTING, // Connecting animation screen
     TFT_MODE_STATUS      // Generic status message
 };
 
@@ -123,6 +124,12 @@ bool sendTFTAPUpdate(const char* ssid, const char* password, const char* ip, uin
  * @return true if message was sent successfully, false if queue is full
  */
 bool sendTFTStationUpdate(const char* ssid, const char* password, const char* ip, int8_t rssi);
+
+/**
+ * @brief Show connecting animation screen on TFT
+ * @return true if message was sent successfully, false if queue is full
+ */
+bool sendTFTConnecting();
 
 /**
  * @brief Send status message to TFT display task

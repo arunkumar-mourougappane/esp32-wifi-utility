@@ -163,6 +163,16 @@ bool sendTFTStationUpdate(const char* ssid, const char* password, const char* ip
     return xQueueSend(tftQueue, &msg, 0) == pdTRUE;
 }
 
+bool sendTFTConnecting() {
+    if (tftQueue == nullptr) return false;
+    
+    TFTMessage msg;
+    msg.mode = TFT_MODE_CONNECTING;
+    
+    // Send to queue (don't block if full)
+    return xQueueSend(tftQueue, &msg, 0) == pdTRUE;
+}
+
 bool sendTFTStatus(const char* message) {
     if (tftQueue == nullptr) return false;
     
@@ -786,11 +796,14 @@ static void tftDisplayTask(void* parameter) {
                     Serial.println("✅ AP Mode displayed via task");
                     break;
                     
-                case TFT_MODE_STATION:
-                    // Show connecting screen first
+                case TFT_MODE_CONNECTING:
+                    // Show connecting animation screen
                     displayStationConnectingScreen();
-                    vTaskDelay(pdMS_TO_TICKS(2000));  // Show for 2 seconds
+                    currentDisplayMode = TFT_MODE_CONNECTING;
+                    Serial.println("🔄 Connecting screen displayed via task");
+                    break;
                     
+                case TFT_MODE_STATION:
                     // Full display update with QR code (only if connected)
                     
                     // Try to initialize NTP if WiFi is connected
