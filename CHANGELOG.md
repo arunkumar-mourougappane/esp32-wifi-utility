@@ -5,6 +5,140 @@ All notable changes to the ESP32 WiFi Utility project are documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.2.0] - 2026-01-16
+
+### 🎨 TFT Display UI Redesign Release
+
+This release delivers a **complete TFT display user interface overhaul** with professional branding, intuitive color-coded status system, and modular architecture that reduces code by 55% while significantly improving user experience.
+
+#### Added
+
+##### Branded Welcome Screen
+- **ESP32 Logo Display**: Custom 60×60 pixel purple logo on device boot
+- **Professional Branding**: "ESP32 WiFi Utility" title and subtitle
+- **2-Second Duration**: Optimal brand recognition timing
+- **Design Tool**: UI assets created with [Lopaka Editor](https://lopaka.app/editor/23371/50884)
+
+##### Color-Coded Status System
+- **Blue (#5555EE)**: Connecting/Idle states - Station mode operations
+- **Green (#00FF00)**: Connected/Active - Success states, AP initialization  
+- **Red (#FF2266)**: Disabled - WiFi stopped
+- **Yellow (#FFFF00)**: Idle mode - Standby state (no text, centered icon)
+- **Purple (#8855FF)**: Branding - Welcome screen logo
+- **Intuitive Psychology**: Colors chosen based on user expectations and industry standards
+
+##### Complete Screen Coverage
+- **Welcome Screen**: Branded startup with ESP32 logo
+- **Connecting Screen (Blue)**: "Station Mode / Connecting..." with WiFi icon
+- **Connected Confirmation (Green)**: 1-second "Connected!" before full details
+- **Station Mode Info**: Full network details with signal strength
+- **Station Idle (Blue)**: "Station Mode / Idle" with text labels
+- **Mode Idle (Yellow)**: WiFi symbol only, no text, vertically centered
+- **Initializing AP (Green)**: "Initializing Access Point" during startup
+- **Access Point Mode**: Full info display with QR code, clients, battery
+- **Disabled (Red)**: "Disabled!" message when WiFi stopped
+
+##### Modular Architecture
+- **displayWiFiStatusScreen()**: Single function replaces 6+ duplicated implementations
+- **Configurable Parameters**: Icon color, text color, line1, line2
+- **Automatic Centering**: Icon position adjusts based on text presence
+  - No text: y=42 (centered)
+  - One line: y=26 (icon higher)
+  - Two lines: y=22 (icon highest)
+- **Code Reduction**: 180 lines → 80 lines (55% reduction)
+- **Eliminates Duplication**: Single source of truth for WiFi icon displays
+
+##### Queue-Based Updates
+- **sendTFTIdle()**: Blue station idle screen with text
+- **sendTFTIdleYellow()**: Yellow WiFi symbol (no text)
+- **sendTFTDisabled()**: Red disabled screen
+- **FreeRTOS Integration**: Non-blocking display updates via queue messages
+- **Zero Main Loop Impact**: Display task blocks when idle
+
+##### Battery Monitor Isolation
+- **BATTERY_MONITOR_SUPPORT Macro**: Dedicated feature flag replaces USE_NEOPIXEL overload
+- **Conditional Compilation**: Battery code only for TFT Feather boards
+- **Platform-Specific**: ESP32dev builds without battery dependencies
+- **Semantic Naming**: Clear indication of hardware feature support
+
+#### Changed
+
+##### Architecture Improvements
+- **Removed TFT Dependencies**: Command interface no longer includes tft_display.h
+- **WiFi Task Coordination**: WiFi task now orchestrates both WiFi and TFT operations
+- **Clean Separation**: Proper module boundaries and single responsibility
+- **Static Function Fix**: Removed static from displayStationIdleScreen() for external access
+
+##### Display Updates
+- **Consistent Layouts**: All status screens use identical positioning logic
+- **Smart Positioning**: Automatic vertical centering based on content
+- **Professional Typography**: Size 1 font for optimal readability on small displays
+- **High Contrast**: All elements on black background for visibility
+
+##### Code Organization
+- **Declarative Screens**: One-line function calls to define screen appearance
+- **Reusable Components**: WiFi icon bitmap shared across all screens
+- **Maintainable**: Single function to update for layout changes
+
+#### Fixed
+
+##### Static Declaration Issues
+- **Function Visibility**: displayStationIdleScreen() can now be called externally
+- **Compilation Errors**: Fixed "function not accessible" errors
+
+##### Architecture Issues
+- **TFT Dependencies**: Command interface no longer has display dependencies
+- **Mode Off Display**: Disabled screen now properly shows when executing `mode off`
+- **Proper Coordination**: WiFi task handles TFT updates for mode changes
+
+##### Display Bugs
+- **Centering Logic**: Fixed icon positioning when text is absent
+- **Text Overflow**: Proper text centering calculations for variable string lengths
+
+#### Documentation
+
+##### New Documentation
+- **RELEASE_NOTES_V5.2.0.md**: Comprehensive 700+ line release documentation
+- **TFT_UI_REDESIGN.md**: 762-line complete UI design guide
+  - Color psychology and palette details
+  - All 9 screen modes documented
+  - Modular architecture deep-dive
+  - Technical implementation details
+  - Code examples and comparisons
+  - Memory usage metrics
+  - User experience flows
+  - Future enhancement suggestions
+
+##### Updated Documentation
+- **README.md**: v5.2.0 section with feature highlights and screenshots
+- **DOCUMENTATION_INDEX.md**: TFT UI redesign section with navigation links
+- **docs/README.md**: TFT UI Redesign added as first core feature
+
+##### UI Screenshots
+- **docs/images/**: 5 professional screenshots added
+  - welcome.png - Branded startup screen
+  - connecting.png - Blue connecting state
+  - initializing_ap.png - Green AP initialization
+  - disabled.png - Red disabled state
+  - ap_mode_qr.png - Full AP mode with QR
+
+#### Technical Details
+
+##### Memory Usage
+- **Flash**: 85.1% (1,226,785 bytes / 1,441,792 bytes)
+- **RAM**: 16.4% (53,592 bytes / 327,680 bytes)
+- **WiFi Icon**: 313 bytes (50×50 bitmap)
+- **ESP32 Logo**: 450 bytes (60×60 bitmap)
+- **Total Bitmaps**: 763 bytes
+
+##### Build Verification
+- ✅ esp32dev - Builds without TFT/battery dependencies
+- ✅ adafruit_feather_esp32s3_tft - Full feature set
+- ✅ adafruit_feather_esp32s3_reversetft - Full feature set
+- ✅ All test environments compile successfully
+
+---
+
 ## [5.1.0] - 2026-01-03
 
 ### 🚀 Latency & UI Improvements Release
