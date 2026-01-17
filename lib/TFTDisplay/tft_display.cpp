@@ -51,6 +51,7 @@ static void drawQRCode(const String& qrData, int offsetX, int offsetY);
 static void displayAPInfoInternal(const TFTAPInfo& apInfo);
 static void displayStationDetailsInternal(const TFTStationInfo& stationInfo);
 static void displayAPInitializingScreen();
+static void displayWiFiStatusScreen(uint16_t iconColor, uint16_t textColor, const char* line1, const char* line2 = nullptr);
 static void displayStationConnectingScreen();
 static void displayWiFiDisabledScreen();
 static void updateTimeDisplay();
@@ -169,6 +170,26 @@ bool sendTFTConnecting() {
     
     TFTMessage msg;
     msg.mode = TFT_MODE_CONNECTING;
+    
+    // Send to queue (don't block if full)
+    return xQueueSend(tftQueue, &msg, 0) == pdTRUE;
+}
+
+bool sendTFTIdle() {
+    if (tftQueue == nullptr) return false;
+    
+    TFTMessage msg;
+    msg.mode = TFT_MODE_IDLE;
+    
+    // Send to queue (don't block if full)
+    return xQueueSend(tftQueue, &msg, 0) == pdTRUE;
+}
+
+bool sendTFTIdleYellow() {
+    if (tftQueue == nullptr) return false;
+    
+    TFTMessage msg;
+    msg.mode = TFT_MODE_IDLE_YELLOW;
     
     // Send to queue (don't block if full)
     return xQueueSend(tftQueue, &msg, 0) == pdTRUE;
@@ -373,43 +394,63 @@ static void displayAPInitializingScreen() {
 }
 
 // ==========================================
-// STATION CONNECTING SCREEN
+// COMMON WIFI STATUS SCREEN
 // ==========================================
-static void displayStationConnectingScreen() {
+// Modular function to display WiFi icon with custom colors and text
+static void displayWiFiStatusScreen(uint16_t iconColor, uint16_t textColor, const char* line1, const char* line2) {
     if (!tft) return;
     
     // Clear screen
     tft->fillScreen(ST77XX_BLACK);
     
-    // Draw WiFi connecting icon (50x50) centered
-    tft->drawBitmap(90, 26, image_wifi_1_bits, 50, 50, 0x55E);  // Cyan/blue color
+    // Draw WiFi icon (50x50) centered horizontally
+    // Y position: center vertically if no text, otherwise adjust based on text lines
+    int iconY = (line1 && strlen(line1) > 0) ? (line2 ? 22 : 26) : 42;  // Centered at 42 if no text
+    tft->drawBitmap(90, iconY, image_wifi_1_bits, 50, 50, iconColor);
     
-    // Display "Connecting..." text
-    tft->setTextColor(0x73AE);  // Light cyan
-    tft->setTextWrap(false);
-    tft->setTextSize(1);
-    tft->setCursor(80, 88);
-    tft->print("Connecting...");
+    // Only display text if line1 is not empty
+    if (line1 && strlen(line1) > 0) {
+        // Configure text display
+        tft->setTextColor(textColor);
+        tft->setTextWrap(false);
+        tft->setTextSize(1);
+        
+        // Calculate X position to center the first line
+        int line1Len = strlen(line1);
+        int line1X = 120 - (line1Len * 3);  // Each char is ~6 pixels wide, center at x=120
+        
+        // Display first line of text
+        int textY = line2 ? 82 : 88;  // Adjust Y based on number of lines
+        tft->setCursor(line1X, textY);
+        tft->print(line1);
+        
+        // Display second line if provided
+        if (line2) {
+            int line2Len = strlen(line2);
+            int line2X = 120 - (line2Len * 3);
+            tft->setCursor(line2X, textY + 12);
+            tft->print(line2);
+        }
+    }
 }
+
+// ==========================================
+// STATION CONNECTING SCREEN
+// ==========================================
+static void displayStationConnectingScreen() {
+    displayWiFiStatusScreen(0x55E, 0x73AE, "Station Mode", "Connecting...");
+}
+
+void displayStationIdleScreen() {
+    displayWiFiStatusScreen(0x55E, 0x73AE, "Station Mode", "Idle");
+}
+
 
 // ==========================================
 // WIFI DISABLED SCREEN
 // ==========================================
 static void displayWiFiDisabledScreen() {
-    if (!tft) return;
-    
-    // Clear screen
-    tft->fillScreen(ST77XX_BLACK);
-    
-    // Draw WiFi disabled icon (50x50) centered - red color
-    tft->drawBitmap(90, 28, image_wifi_1_bits, 50, 50, 0xF206);  // Red color
-    
-    // Display "Disabled!" text
-    tft->setTextColor(0xEF7D);  // Pinkish-red
-    tft->setTextWrap(false);
-    tft->setTextSize(1);
-    tft->setCursor(88, 90);
-    tft->print("Disabled!");
+    displayWiFiStatusScreen(0xF206, 0xEF7D, "Disabled!", nullptr);
 }
 
 // ==========================================
@@ -832,6 +873,19 @@ static void tftDisplayTask(void* parameter) {
                     displayStationConnectingScreen();
                     currentDisplayMode = TFT_MODE_CONNECTING;
                     Serial.println("🔄 Connecting screen displayed via task");
+                    break;
+                    
+                case TFT_MODE_IDLE:
+                    // Show station mode idle screen
+                    displayStationIdleScreen();
+                    currentDisplayMode = TFT_MODE_IDLE;
+                    Serial.println("🔵 Station Mode Idle screen displayed via task");
+                    break;
+                    
+                case TFT_MODE_IDLE_YELLOW:
+                    // Show idle mode with yellow WiFi symbol, no text
+                    displayWiFiStatusScreen(0xFFE0, 0xFFE0, "", nullptr);  // Yellow symbol, no text
+                    currentDisplayMode = TFT_MODE_IDLE_YELLOW;
                     break;
                     
                 case TFT_MODE_DISABLED:
