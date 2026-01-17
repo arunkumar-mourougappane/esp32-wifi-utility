@@ -5,6 +5,7 @@
 Comprehensive guides for using all features of the ESP32 WiFi Utility:
 
 ### Core Features
+- **[TFT Display UI Redesign](TFT_UI_REDESIGN.md)** - 🆕 v5.2.0: Complete UI overhaul with branded welcome screen
 - **[Web Configuration Guide](WEB_CONFIGURATION.md)** - Complete web-based configuration system
 - **[Configuration System](CONFIGURATION_SYSTEM.md)** - Persistent AP and Station configuration
 - **[Port Scanner](PORT_SCANNER.md)** - 🆕 v4.3.0: Port scanning and service detection
@@ -59,6 +60,15 @@ New to the ESP32 WiFi Utility? Start here:
 5. **[Web Configuration](WEB_CONFIGURATION.md)** - 🆕 v4.2.0: Configure via browser
 
 ## 🎯 Feature Highlights
+
+### 🆕 v5.2.0: TFT Display UI Redesign
+- **Branded Welcome Screen**: Professional ESP32 logo with WiFi Utility branding on startup
+- **Color-Coded Status System**: Intuitive visual feedback (🔵 Blue=Connecting, 🟢 Green=Connected, 🔴 Red=Disabled, 🟡 Yellow=Idle)
+- **Modular Architecture**: Single `displayWiFiStatusScreen()` function eliminates code duplication (55% reduction)
+- **8 Display Modes**: Complete coverage of all WiFi states with consistent layouts
+- **Queue-Based Updates**: Non-blocking FreeRTOS messaging for smooth operation
+- **UI Design Assets**: [Lopaka Editor Project](https://lopaka.app/editor/23371/50884) for bitmap design
+- **Architecture Cleanup**: Removed TFT dependencies from command interface for better separation of concerns
 
 ### 🆕 v5.0.0: TFT Display Enhancements & System Responsiveness
 - **QR Code Support**: Automatic WiFi credential sharing via scannable QR codes (Station mode)
