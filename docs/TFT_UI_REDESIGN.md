@@ -56,7 +56,7 @@ All status screens follow a unified design language:
 ## Welcome Screen
 
 <p align="center">
-  <img src="images/welcome.png" alt="ESP32 WiFi Utility Welcome Screen" width="300"/>
+  <img src="images/WelcomScreen.png" alt="ESP32 WiFi Utility Welcome Screen" width="300"/>
 </p>
 
 ### Design
@@ -140,7 +140,7 @@ void displayWelcomeScreen() {
 
 ### 2. Connecting Screen (Blue)
 <p align="center">
-  <img src="images/connecting.png" alt="Connecting Screen" width="200"/>
+  <img src="images/STA_Connecting.png" alt="Connecting Screen" width="200"/>
 </p>
 
 **Mode**: `TFT_MODE_CONNECTING`  
@@ -217,7 +217,7 @@ case TFT_MODE_IDLE_YELLOW:
 
 ### 7. Initializing Access Point (Green)
 <p align="center">
-  <img src="images/initializing_ap.png" alt="Initializing Access Point" width="200"/>
+  <img src="images/AP_Initialize.png" alt="Initializing Access Point" width="200"/>
 </p>
 
 **Mode**: `TFT_MODE_CONNECTING` (used for AP initialization)  
@@ -233,7 +233,7 @@ case TFT_MODE_IDLE_YELLOW:
 
 ### 8. Access Point Mode
 <p align="center">
-  <img src="images/ap_mode_qr.png" alt="AP Mode with QR Code" width="300"/>
+  <img src="images/AP_Info.png" alt="AP Mode with QR Code" width="300"/>
 </p>
 
 **Mode**: `TFT_MODE_AP`  
@@ -254,7 +254,7 @@ case TFT_MODE_IDLE_YELLOW:
 
 ### 9. Disabled Screen (Red)
 <p align="center">
-  <img src="images/disabled.png" alt="Disabled Screen" width="200"/>
+  <img src="images/WiFi_Disabled.png" alt="Disabled Screen" width="200"/>
 </p>
 
 **Mode**: `TFT_MODE_DISABLED`  
