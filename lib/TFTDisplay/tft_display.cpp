@@ -33,6 +33,9 @@ static QueueHandle_t tftQueue = nullptr;
 // Task handle
 static TaskHandle_t tftTaskHandle = nullptr;
 
+// Current display mode (for battery indicator control)
+static TFTDisplayMode currentDisplayMode = TFT_MODE_OFF;
+
 // NTP and time tracking
 static bool ntpSynced = false;
 static int lastDisplayedDay = -1;
@@ -206,6 +209,11 @@ static void onBatteryUpdate(uint8_t percentage, float voltage) {
 
 static void updateBatteryDisplay(uint8_t percent) {
     if (!tft) return;
+    
+    // Only draw battery indicator in AP or Station mode
+    if (currentDisplayMode != TFT_MODE_AP && currentDisplayMode != TFT_MODE_STATION) {
+        return;
+    }
     
     // Battery display configuration
     // Position varies based on rotation
@@ -601,10 +609,7 @@ static void displayStationDetailsInternal(const TFTStationInfo& stationInfo) {
     bool isSecure = (stationInfo.password[0] != '\0' && strlen(stationInfo.password) > 0);
     uint16_t lockColor = isSecure ? 0x07E0 : 0xF800;  // Green or Red
     tft->drawBitmap(227, 16, image_Lock_bits, 7, 8, lockColor);
-    
-    // Download/battery icon (top right corner)
-    // tft->drawBitmap(175, 1, image_download_bits, 60, 21, COLOR_GREEN);
-    
+        
     // Display battery percentage
     uint8_t batteryPercent = getLastBatteryPercent();
     updateBatteryDisplay(batteryPercent);
@@ -673,7 +678,6 @@ static void tftDisplayTask(void* parameter) {
     const TickType_t CLIENTS_CHECK_INTERVAL = pdMS_TO_TICKS(1000);    // 1 second
     const TickType_t STATION_UPDATE_INTERVAL = pdMS_TO_TICKS(10000);  // 10 seconds
     
-    TFTDisplayMode currentMode = TFT_MODE_OFF;
     TFTAPInfo lastAPInfo = {};
     TFTStationInfo lastStationInfo = {};
     uint8_t lastClientCount = 0;
@@ -687,7 +691,7 @@ static void tftDisplayTask(void* parameter) {
             switch (msg.mode) {
                 case TFT_MODE_OFF:
                     clearTFT();
-                    currentMode = TFT_MODE_OFF;
+                    currentDisplayMode = TFT_MODE_OFF;
                     Serial.println("🔄 TFT cleared via task");
                     break;
                     
@@ -716,7 +720,7 @@ static void tftDisplayTask(void* parameter) {
                     // Save for periodic updates
                     lastAPInfo = msg.data.ap;
                     lastClientCount = msg.data.ap.clients;
-                    currentMode = TFT_MODE_AP;
+                    currentDisplayMode = TFT_MODE_AP;
                     lastTimeUpdate = xTaskGetTickCount();
                     lastClientsCheck = xTaskGetTickCount();
                     
@@ -734,7 +738,7 @@ static void tftDisplayTask(void* parameter) {
                     
                     // Save for periodic updates
                     lastStationInfo = msg.data.station;
-                    currentMode = TFT_MODE_STATION;
+                    currentDisplayMode = TFT_MODE_STATION;
                     lastStationUpdate = xTaskGetTickCount();
                     lastTimeUpdate = xTaskGetTickCount();
                     
@@ -743,7 +747,7 @@ static void tftDisplayTask(void* parameter) {
                 case TFT_MODE_STATUS:
                     clearTFT();
                     displayStatus(String(msg.data.status.message), false);
-                    currentMode = TFT_MODE_STATUS;
+                    currentDisplayMode = TFT_MODE_STATUS;
                     Serial.println("✅ Status displayed via task");
                     break;
             }
@@ -752,7 +756,7 @@ static void tftDisplayTask(void* parameter) {
         // Handle periodic updates for current mode
         TickType_t currentTick = xTaskGetTickCount();
         
-        if (currentMode == TFT_MODE_AP) {
+        if (currentDisplayMode == TFT_MODE_AP) {
             // Update time every second
             if ((currentTick - lastTimeUpdate) >= TIME_UPDATE_INTERVAL) {
                 updateTimeDisplay();
@@ -770,7 +774,7 @@ static void tftDisplayTask(void* parameter) {
                 }
                 lastClientsCheck = currentTick;
             }
-        } else if (currentMode == TFT_MODE_STATION) {
+        } else if (currentDisplayMode == TFT_MODE_STATION) {
             // Update time every second in Station mode too
             if ((currentTick - lastTimeUpdate) >= TIME_UPDATE_INTERVAL) {
                 updateTimeDisplay();
