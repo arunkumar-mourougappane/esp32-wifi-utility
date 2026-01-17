@@ -1,4 +1,11 @@
 #include "battery_monitor.h"
+#include <Wire.h>
+#include "Adafruit_MAX1704X.h"
+#include "Adafruit_LC709203F.h"
+
+// Battery monitor objects
+static Adafruit_MAX17048 maxlipo;
+static Adafruit_LC709203F lc;
 
 // FreeRTOS task handle
 static TaskHandle_t batteryTaskHandle = nullptr;
@@ -10,20 +17,24 @@ static BatteryUpdateCallback updateCallback = nullptr;
 static float lastBatteryVoltage = 0.0;
 static uint8_t lastBatteryPercent = 0;
 
+// Battery monitor type detection
+static bool usingMAX17048 = false;
+static bool batteryMonitorFound = false;
+
 /**
- * @brief Read the current battery voltage from ADC
- * @return Battery voltage in volts
+ * @brief Read the current battery voltage from I2C battery monitor
+ * @return Battery voltage in volts (0.0 if error)
  */
 float readBatteryVoltage() {
-    // Read ADC value (12-bit: 0-4095)
-    uint16_t adcValue = analogRead(VBAT_PIN);
+    if (!batteryMonitorFound) {
+        return 0.0;
+    }
     
-    // Convert to voltage
-    // ADC reads 0-3.3V, but battery voltage is divided by 2
-    // So actual voltage = (adcValue / 4095) * 3.3 * 2
-    float voltage = (adcValue / 4095.0) * 3.3 * 2.0;
-    
-    return voltage;
+    if (usingMAX17048) {
+        return maxlipo.cellVoltage();
+    } else {
+        return lc.cellVoltage();
+    }
 }
 
 /**
@@ -31,22 +42,15 @@ float readBatteryVoltage() {
  * @return Battery percentage (0-100)
  */
 uint8_t readBatteryPercent() {
-    float voltage = readBatteryVoltage();
-    
-    // Convert voltage to percentage (0-100)
-    // Clamp voltage to valid range
-    if (voltage >= BATTERY_MAX_VOLTAGE) {
-        return 100;
-    }
-    if (voltage <= BATTERY_MIN_VOLTAGE) {
+    if (!batteryMonitorFound) {
         return 0;
     }
     
-    // Linear interpolation between min and max voltage
-    float percent = ((voltage - BATTERY_MIN_VOLTAGE) / 
-                     (BATTERY_MAX_VOLTAGE - BATTERY_MIN_VOLTAGE)) * 100.0;
-    
-    return (uint8_t)percent;
+    if (usingMAX17048) {
+        return (uint8_t)maxlipo.cellPercent();
+    } else {
+        return (uint8_t)lc.cellPercent();
+    }
 }
 
 /**
@@ -115,10 +119,35 @@ bool initializeBatteryMonitor(BatteryUpdateCallback callback) {
     // Store callback
     updateCallback = callback;
     
-    // Configure ADC pin
-    pinMode(VBAT_PIN, INPUT);
-    analogReadResolution(12);  // 12-bit resolution (0-4095)
-    analogSetAttenuation(ADC_11db);  // Full range: 0-3.3V
+    // Initialize I2C
+    Wire.begin();
+    
+    // Try to detect MAX17048 first (address 0x36)
+    if (maxlipo.begin()) {
+        usingMAX17048 = true;
+        batteryMonitorFound = true;
+        Serial.println(F("Found MAX17048 battery monitor"));
+        Serial.print(F("Chip ID: 0x"));
+        Serial.println(maxlipo.getChipID(), HEX);
+    }
+    // Try LC709203F (address 0x0B)
+    else if (lc.begin()) {
+        usingMAX17048 = false;
+        batteryMonitorFound = true;
+        Serial.println(F("Found LC709203F battery monitor"));
+        Serial.print(F("Version: 0x"));
+        Serial.println(lc.getICversion(), HEX);
+        
+        // Configure LC709203F
+        lc.setThermistorB(3950);
+        lc.setPackSize(LC709203F_APA_500MAH);  // Adjust based on your battery
+        lc.setAlarmVoltage(3.8);
+    }
+    else {
+        Serial.println(F("No battery monitor found (MAX17048 or LC709203F)"));
+        batteryMonitorFound = false;
+        return false;
+    }
     
     // Create battery monitoring task
     BaseType_t result = xTaskCreatePinnedToCore(
