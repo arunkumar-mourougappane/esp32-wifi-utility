@@ -52,6 +52,7 @@ static void displayAPInfoInternal(const TFTAPInfo& apInfo);
 static void displayStationDetailsInternal(const TFTStationInfo& stationInfo);
 static void displayAPInitializingScreen();
 static void displayStationConnectingScreen();
+static void displayWiFiDisabledScreen();
 static void updateTimeDisplay();
 static void updateDateDisplay();
 static void updateClientsDisplay(uint8_t clients);
@@ -168,6 +169,16 @@ bool sendTFTConnecting() {
     
     TFTMessage msg;
     msg.mode = TFT_MODE_CONNECTING;
+    
+    // Send to queue (don't block if full)
+    return xQueueSend(tftQueue, &msg, 0) == pdTRUE;
+}
+
+bool sendTFTDisabled() {
+    if (tftQueue == nullptr) return false;
+    
+    TFTMessage msg;
+    msg.mode = TFT_MODE_DISABLED;
     
     // Send to queue (don't block if full)
     return xQueueSend(tftQueue, &msg, 0) == pdTRUE;
@@ -379,6 +390,26 @@ static void displayStationConnectingScreen() {
     tft->setTextSize(1);
     tft->setCursor(80, 88);
     tft->print("Connecting...");
+}
+
+// ==========================================
+// WIFI DISABLED SCREEN
+// ==========================================
+static void displayWiFiDisabledScreen() {
+    if (!tft) return;
+    
+    // Clear screen
+    tft->fillScreen(ST77XX_BLACK);
+    
+    // Draw WiFi disabled icon (50x50) centered - red color
+    tft->drawBitmap(90, 28, image_wifi_1_bits, 50, 50, 0xF206);  // Red color
+    
+    // Display "Disabled!" text
+    tft->setTextColor(0xEF7D);  // Pinkish-red
+    tft->setTextWrap(false);
+    tft->setTextSize(1);
+    tft->setCursor(88, 90);
+    tft->print("Disabled!");
 }
 
 // ==========================================
@@ -801,6 +832,13 @@ static void tftDisplayTask(void* parameter) {
                     displayStationConnectingScreen();
                     currentDisplayMode = TFT_MODE_CONNECTING;
                     Serial.println("🔄 Connecting screen displayed via task");
+                    break;
+                    
+                case TFT_MODE_DISABLED:
+                    // Show WiFi disabled screen
+                    displayWiFiDisabledScreen();
+                    currentDisplayMode = TFT_MODE_DISABLED;
+                    Serial.println("🔴 WiFi Disabled screen displayed via task");
                     break;
                     
                 case TFT_MODE_STATION:
