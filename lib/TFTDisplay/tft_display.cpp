@@ -214,7 +214,12 @@ static void updateBatteryDisplay(uint8_t percent) {
     if (!tft) return;
     
     // Battery display configuration
-    const int batteryX = 203;       // X position
+    // Position varies based on rotation
+    #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
+        const int batteryX = 203;       // Reverse TFT: rotation 3 (240x135)
+    #else
+        const int batteryX = 105;       // Normal TFT: rotation 1 (240x135)
+    #endif
     const int batteryY = 2;         // Y position
     const int batteryWidth = 28;    // Battery body width
     const int batteryHeight = 12;   // Battery body height
