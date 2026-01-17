@@ -159,7 +159,23 @@ void executeCommand(String command) {
     int spaceIndex = params.indexOf(' ');
     if (spaceIndex > 0) {
       String ssid = params.substring(0, spaceIndex);
-      String password = params.substring(spaceIndex + 1);
+      String remaining = params.substring(spaceIndex + 1);
+      remaining.trim();
+      
+      // Extract password and optional security
+      String password;
+      String securityStr = "wpa2"; // Default to WPA2
+      int secondSpace = remaining.indexOf(' ');
+      
+      if (secondSpace < 0) {
+        password = remaining;
+      } else {
+        password = remaining.substring(0, secondSpace);
+        securityStr = remaining.substring(secondSpace + 1);
+        securityStr.trim();
+        securityStr.toLowerCase();
+      }
+      
       ssid.trim();
       password.trim();
       
@@ -173,15 +189,32 @@ void executeCommand(String command) {
         password = password.substring(1, password.length() - 1);
       }
       
-      startAccessPoint(ssid, password);
+      // Parse security type
+      APSecurityType security = AP_SEC_WPA2_PSK; // Default
+      if (securityStr == "open") {
+        security = AP_SEC_OPEN;
+      } else if (securityStr == "wpa2") {
+        security = AP_SEC_WPA2_PSK;
+      } else if (securityStr == "wpa3") {
+        security = AP_SEC_WPA3_PSK;
+      } else if (securityStr == "mixed") {
+        security = AP_SEC_WPA2_WPA3;
+      } else {
+        Serial.printf("⚠ Warning: Unknown security '%s', using WPA2\n", securityStr.c_str());
+      }
+      
+      startAccessPoint(ssid, password, security);
       Serial.println("[CMD] Custom AP mode switch completed");
       Serial.flush();
     } else {
-      Serial.println("✗ Error: Usage: mode ap <ssid> <password>");
+      Serial.println("✗ Error: Usage: mode ap <ssid> <password> [security]");
       Serial.println("  Examples:");
       Serial.println("    mode ap MyHotspot MyPassword123");
-      Serial.println("    mode ap \"My Hotspot\" \"My Password 123\"");
-      Serial.println("  Note: SSID: 1-32 chars, Password: 8-63 chars");
+      Serial.println("    mode ap MyHotspot MyPassword123 wpa2");
+      Serial.println("    mode ap OpenAP '' open");
+      Serial.println("    mode ap \"My Hotspot\" \"My Password 123\" wpa3");
+      Serial.println("  Security: open, wpa2, wpa3, mixed (default: wpa2)");
+      Serial.println("  Note: SSID: 1-32 chars, Password: 8-63 chars for WPA2/WPA3");
     }
   }
   else if (command == "mode off") {
@@ -237,6 +270,7 @@ void executeCommand(String command) {
       strncpy(config.password, currentAPPassword.c_str(), sizeof(config.password) - 1);
       config.password[sizeof(config.password) - 1] = '\0';
       config.channel = currentAPChannel;
+      config.security = currentAPSecurity;
       config.autoStart = true;
       config.isValid = true;
       
@@ -250,8 +284,8 @@ void executeCommand(String command) {
       // Parse custom configuration
       int firstSpace = params.indexOf(' ');
       if (firstSpace < 0) {
-        Serial.println("✗ Error: Usage: ap save <ssid> <password> [channel] [autostart]");
-        Serial.println("  Example: ap save MyNetwork MyPass123 6 yes");
+        Serial.println("✗ Error: Usage: ap save <ssid> <password> [channel] [security] [autostart]");
+        Serial.println("  Example: ap save MyNetwork MyPass123 6 wpa2 yes");
         return;
       }
       
@@ -262,6 +296,7 @@ void executeCommand(String command) {
       int secondSpace = remaining.indexOf(' ');
       String password;
       String channelStr;
+      String securityStr = "wpa2"; // Default
       String autoStartStr = "yes";
       
       if (secondSpace < 0) {
@@ -276,8 +311,17 @@ void executeCommand(String command) {
           channelStr = remaining;
         } else {
           channelStr = remaining.substring(0, thirdSpace);
-          autoStartStr = remaining.substring(thirdSpace + 1);
-          autoStartStr.trim();
+          remaining = remaining.substring(thirdSpace + 1);
+          remaining.trim();
+          
+          int fourthSpace = remaining.indexOf(' ');
+          if (fourthSpace < 0) {
+            securityStr = remaining;
+          } else {
+            securityStr = remaining.substring(0, fourthSpace);
+            autoStartStr = remaining.substring(fourthSpace + 1);
+            autoStartStr.trim();
+          }
         }
       }
       
@@ -291,14 +335,35 @@ void executeCommand(String command) {
         password = password.substring(1, password.length() - 1);
       }
       
-      // Validate SSID and password
+      // Parse security type
+      securityStr.toLowerCase();
+      APSecurityType security = AP_SEC_WPA2_PSK; // Default
+      if (securityStr == "open") {
+        security = AP_SEC_OPEN;
+      } else if (securityStr == "wpa2") {
+        security = AP_SEC_WPA2_PSK;
+      } else if (securityStr == "wpa3") {
+        security = AP_SEC_WPA3_PSK;
+      } else if (securityStr == "mixed") {
+        security = AP_SEC_WPA2_WPA3;
+      }
+      
+      // Validate SSID
       if (ssid.length() == 0 || ssid.length() > 32) {
         Serial.println("✗ Error: SSID must be 1-32 characters");
         return;
       }
-      if (password.length() < 8 || password.length() > 63) {
-        Serial.println("✗ Error: Password must be 8-63 characters");
-        return;
+      
+      // Validate password based on security type
+      if (security == AP_SEC_OPEN) {
+        // Open networks don't require passwords
+        password = "";
+      } else {
+        // WPA2/WPA3 require 8-63 character passwords
+        if (password.length() < 8 || password.length() > 63) {
+          Serial.println("✗ Error: Password must be 8-63 characters for WPA2/WPA3");
+          return;
+        }
       }
       
       // Parse channel (default to 1 if not specified or invalid)
@@ -323,6 +388,7 @@ void executeCommand(String command) {
       strncpy(config.password, password.c_str(), sizeof(config.password) - 1);
       config.password[sizeof(config.password) - 1] = '\0';
       config.channel = channel;
+      config.security = security;
       config.autoStart = autoStart;
       config.isValid = true;
       
@@ -344,6 +410,7 @@ void executeCommand(String command) {
       currentAPSSID = String(config.ssid);
       currentAPPassword = String(config.password);
       currentAPChannel = config.channel;
+      currentAPSecurity = config.security;
       
       Serial.println("\nConfiguration loaded. Use 'mode ap' to start AP with saved settings.");
     } else {
@@ -742,6 +809,7 @@ void printHelp() {
   Serial.println("│ mode station    │ Enable station mode for scanning     │");
   Serial.println("│ mode ap         │ Start as Access Point (default)      │");
   Serial.println("│ mode ap <s> <p> │ Start AP with custom SSID/password   │");
+  Serial.println("│   [security]    │   Security: open, wpa2, wpa3, mixed  │");
   Serial.println("│ mode off        │ Disable WiFi completely              │");
   Serial.println("│ scan on         │ Start WiFi scanning (station mode)   │");
   Serial.println("│ scan off        │ Stop WiFi scanning                   │");
@@ -758,7 +826,8 @@ void printHelp() {
   Serial.println("│ ap info         │ Show AP details (when in AP mode)    │");
   Serial.println("│ ap clients      │ List connected clients (AP mode)     │");
   Serial.println("│ ap save         │ Save current AP config (auto-start)  │");
-  Serial.println("│ ap save <s> <p> │ Save custom AP config [ch] [auto]    │");
+  Serial.println("│ ap save <s> <p> │ Save AP config [ch] [sec] [auto]     │");
+  Serial.println("│   [ch] [sec] .. │   Security: open, wpa2, wpa3, mixed  │");
   Serial.println("│ ap load         │ Load & apply saved AP config         │");
   Serial.println("│ ap show         │ Show saved or default AP config      │");
   Serial.println("│ ap clear        │ Clear saved AP config (no auto)      │");

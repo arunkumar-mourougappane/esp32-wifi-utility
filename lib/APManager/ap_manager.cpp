@@ -456,6 +456,8 @@ void printAPInfo() {
   Serial.println(currentAPSSID);
   Serial.print("Password: ");
   Serial.println(currentAPPassword);
+  Serial.print("Security: ");
+  Serial.println(securityTypeToString(currentAPSecurity));
   Serial.print("IP Address: ");
   Serial.println(WiFi.softAPIP());
   Serial.print("MAC Address: ");

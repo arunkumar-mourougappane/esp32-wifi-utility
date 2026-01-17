@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
 #include "config.h"
+#include "ap_config.h"  // For APSecurityType enum
 
 // ==========================================
 // GLOBAL STATE VARIABLES
@@ -17,6 +18,7 @@ extern bool ledState;
 extern String currentAPSSID;
 extern String currentAPPassword;
 extern uint8_t currentAPChannel;
+extern APSecurityType currentAPSecurity;
 
 // ==========================================
 // WIFI STATE MANAGEMENT
@@ -24,9 +26,14 @@ extern uint8_t currentAPChannel;
 void initializeWiFi();
 void startStationMode();
 void startAccessPoint();
-void startAccessPoint(const String& ssid, const String& password);
+void startAccessPoint(const String& ssid, const String& password, APSecurityType security = AP_SEC_WPA2_PSK);
 void stopWiFi();
 void setIdleMode();
+
+// ==========================================
+// HELPER FUNCTIONS
+// ==========================================
+const char* securityTypeToString(APSecurityType security);
 
 // ==========================================
 // QR CODE FUNCTIONALITY
