@@ -61,6 +61,11 @@ New to the ESP32 WiFi Utility? Start here:
 
 ## 🎯 Feature Highlights
 
+### 🆕 v5.2.1: Documentation Fixes
+- **Image References**: Corrected README.md image paths to match actual filenames
+- **Visual Documentation**: All TFT UI screenshots now display properly on GitHub
+- **Professional Presentation**: Accurate visual examples of v5.2.0 TFT interface redesign
+
 ### 🆕 v5.2.0: TFT Display UI Redesign
 - **Branded Welcome Screen**: Professional ESP32 logo with WiFi Utility branding on startup
 - **Color-Coded Status System**: Intuitive visual feedback (🔵 Blue=Connecting, 🟢 Green=Connected, 🔴 Red=Disabled, 🟡 Yellow=Idle)
@@ -146,7 +151,8 @@ New to the ESP32 WiFi Utility? Start here:
 docs/
 ├── README.md                           # This index file
 ├── DOCUMENTATION_INDEX.md              # Complete documentation catalog
-├── RELEASE_NOTES_V5.2.0.md            # 🆕 Latest release notes
+├── RELEASE_NOTES_V5.2.1.md            # 🆕 Latest release notes (v5.2.1)
+├── RELEASE_NOTES_V5.2.0.md            # v5.2.0 release notes
 ├── WEB_CONFIGURATION.md                # Web-based configuration guide
 ├── CONFIGURATION_SYSTEM.md             # Configuration overview
 ├── PORT_SCANNER.md                     # 🆕 v4.3.0 Port scanning guide

@@ -1,7 +1,7 @@
 # ESP32 WiFi Utility Suite
 
 ![Build Status](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/actions/workflows/build.yml/badge.svg)
-![Version](https://img.shields.io/badge/version-5.2.0-blue.svg)
+![Version](https://img.shields.io/badge/version-5.2.1-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-ESP32-blue.svg)
 ![Framework](https://img.shields.io/badge/framework-Arduino-green.svg)
 ![PlatformIO](https://img.shields.io/badge/build-PlatformIO-orange.svg)
@@ -10,6 +10,33 @@
 [![Changelog](https://img.shields.io/badge/changelog-available-brightgreen.svg)](CHANGELOG.md)
 
 A professional-grade ESP32 WiFi analysis and management suite featuring comprehensive network scanning, signal strength monitoring, port scanning, visual spectrum analysis, TFT display support with QR codes, performance testing, tri-board support, persistent configuration storage, instant mode switching via web interface, non-blocking operations, structured logging, and FreeRTOS task-based architecture.
+
+## 🎉 What's New in v5.2.1
+
+Version 5.2.1 is a **documentation patch release** that fixes image reference paths in the README to ensure proper display of the v5.2.0 TFT UI screenshots on GitHub.
+
+### 🔧 **Documentation Fixes**
+
+- **Image References**: Corrected all image paths in README.md to match actual filenames in `docs/images/`
+- **Visual Documentation**: TFT UI screenshots now display properly on GitHub
+- **Professional Presentation**: Accurate visual examples of v5.2.0 TFT interface redesign
+
+**Corrected Image Paths:**
+
+| Section | Corrected Filename |
+|---------|-------------------|
+| Welcome Screen | `WelcomScreen.png` |
+| Connecting Screen | `STA_Connecting.png` |
+| AP Initialize | `AP_Initialize.png` |
+| WiFi Disabled | `WiFi_Disabled.png` |
+| AP Mode Display | `AP_Info.png` |
+
+### 🔗 **Quick Links**
+
+- **Release Notes**: [v5.2.1 Details](docs/RELEASE_NOTES_V5.2.1.md)
+- **Changelog**: [Full Version History](CHANGELOG.md)
+
+---
 
 ## 🎉 What's New in v5.1.0
 

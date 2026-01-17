@@ -5,6 +5,19 @@ All notable changes to the ESP32 WiFi Utility project are documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.2.1] - 2026-01-17
+
+### Fixed
+
+#### Documentation
+- **Image References**: Corrected image paths in README.md to match actual filenames in `docs/images/`
+  - `welcome.png` → `WelcomScreen.png`
+  - `connecting.png` → `STA_Connecting.png`
+  - `initializing_ap.png` → `AP_Initialize.png`
+  - `disabled.png` → `WiFi_Disabled.png`
+  - `ap_mode_qr.png` → `AP_Info.png`
+- **Visual Documentation**: TFT UI screenshots now display correctly on GitHub
+
 ## [5.2.0] - 2026-01-16
 
 ### 🎨 TFT Display UI Redesign Release
