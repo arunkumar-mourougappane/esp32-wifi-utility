@@ -230,14 +230,14 @@ void stopWiFi() {
     stopWebServer();
   }
 #endif
-  
+
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
-  // Clear TFT display when stopping WiFi (from any mode)
+  // Show WiFi disabled screen when stopping WiFi
   if (currentMode == MODE_AP || currentMode == MODE_STATION) {
-    sendTFTStatus("WiFi Off");
+    sendTFTDisabled();
   }
 #endif
-  
+   
   WiFi.disconnect();
   WiFi.softAPdisconnect(true);
   WiFi.mode(WIFI_OFF);
