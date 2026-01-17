@@ -20,11 +20,14 @@ static const char* NVS_NAMESPACE = "ap_config";
 static const char* KEY_SSID = "ssid";
 static const char* KEY_PASSWORD = "password";
 static const char* KEY_CHANNEL = "channel";
+static const char* KEY_SECURITY = "security";
 static const char* KEY_AUTO_START = "auto_start";
 static const char* KEY_VALID = "valid";
 
 // Default channel
 static const uint8_t DEFAULT_CHANNEL = 1;
+// Default security type (WPA2)
+static const APSecurityType DEFAULT_SECURITY = AP_SEC_WPA2_PSK;
 
 // ==========================================
 // GLOBAL VARIABLES
@@ -71,6 +74,11 @@ bool saveAPConfig(const APConfig& config) {
         success = false;
     }
     
+    if (preferences.putUChar(KEY_SECURITY, static_cast<uint8_t>(config.security)) == 0) {
+        Serial.println("[AP Config] ERROR: Failed to save security type");
+        success = false;
+    }
+    
     if (preferences.putBool(KEY_AUTO_START, config.autoStart) == 0) {
         Serial.println("[AP Config] ERROR: Failed to save auto-start flag");
         success = false;
@@ -108,6 +116,11 @@ bool loadAPConfig(APConfig& config) {
     String ssid = preferences.getString(KEY_SSID, "");
     String encodedPassword = preferences.getString(KEY_PASSWORD, "");
     config.channel = preferences.getUChar(KEY_CHANNEL, DEFAULT_CHANNEL);
+    
+    // Load security type with default for migration from old configs
+    uint8_t securityValue = preferences.getUChar(KEY_SECURITY, static_cast<uint8_t>(DEFAULT_SECURITY));
+    config.security = static_cast<APSecurityType>(securityValue);
+    
     config.autoStart = preferences.getBool(KEY_AUTO_START, true);
     
     preferences.end();

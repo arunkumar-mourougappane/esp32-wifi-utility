@@ -14,6 +14,20 @@
 #include "config.h"
 
 // ==========================================
+// AP SECURITY TYPES
+// ==========================================
+
+/**
+ * @brief WiFi security types for Access Point mode
+ */
+enum APSecurityType {
+    AP_SEC_OPEN = 0,        // No password required (open network)
+    AP_SEC_WPA2_PSK = 1,    // WPA2 Personal (default, recommended)
+    AP_SEC_WPA3_PSK = 2,    // WPA3 Personal (modern devices only)
+    AP_SEC_WPA2_WPA3 = 3    // WPA2/WPA3 Mixed mode (compatibility + security)
+};
+
+// ==========================================
 // AP CONFIGURATION STRUCTURE
 // ==========================================
 
@@ -24,6 +38,7 @@ struct APConfig {
     char ssid[33];        // WiFi SSID (max 32 chars + null terminator)
     char password[64];    // WiFi password (max 63 chars + null terminator)
     uint8_t channel;      // WiFi channel (1-13)
+    APSecurityType security;  // Security type (Open, WPA2, WPA3, Mixed)
     bool autoStart;       // Auto-start AP on boot
     bool isValid;         // Configuration validity flag
 };
