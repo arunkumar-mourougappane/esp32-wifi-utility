@@ -39,7 +39,7 @@
 
 ## 🆕 Latest Updates
 
-**Major enhancements focusing on TFT display, non-blocking operations, and structured logging:**
+**Major enhancements focusing on TFT display UI redesign, modular architecture, and professional branding:**
 
 ### Release Documentation
 
@@ -48,7 +48,17 @@
 | **[Release Notes v5.0.0](RELEASE_NOTES_V5.0.0.md)** | Comprehensive release documentation |
 | **[Changelog](../CHANGELOG.md)**                    | Complete version history            |
 
-### New Features (v5.0.0)
+### New Features (v5.2.0)
+
+| Feature                     | Documentation                                                                                |
+| --------------------------- | -------------------------------------------------------------------------------------------- |
+| **TFT UI Redesign** 🎨       | **[TFT UI Redesign Guide](TFT_UI_REDESIGN.md)** - Complete UI overhaul                      |
+| **Welcome Screen**          | [TFT UI Redesign - Welcome Screen](TFT_UI_REDESIGN.md#welcome-screen)                       |
+| **Color-Coded Status**      | [TFT UI Redesign - Status System](TFT_UI_REDESIGN.md#color-coded-status-system)             |
+| **Modular Architecture**    | [TFT UI Redesign - Architecture](TFT_UI_REDESIGN.md#modular-architecture)                   |
+| **UI Design Assets**        | [Lopaka Editor Project](https://lopaka.app/editor/23371/50884)                              |
+
+### Features (v5.0.0)
 
 | Feature                     | Documentation                                                                                |
 | --------------------------- | -------------------------------------------------------------------------------------------- |
