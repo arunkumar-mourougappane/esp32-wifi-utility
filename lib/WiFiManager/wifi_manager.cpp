@@ -41,6 +41,63 @@ static int connectionAttempts = 0;
 String currentAPSSID = AP_SSID;
 String currentAPPassword = AP_PASSWORD;
 uint8_t currentAPChannel = 1;
+APSecurityType currentAPSecurity = AP_SEC_WPA2_PSK;
+
+// ==========================================
+// HELPER FUNCTIONS
+// ==========================================
+
+/**
+ * @brief Convert APSecurityType to wifi_auth_mode_t for ESP-IDF
+ */
+static wifi_auth_mode_t securityTypeToAuthMode(APSecurityType security) {
+  switch(security) {
+    case AP_SEC_OPEN:
+      return WIFI_AUTH_OPEN;
+    case AP_SEC_WPA2_PSK:
+      return WIFI_AUTH_WPA2_PSK;
+    case AP_SEC_WPA3_PSK:
+      return WIFI_AUTH_WPA3_PSK;
+    case AP_SEC_WPA2_WPA3:
+      return WIFI_AUTH_WPA2_WPA3_PSK;
+    default:
+      return WIFI_AUTH_WPA2_PSK;
+  }
+}
+
+/**
+ * @brief Convert APSecurityType to string for QR code generation
+ */
+static String securityTypeToQRString(APSecurityType security) {
+  switch(security) {
+    case AP_SEC_OPEN:
+      return "nopass";
+    case AP_SEC_WPA2_PSK:
+    case AP_SEC_WPA3_PSK:
+    case AP_SEC_WPA2_WPA3:
+      return "WPA";  // QR code spec uses "WPA" for WPA2/WPA3
+    default:
+      return "WPA";
+  }
+}
+
+/**
+ * @brief Convert APSecurityType to human-readable string
+ */
+const char* securityTypeToString(APSecurityType security) {
+  switch(security) {
+    case AP_SEC_OPEN:
+      return "Open";
+    case AP_SEC_WPA2_PSK:
+      return "WPA2-PSK";
+    case AP_SEC_WPA3_PSK:
+      return "WPA3-PSK";
+    case AP_SEC_WPA2_WPA3:
+      return "WPA2/WPA3 Mixed";
+    default:
+      return "Unknown";
+  }
+}
 
 // ==========================================
 // WIFI INITIALIZATION
@@ -61,6 +118,7 @@ void initializeWiFi() {
     currentAPSSID = String(savedAPConfig.ssid);
     currentAPPassword = String(savedAPConfig.password);
     currentAPChannel = savedAPConfig.channel;
+    currentAPSecurity = savedAPConfig.security;
     
     // Start AP with saved configuration
     startAccessPoint();
@@ -116,8 +174,24 @@ void startAccessPoint() {
   
   delay(100);
   
+  // Use ESP-IDF for precise security control
   WiFi.mode(WIFI_AP);
-  bool apStarted = WiFi.softAP(currentAPSSID.c_str(), currentAPPassword.c_str(), currentAPChannel);
+  
+  wifi_config_t wifi_config = {};
+  strncpy((char*)wifi_config.ap.ssid, currentAPSSID.c_str(), 32);
+  wifi_config.ap.ssid_len = currentAPSSID.length();
+  strncpy((char*)wifi_config.ap.password, currentAPPassword.c_str(), 64);
+  wifi_config.ap.channel = currentAPChannel;
+  wifi_config.ap.authmode = securityTypeToAuthMode(currentAPSecurity);
+  wifi_config.ap.max_connection = 4;
+  
+  // For open network, ensure password is empty
+  if (currentAPSecurity == AP_SEC_OPEN) {
+    wifi_config.ap.password[0] = 0;
+  }
+  
+  esp_wifi_set_config(WIFI_IF_AP, &wifi_config);
+  bool apStarted = (esp_wifi_start() == ESP_OK);
   
   if (apStarted) {
     currentMode = MODE_AP;
@@ -125,13 +199,16 @@ void startAccessPoint() {
     
     LOG_INFO(TAG_AP, "Access Point mode activated");
     LOG_INFO(TAG_AP, "SSID: %s", currentAPSSID.c_str());
-    LOG_DEBUG(TAG_AP, "Password: %s", currentAPPassword.c_str());
+    LOG_INFO(TAG_AP, "Security: %s", securityTypeToString(currentAPSecurity));
+    if (currentAPSecurity != AP_SEC_OPEN) {
+      LOG_DEBUG(TAG_AP, "Password: %s", currentAPPassword.c_str());
+    }
     LOG_INFO(TAG_AP, "Channel: %d", currentAPChannel);
     LOG_INFO(TAG_AP, "IP Address: %s", WiFi.softAPIP().toString().c_str());
     LOG_DEBUG(TAG_AP, "Use 'ap info' for detailed information");
     
-    // Generate and display QR code for easy mobile connection
-    generateAPQRCode(currentAPSSID, currentAPPassword, "WPA");
+    // Generate and display QR code with actual security type
+    generateAPQRCode(currentAPSSID, currentAPPassword, securityTypeToQRString(currentAPSecurity));
     
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
     // Send AP info to TFT display task via queue
@@ -157,29 +234,55 @@ void startAccessPoint() {
   }
 }
 
-void startAccessPoint(const String& ssid, const String& password) {
-  // Validate SSID and password
+void startAccessPoint(const String& ssid, const String& password, APSecurityType security) {
+  // Validate SSID
   if (ssid.length() == 0 || ssid.length() > 32) {
     LOG_ERROR(TAG_AP, "SSID must be 1-32 characters long");
     return;
   }
   
-  if (password.length() < 8 || password.length() > 63) {
-    LOG_ERROR(TAG_AP, "Password must be 8-63 characters long for WPA2");
-    return;
+  // Validate password based on security type
+  if (security == AP_SEC_OPEN) {
+    // Open network: password should be empty or will be ignored
+    if (password.length() > 0) {
+      LOG_WARN(TAG_AP, "Password provided for Open network will be ignored");
+    }
+  } else {
+    // WPA2/WPA3: password must be 8-63 characters
+    if (password.length() < 8 || password.length() > 63) {
+      LOG_ERROR(TAG_AP, "Password must be 8-63 characters long for WPA2/WPA3");
+      return;
+    }
   }
   
   // Update current AP configuration
   currentAPSSID = ssid;
-  currentAPPassword = password;
+  currentAPPassword = (security == AP_SEC_OPEN) ? "" : password;
+  currentAPSecurity = security;
   
   // Start AP with new configuration
   stopWiFi();
   
   delay(100);
   
+  // Use ESP-IDF for precise security control
   WiFi.mode(WIFI_AP);
-  bool apStarted = WiFi.softAP(currentAPSSID.c_str(), currentAPPassword.c_str(), currentAPChannel);
+  
+  wifi_config_t wifi_config = {};
+  strncpy((char*)wifi_config.ap.ssid, currentAPSSID.c_str(), 32);
+  wifi_config.ap.ssid_len = currentAPSSID.length();
+  strncpy((char*)wifi_config.ap.password, currentAPPassword.c_str(), 64);
+  wifi_config.ap.channel = currentAPChannel;
+  wifi_config.ap.authmode = securityTypeToAuthMode(security);
+  wifi_config.ap.max_connection = 4;
+  
+  // For open network, ensure password is empty
+  if (security == AP_SEC_OPEN) {
+    wifi_config.ap.password[0] = 0;
+  }
+  
+  esp_wifi_set_config(WIFI_IF_AP, &wifi_config);
+  bool apStarted = (esp_wifi_start() == ESP_OK);
   
   if (apStarted) {
     currentMode = MODE_AP;
@@ -187,12 +290,15 @@ void startAccessPoint(const String& ssid, const String& password) {
     
     LOG_INFO(TAG_AP, "Custom Access Point mode activated");
     LOG_INFO(TAG_AP, "SSID: %s", currentAPSSID.c_str());
-    LOG_DEBUG(TAG_AP, "Password: %s", currentAPPassword.c_str());
+    LOG_INFO(TAG_AP, "Security: %s", securityTypeToString(security));
+    if (security != AP_SEC_OPEN) {
+      LOG_DEBUG(TAG_AP, "Password: %s", currentAPPassword.c_str());
+    }
     LOG_INFO(TAG_AP, "IP Address: %s", WiFi.softAPIP().toString().c_str());
     LOG_DEBUG(TAG_AP, "Use 'ap info' for detailed information");
     
-    // Generate and display QR code for easy mobile connection
-    generateAPQRCode(currentAPSSID, currentAPPassword, "WPA");
+    // Generate and display QR code with actual security type
+    generateAPQRCode(currentAPSSID, currentAPPassword, securityTypeToQRString(security));
     
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
     // Send AP info to TFT display task via queue

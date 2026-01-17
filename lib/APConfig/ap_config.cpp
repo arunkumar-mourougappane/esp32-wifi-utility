@@ -213,6 +213,24 @@ void printAPConfig(const APConfig& config) {
     Serial.printf("  SSID:       %s\n", config.ssid);
     Serial.printf("  Password:   %s\n", config.password);
     Serial.printf("  Channel:    %d\n", config.channel);
+    
+    // Display security type
+    const char* securityName = "Unknown";
+    switch(config.security) {
+        case AP_SEC_OPEN:
+            securityName = "Open";
+            break;
+        case AP_SEC_WPA2_PSK:
+            securityName = "WPA2-PSK";
+            break;
+        case AP_SEC_WPA3_PSK:
+            securityName = "WPA3-PSK";
+            break;
+        case AP_SEC_WPA2_WPA3:
+            securityName = "WPA2/WPA3 Mixed";
+            break;
+    }
+    Serial.printf("  Security:   %s\n", securityName);
     Serial.printf("  Auto-Start: %s\n", config.autoStart ? "Yes" : "No");
     Serial.printf("  Valid:      %s\n", config.isValid ? "Yes" : "No");
     Serial.println("==========================================");
