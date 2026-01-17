@@ -1,4 +1,7 @@
 #include "battery_monitor.h"
+
+#ifdef BATTERY_MONITOR_SUPPORT
+
 #include <Wire.h>
 #include "Adafruit_MAX1704X.h"
 #include "Adafruit_LC709203F.h"
@@ -177,3 +180,5 @@ void stopBatteryMonitor() {
         batteryTaskHandle = nullptr;
     }
 }
+
+#endif // BATTERY_MONITOR_SUPPORT

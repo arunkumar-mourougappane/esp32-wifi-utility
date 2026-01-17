@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef BATTERY_MONITOR_SUPPORT
+
 #include <Arduino.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -48,3 +50,11 @@ uint8_t getLastBatteryPercent();
  * @brief Stop the battery monitoring task
  */
 void stopBatteryMonitor();
+
+/**
+ * @brief Check if battery monitor hardware is available
+ * @return true if battery monitor found, false otherwise
+ */
+bool isBatteryMonitorAvailable();
+
+#endif // BATTERY_MONITOR_SUPPORT
