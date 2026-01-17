@@ -57,6 +57,8 @@ enum TFTDisplayMode {
     TFT_MODE_AP,         // Access Point mode with QR code
     TFT_MODE_STATION,    // Station mode with connection info
     TFT_MODE_CONNECTING, // Connecting animation screen
+    TFT_MODE_IDLE,       // Station mode idle screen (blue with text)
+    TFT_MODE_IDLE_YELLOW,// Idle mode screen (yellow WiFi symbol, no text)
     TFT_MODE_DISABLED,   // WiFi disabled screen
     TFT_MODE_STATUS      // Generic status message
 };
@@ -133,10 +135,27 @@ bool sendTFTStationUpdate(const char* ssid, const char* password, const char* ip
 bool sendTFTConnecting();
 
 /**
+ * @brief Show Station mode idle screen on TFT
+ * @return true if message was sent successfully, false if queue is full
+ */
+bool sendTFTIdle();
+
+/**
+ * @brief Show idle mode screen with yellow WiFi symbol (no text)
+ * @return true if message was sent successfully, false if queue is full
+ */
+bool sendTFTIdleYellow();
+
+/**
  * @brief Show WiFi disabled screen on TFT
  * @return true if message was sent successfully, false if queue is full
  */
 bool sendTFTDisabled();
+
+/**
+ * @brief Show Station mode idle screen on TFT
+ */
+void displayStationIdleScreen();
 
 /**
  * @brief Send status message to TFT display task

@@ -1,5 +1,6 @@
 #include "command_interface.h"
 #include "wifi_manager.h"
+#include "wifi_task.h"
 #include "ap_manager.h"
 #include "ap_config.h"
 #include "station_config.h"
@@ -184,7 +185,7 @@ void executeCommand(String command) {
     }
   }
   else if (command == "mode off") {
-    stopWiFi();
+    requestStopWiFi();
   }
   else if (command == "mode idle") {
     setIdleMode();

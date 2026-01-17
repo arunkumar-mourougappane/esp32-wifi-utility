@@ -100,7 +100,7 @@ void startStationMode() {
   
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
   // Show Station mode status on TFT
-  sendTFTStatus("Station Mode\nReady");
+  sendTFTIdle();
 #endif
   
   LOG_INFO(TAG_WIFI, "Station mode activated - Ready to scan for networks");
@@ -258,6 +258,11 @@ void setIdleMode() {
   currentMode = MODE_IDLE;
   scanningEnabled = false;
   digitalWrite(LED_PIN, LOW);
+  
+#if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
+  // Show idle mode with yellow WiFi symbol
+  sendTFTIdleYellow();
+#endif
   
   LOG_INFO(TAG_WIFI, "Device set to IDLE mode - Ready for commands");
   LOG_DEBUG(TAG_WIFI, "Use 'mode station' or 'mode ap' to activate WiFi");
