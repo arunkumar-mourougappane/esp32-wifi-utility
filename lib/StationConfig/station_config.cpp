@@ -19,7 +19,11 @@ static const char* NVS_NAMESPACE = "sta_config";
 static const char* KEY_SSID = "ssid";
 static const char* KEY_PASSWORD = "password";
 static const char* KEY_AUTO_CONNECT = "auto_connect";
+static const char* KEY_SEC_PREF = "sec_pref";
 static const char* KEY_VALID = "valid";
+
+// Default security preference (auto-negotiate)
+static const StationSecurityPreference DEFAULT_SEC_PREF = STA_SEC_AUTO;
 
 // ==========================================
 // GLOBAL VARIABLES
@@ -66,6 +70,11 @@ bool saveStationConfig(const StationConfig& config) {
         success = false;
     }
     
+    if (preferences.putUChar(KEY_SEC_PREF, static_cast<uint8_t>(config.securityPreference)) == 0) {
+        Serial.println("[Station Config] ERROR: Failed to save security preference");
+        success = false;
+    }
+    
     if (preferences.putBool(KEY_VALID, true) == 0) {
         Serial.println("[Station Config] ERROR: Failed to save validity flag");
         success = false;
@@ -98,6 +107,10 @@ bool loadStationConfig(StationConfig& config) {
     String ssid = preferences.getString(KEY_SSID, "");
     String encodedPassword = preferences.getString(KEY_PASSWORD, "");
     config.autoConnect = preferences.getBool(KEY_AUTO_CONNECT, false);
+    
+    // Load security preference with default for migration from old configs
+    uint8_t secPrefValue = preferences.getUChar(KEY_SEC_PREF, static_cast<uint8_t>(DEFAULT_SEC_PREF));
+    config.securityPreference = static_cast<StationSecurityPreference>(secPrefValue);
     
     preferences.end();
     
