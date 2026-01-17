@@ -48,7 +48,7 @@ Professional user interface with intuitive visual feedback:
 #### Welcome Screen
 
 <p align="center">
-  <img src="docs/images/welcome.png" alt="ESP32 WiFi Utility Welcome Screen" width="300"/>
+  <img src="docs/images/WelcomScreen.png" alt="ESP32 WiFi Utility Welcome Screen" width="300"/>
 </p>
 
 - **Branded Startup**: Purple ESP32 logo with "ESP32 WiFi Utility" title
@@ -58,9 +58,9 @@ Professional user interface with intuitive visual feedback:
 #### Color-Coded Status Screens
 
 <p align="center">
-  <img src="docs/images/connecting.png" alt="Connecting Screen" width="200"/>
-  <img src="docs/images/initializing_ap.png" alt="Initializing Access Point" width="200"/>
-  <img src="docs/images/disabled.png" alt="Disabled Screen" width="200"/>
+  <img src="docs/images/STA_Connecting.png" alt="Connecting Screen" width="200"/>
+  <img src="docs/images/AP_Initialize.png" alt="Initializing Access Point" width="200"/>
+  <img src="docs/images/WiFi_Disabled.png" alt="Disabled Screen" width="200"/>
 </p>
 
 **Visual Status System**:
@@ -84,7 +84,7 @@ Professional user interface with intuitive visual feedback:
 #### AP Mode Display
 
 <p align="center">
-  <img src="docs/images/ap_mode_qr.png" alt="AP Mode with QR Code" width="300"/>
+  <img src="docs/images/AP_Info.png" alt="AP Mode with QR Code" width="300"/>
 </p>
 
 - **Comprehensive Information**: SSID, password, IP address, QR code
