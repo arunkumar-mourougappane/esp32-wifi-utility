@@ -1,7 +1,7 @@
 # ESP32 WiFi Utility Suite
 
 ![Build Status](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/actions/workflows/build.yml/badge.svg)
-![Version](https://img.shields.io/badge/version-5.1.0-blue.svg)
+![Version](https://img.shields.io/badge/version-5.2.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-ESP32-blue.svg)
 ![Framework](https://img.shields.io/badge/framework-Arduino-green.svg)
 ![PlatformIO](https://img.shields.io/badge/build-PlatformIO-orange.svg)

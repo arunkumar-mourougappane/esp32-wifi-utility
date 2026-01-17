@@ -146,8 +146,7 @@ New to the ESP32 WiFi Utility? Start here:
 docs/
 ├── README.md                           # This index file
 ├── DOCUMENTATION_INDEX.md              # Complete documentation catalog
-├── RELEASE_NOTES_V5.0.0.md            # 🆕 Latest release notes
-├── RELEASE_NOTES_V4.3.1.md            # v4.3.1 release notes
+├── RELEASE_NOTES_V5.2.0.md            # 🆕 Latest release notes
 ├── WEB_CONFIGURATION.md                # Web-based configuration guide
 ├── CONFIGURATION_SYSTEM.md             # Configuration overview
 ├── PORT_SCANNER.md                     # 🆕 v4.3.0 Port scanning guide
