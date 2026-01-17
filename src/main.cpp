@@ -31,8 +31,8 @@ void setup() {
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
   // Initialize TFT display
   initializeTFT();
-  displayStatus("WiFi Tool\nStarting...", true);
-  delay(1000);
+  displayWelcomeScreen();
+  delay(2000);
 #endif
   
   // Initialize WiFi (will be configured by user commands)

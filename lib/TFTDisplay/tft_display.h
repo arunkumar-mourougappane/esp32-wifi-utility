@@ -193,6 +193,11 @@ void tftBacklightOn();
  */
 void initializeTFTTime();
 
+/**
+ * @brief Display welcome screen with ESP32 logo and WiFi Utility text
+ */
+void displayWelcomeScreen();
+
 // Global TFT instance
 extern Adafruit_ST7789* tft;
 
