@@ -3,6 +3,9 @@
 #include "ap_config.h"
 #include "station_config.h"
 #include "logging.h"
+#if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
+#include "tft_display.h"
+#endif
 
 // ==========================================
 // TASK VARIABLES
@@ -73,6 +76,10 @@ static void wifiCommandTask(void* parameter) {
                     
                 case WIFI_CMD_STOP:
                     LOG_INFO(TAG_TASK, "Stopping WiFi");
+#if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
+                    // Show WiFi disabled screen when stopping via command
+                    sendTFTDisabled();
+#endif
                     stopWiFi();
                     break;
                     
