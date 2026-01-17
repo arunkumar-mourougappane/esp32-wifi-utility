@@ -804,6 +804,16 @@ static void tftDisplayTask(void* parameter) {
                     break;
                     
                 case TFT_MODE_STATION:
+                    // Show connected screen with green icon first
+                    tft->fillScreen(ST77XX_BLACK);
+                    tft->drawBitmap(90, 26, image_wifi_1_bits, 50, 50, 0x07E0);  // Green color for connected
+                    tft->setTextColor(0x07E0);  // Green
+                    tft->setTextWrap(false);
+                    tft->setTextSize(1);
+                    tft->setCursor(85, 88);
+                    tft->print("Connected!");
+                    vTaskDelay(pdMS_TO_TICKS(1000));  // Show for 1 second
+                    
                     // Full display update with QR code (only if connected)
                     
                     // Try to initialize NTP if WiFi is connected
