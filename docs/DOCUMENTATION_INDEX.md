@@ -102,6 +102,15 @@
 | **[iPerf Guide](user-guides/IPERF_GUIDE.md)**              | Throughput measurement                | Advanced     |
 | **[Enhanced Scanning](user-guides/ENHANCED_SCANNING.md)**  | WiFi network discovery                | Beginner     |
 
+### Security Configuration
+
+| Document                                                      | Description                             | Level        |
+| ------------------------------------------------------------- | --------------------------------------- | ------------ |
+| **[Security Configuration Guide](SECURITY_CONFIGURATION.md)** | Complete WiFi security configuration    | Beginner     |
+| **[Security Best Practices](SECURITY_BEST_PRACTICES.md)**     | Security recommendations and compliance | Intermediate |
+| **[Security Testing Suite](SECURITY_TESTING.md)**             | Comprehensive testing procedures        | Advanced     |
+| **[Security Test Results](SECURITY_TEST_RESULTS.md)**         | Test execution results and validation   | Advanced     |
+
 ### Hardware-Specific
 
 | Document                                            | Description                              | Level    |
@@ -148,11 +157,13 @@
 
 ### Build & Testing
 
-| Document                                                    | Description                  | Audience     |
-| ----------------------------------------------------------- | ---------------------------- | ------------ |
-| **[Test Infrastructure](technical/TEST_INFRASTRUCTURE.md)** | Testing framework            | Developers   |
-| **[Automated Releases](technical/AUTOMATED_RELEASES.md)**   | CI/CD pipeline               | Contributors |
-| **[Workflow Summary](technical/WORKFLOW_SUMMARY.md)**       | Complete automation overview | Contributors |
+| Document                                                    | Description                       | Audience     |
+| ----------------------------------------------------------- | --------------------------------- | ------------ |
+| **[Security Testing Suite](SECURITY_TESTING.md)**           | WiFi security testing procedures  | QA/Testers   |
+| **[Security Test Results](SECURITY_TEST_RESULTS.md)**       | Test results and validation       | QA/Testers   |
+| **[Test Infrastructure](technical/TEST_INFRASTRUCTURE.md)** | Testing framework                 | Developers   |
+| **[Automated Releases](technical/AUTOMATED_RELEASES.md)**   | CI/CD pipeline                    | Contributors |
+| **[Workflow Summary](technical/WORKFLOW_SUMMARY.md)**       | Complete automation overview      | Contributors |
 
 ---
 
@@ -246,6 +257,21 @@
 3. [Latency Testing Guide](user-guides/LATENCY_GUIDE.md) - Performance testing
 4. [iPerf Guide](user-guides/IPERF_GUIDE.md) - Throughput measurement
 
+### Use Case: Security Configuration
+
+1. [Security Configuration Guide](SECURITY_CONFIGURATION.md) - Complete security setup
+2. [Security Best Practices](SECURITY_BEST_PRACTICES.md) - Security recommendations
+3. [AP Config Quick Ref](AP_CONFIG_QUICK_REF.md) - AP security commands
+4. [Station Config Quick Ref](STATION_CONFIG_QUICK_REF.md) - Station security preferences
+5. [Web Configuration](WEB_CONFIGURATION.md) - Security via web interface
+
+### Use Case: Testing WiFi Security
+
+1. [Security Testing Suite](SECURITY_TESTING.md) - Test procedures
+2. [Security Test Results](SECURITY_TEST_RESULTS.md) - Results documentation
+3. Test all security types: Open, WPA2, WPA3, Mixed
+4. Validate QR code generation and scanning
+
 ### Use Case: Mobile Configuration
 
 1. [Web Configuration](WEB_CONFIGURATION.md) - Mobile interface
@@ -264,12 +290,12 @@
 
 | Category         | Count  | Total Pages (est.) |
 | ---------------- | ------ | ------------------ |
-| User Guides      | 9      | ~150               |
-| Technical Docs   | 8      | ~120               |
+| User Guides      | 13     | ~250               |
+| Technical Docs   | 10     | ~150               |
 | Quick References | 2      | ~20                |
 | Migration Guides | 2      | ~40                |
 | Release Notes    | 1      | ~20                |
-| **Total**        | **22** | **~350**           |
+| **Total**        | **28** | **~480**           |
 
 ---
 

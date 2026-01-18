@@ -981,6 +981,7 @@ This project includes professional-grade documentation covering all features and
 | Document                                                             | Description                                             | Key Topics                                                         |
 | -------------------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------ |
 | **[📚 Documentation Index](docs/README.md)**                         | **Complete documentation portal**                       | **All guides and technical documentation**                         |
+| **[Security Configuration Guide](docs/SECURITY_CONFIGURATION.md)**   | **Complete WiFi security setup and configuration**       | **AP security types, Station preferences, QR codes, best practices** |
 | **[Channel Analysis Guide](docs/user-guides/CHANNEL_GUIDE.md)**      | Complete guide to professional spectrum analysis        | AI recommendations, congestion analysis, interference detection    |
 | **[Latency Testing Guide](docs/user-guides/LATENCY_GUIDE.md)**       | Advanced network latency and jitter analysis            | Performance metrics, statistical analysis, quality assessment      |
 | **[Enhanced WiFi Scanning](docs/user-guides/ENHANCED_SCANNING.md)**  | Advanced network scanning features and analysis         | Visual indicators, security analysis, network statistics           |
@@ -991,6 +992,7 @@ This project includes professional-grade documentation covering all features and
 
 | Document                                                                       | Description                                            | Key Topics                                                     |
 | ------------------------------------------------------------------------------ | ------------------------------------------------------ | -------------------------------------------------------------- |
+| **[Security Testing Suite](docs/SECURITY_TESTING.md)**                         | Comprehensive WiFi security testing procedures         | Unit tests, integration tests, hardware compatibility, QA      |
 | **[Test Infrastructure Guide](docs/technical/TEST_INFRASTRUCTURE.md)**         | Comprehensive testing framework for dual-board support | Unity testing, CI/CD, hardware validation                      |
 | **[Channel Implementation Details](docs/technical/CHANNEL_IMPLEMENTATION.md)** | Technical deep-dive into spectrum analysis algorithms  | Mathematical models, interference patterns, optimization       |
 | **[Implementation Summary](docs/technical/IMPLEMENTATION_SUMMARY.md)**         | Overview of all system enhancements and architecture   | Module structure, performance metrics, technical specs         |
