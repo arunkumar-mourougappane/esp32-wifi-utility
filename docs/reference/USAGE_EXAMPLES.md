@@ -401,8 +401,8 @@ Examples:
 ## Related Documentation
 
 - [Command Reference](COMMAND_REFERENCE.md) - Complete command documentation
-- [Features Guide](FEATURES.md) - Feature descriptions
-- [Quick Start Guide](../README.md#quick-start) - Getting started
-- [Channel Analysis Guide](user-guides/CHANNEL_GUIDE.md) - Spectrum analysis examples
-- [Latency Testing Guide](user-guides/LATENCY_GUIDE.md) - Performance testing
-- [iPerf Guide](user-guides/IPERF_GUIDE.md) - Bandwidth measurement
+- [Features Guide](../features/FEATURES.md) - Feature descriptions
+- [Quick Start Guide](../../README.md#quick-start) - Getting started
+- [Channel Analysis Guide](../guides/CHANNEL_GUIDE.md) - Spectrum analysis examples
+- [Latency Testing Guide](../guides/LATENCY_GUIDE.md) - Performance testing
+- [iPerf Guide](../guides/IPERF_GUIDE.md) - Bandwidth measurement

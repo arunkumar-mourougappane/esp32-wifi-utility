@@ -7,58 +7,58 @@ Welcome to the ESP32 WiFi Utility documentation portal. Find guides, references,
 New to the ESP32 WiFi Utility? Start here:
 
 1. **[Main README](../README.md)** - Project overview and quick start
-2. **[Version History](VERSION_HISTORY.md)** - Release notes and what's new
-3. **[Features Guide](FEATURES.md)** - Complete feature descriptions
-4. **[Command Reference](COMMAND_REFERENCE.md)** - All available commands
-5. **[Usage Examples](USAGE_EXAMPLES.md)** - Practical command examples
+2. **[Version History](releases/VERSION_HISTORY.md)** - Release notes and what's new
+3. **[Features Guide](features/FEATURES.md)** - Complete feature descriptions
+4. **[Command Reference](reference/COMMAND_REFERENCE.md)** - All available commands
+5. **[Usage Examples](reference/USAGE_EXAMPLES.md)** - Practical command examples
 
 ## 📚 Core Documentation
 
 ### Essential Guides
 
-- **[Features Guide](FEATURES.md)** - Comprehensive feature descriptions
-- **[Command Reference](COMMAND_REFERENCE.md)** - Complete command documentation
-- **[Usage Examples](USAGE_EXAMPLES.md)** - Practical usage scenarios
-- **[Version History](VERSION_HISTORY.md)** - Release notes and changelog
-- **[Architecture Guide](ARCHITECTURE.md)** - Technical implementation details
+- **[Features Guide](features/FEATURES.md)** - Comprehensive feature descriptions
+- **[Command Reference](reference/COMMAND_REFERENCE.md)** - Complete command documentation
+- **[Usage Examples](reference/USAGE_EXAMPLES.md)** - Practical usage scenarios
+- **[Version History](releases/VERSION_HISTORY.md)** - Release notes and changelog
+- **[Architecture Guide](architecture/ARCHITECTURE.md)** - Technical implementation details
 
 ### Configuration & Setup
 
-- **[Security Configuration](SECURITY_CONFIGURATION.md)** - WiFi security setup guide
-- **[Security Testing](SECURITY_TESTING.md)** - Testing procedures and QA
-- **[Configuration System](CONFIGURATION_SYSTEM.md)** - Persistent settings
-- **[AP Config Quick Reference](AP_CONFIG_QUICK_REF.md)** - Access Point commands
-- **[Station Config Quick Reference](STATION_CONFIG_QUICK_REF.md)** - Station commands
+- **[Security Configuration](security/SECURITY_CONFIGURATION.md)** - WiFi security setup guide
+- **[Security Testing](security/SECURITY_TESTING.md)** - Testing procedures and QA
+- **[Configuration System](configuration/CONFIGURATION_SYSTEM.md)** - Persistent settings
+- **[AP Config Quick Reference](reference/AP_CONFIG_QUICK_REF.md)** - Access Point commands
+- **[Station Config Quick Reference](reference/STATION_CONFIG_QUICK_REF.md)** - Station commands
 
 ### Web & Display Interfaces
 
-- **[Web Configuration](WEB_CONFIGURATION.md)** - Browser-based configuration
-- **[Responsive Menu](RESPONSIVE_MENU.md)** - Mobile-optimized interface
-- **[TFT UI Redesign](TFT_UI_REDESIGN.md)** - v5.2.0 display enhancements
+- **[Web Configuration](configuration/WEB_CONFIGURATION.md)** - Browser-based configuration
+- **[Responsive Menu](features/RESPONSIVE_MENU.md)** - Mobile-optimized interface
+- **[TFT UI Redesign](features/TFT_UI_REDESIGN.md)** - v5.2.0 display enhancements
 
 ## 🎯 Feature-Specific Guides
 
 ### Network Analysis & Testing
 
-- **[Channel Analysis Guide](user-guides/CHANNEL_GUIDE.md)** - Professional spectrum analysis
-- **[Latency Testing Guide](user-guides/LATENCY_GUIDE.md)** - Network performance testing
-- **[Enhanced WiFi Scanning](user-guides/ENHANCED_SCANNING.md)** - Advanced network discovery
-- **[iPerf Network Testing](user-guides/IPERF_GUIDE.md)** - Bandwidth measurement
-- **[Port Scanner](PORT_SCANNER.md)** - Network security auditing
-- **[Signal Strength Monitor](SIGNAL_STRENGTH_MONITOR.md)** - RSSI monitoring
-- **[Channel Graph](CHANNEL_GRAPH.md)** - Visual spectrum visualization
+- **[Channel Analysis Guide](guides/CHANNEL_GUIDE.md)** - Professional spectrum analysis
+- **[Latency Testing Guide](guides/LATENCY_GUIDE.md)** - Network performance testing
+- **[Enhanced WiFi Scanning](guides/ENHANCED_SCANNING.md)** - Advanced network discovery
+- **[iPerf Network Testing](guides/IPERF_GUIDE.md)** - Bandwidth measurement
+- **[Port Scanner](features/PORT_SCANNER.md)** - Network security auditing
+- **[Signal Strength Monitor](features/SIGNAL_STRENGTH_MONITOR.md)** - RSSI monitoring
+- **[Channel Graph](features/CHANNEL_GRAPH.md)** - Visual spectrum visualization
 
 ### Hardware & Display
 
-- **[NeoPixel Guide](user-guides/NEOPIXEL_GUIDE.md)** - RGB LED status indicators
-- **[Web Interface Guide](user-guides/WEB_INTERFACE.md)** - Complete dashboard documentation
+- **[NeoPixel Guide](guides/NEOPIXEL_GUIDE.md)** - RGB LED status indicators
+- **[Web Interface Guide](guides/WEB_INTERFACE.md)** - Complete dashboard documentation
 
 ## 🔧 Technical Documentation
 
 ### Architecture & Implementation
 
-- **[Architecture Guide](ARCHITECTURE.md)** - System design and structure
-- **[Library Structure](LIBRARY_STRUCTURE.md)** - Modular architecture overview
+- **[Architecture Guide](architecture/ARCHITECTURE.md)** - System design and structure
+- **[Library Structure](architecture/LIBRARY_STRUCTURE.md)** - Modular architecture overview
 - **[Implementation Summary](technical/IMPLEMENTATION_SUMMARY.md)** - System overview
 - **[Project Completion Summary](technical/PROJECT_COMPLETION_SUMMARY.md)** - Final status
 
@@ -73,18 +73,18 @@ New to the ESP32 WiFi Utility? Start here:
 
 ### Configuration Deep Dives
 
-- **[AP Configuration Persistence](AP_CONFIG_PERSISTENCE.md)** - Access Point storage
-- **[Station Configuration Persistence](STATION_CONFIG_PERSISTENCE.md)** - Station storage
+- **[AP Configuration Persistence](configuration/AP_CONFIG_PERSISTENCE.md)** - Access Point storage
+- **[Station Configuration Persistence](configuration/STATION_CONFIG_PERSISTENCE.md)** - Station storage
 
 ## 📊 Release Information
 
 ### Latest Releases
 
-- **[v5.2.1 Release Notes](RELEASE_NOTES_V5.2.1.md)** - Documentation fixes
-- **[v5.2.0 Release Notes](RELEASE_NOTES_V5.2.0.md)** - TFT UI redesign
-- **[Version History](VERSION_HISTORY.md)** - All releases
+- **[v5.2.1 Release Notes](releases/RELEASE_NOTES_V5.2.1.md)** - Documentation fixes
+- **[v5.2.0 Release Notes](releases/RELEASE_NOTES_V5.2.0.md)** - TFT UI redesign
+- **[Version History](releases/VERSION_HISTORY.md)** - All releases
 - **[CHANGELOG](../CHANGELOG.md)** - Detailed change log
-- **[Improvements Summary](IMPROVEMENTS_SUMMARY.md)** - System enhancements
+- **[Improvements Summary](architecture/IMPROVEMENTS_SUMMARY.md)** - System enhancements
 
 ### Key Features by Version
 
@@ -228,7 +228,7 @@ station connect
 - ✅ Auto-start on boot
 - ✅ Instant mode switching
 - ✅ Mobile-friendly interface
-- New in v4.0.0: Clickable network details with comprehensive information
+- ✅ Clickable network details with comprehensive information
 - Guide: [Complete Web Interface Documentation](user-guides/WEB_INTERFACE.md)
 
 ## 🤝 Contributing

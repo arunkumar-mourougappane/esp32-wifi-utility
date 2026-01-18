@@ -278,7 +278,7 @@ station save GuestNetwork GuestPass yes
 
 ## See Also
 
-- [AP Configuration Persistence](AP_CONFIG_PERSISTENCE.md)
+- [AP Configuration Persistence](../configuration/AP_CONFIG_PERSISTENCE.md)
 - [WiFi Manager Documentation](../WIFI_MANAGER.md)
 - [Command Reference](../COMMAND_REFERENCE.md)
 - [ESP32 NVS Documentation](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/storage/nvs_flash.html)

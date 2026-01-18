@@ -562,11 +562,11 @@ The web interface is fully responsive and works well on mobile devices:
 
 ### Documentation Links
 
-- **[Security Configuration Guide](SECURITY_CONFIGURATION.md)** - Comprehensive security documentation
-- **[Security Best Practices](SECURITY_BEST_PRACTICES.md)** - Security recommendations
-- **[AP Config Quick Reference](AP_CONFIG_QUICK_REF.md)** - Quick AP configuration guide
-- **[Station Config Quick Reference](STATION_CONFIG_QUICK_REF.md)** - Quick Station configuration guide
-- **[Configuration System](CONFIGURATION_SYSTEM.md)** - Technical implementation details
+- **[Security Configuration Guide](../security/SECURITY_CONFIGURATION.md)** - Comprehensive security documentation
+- **[Security Best Practices](../security/SECURITY_BEST_PRACTICES.md)** - Security recommendations
+- **[AP Config Quick Reference](../reference/AP_CONFIG_QUICK_REF.md)** - Quick AP configuration guide
+- **[Station Config Quick Reference](../reference/STATION_CONFIG_QUICK_REF.md)** - Quick Station configuration guide
+- **[Configuration System](../configuration/CONFIGURATION_SYSTEM.md)** - Technical implementation details
 
 ### Serial Commands
 
@@ -619,7 +619,7 @@ curl -X POST http://192.168.4.1/config/clear -d "type=station"
 
 ## See Also
 
-- [Configuration System Overview](CONFIGURATION_SYSTEM.md)
-- [AP Configuration Guide](AP_CONFIG_PERSISTENCE.md)
-- [Station Configuration Guide](STATION_CONFIG_PERSISTENCE.md)
+- [Configuration System Overview](../configuration/CONFIGURATION_SYSTEM.md)
+- [AP Configuration Guide](../configuration/AP_CONFIG_PERSISTENCE.md)
+- [Station Configuration Guide](../configuration/STATION_CONFIG_PERSISTENCE.md)
 - [Serial Command Reference](../README.md)

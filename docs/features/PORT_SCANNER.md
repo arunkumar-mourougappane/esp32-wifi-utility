@@ -518,5 +518,5 @@ The Port Scanner provides essential network security auditing capabilities direc
 For more information, see:
 
 - [Analysis Dashboard Documentation](ANALYSIS_DASHBOARD.md)
-- [Web Configuration Guide](WEB_CONFIGURATION.md)
-- [Security Best Practices](SECURITY_BEST_PRACTICES.md)
+- [Web Configuration Guide](../configuration/WEB_CONFIGURATION.md)
+- [Security Best Practices](../security/SECURITY_BEST_PRACTICES.md)

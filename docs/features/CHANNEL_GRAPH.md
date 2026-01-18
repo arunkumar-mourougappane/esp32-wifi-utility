@@ -590,5 +590,5 @@ The Channel Graph Visualization provides essential insights into WiFi spectrum u
 
 For more information, see:
 - [Channel Analysis Documentation](CHANNEL_ANALYSIS.md)
-- [Signal Strength Monitor](SIGNAL_STRENGTH_MONITOR.md)
+- [Signal Strength Monitor](../features/SIGNAL_STRENGTH_MONITOR.md)
 - [Analysis Dashboard Guide](ANALYSIS_DASHBOARD.md)

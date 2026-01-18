@@ -14,12 +14,12 @@ A professional-grade ESP32 WiFi analysis and management suite featuring comprehe
 ## 📚 Documentation
 
 - **[Quick Start Guide](#quick-start)** - Get up and running in minutes
-- **[Features Overview](docs/FEATURES.md)** - Complete feature descriptions
-- **[Command Reference](docs/COMMAND_REFERENCE.md)** - All available commands
-- **[Usage Examples](docs/USAGE_EXAMPLES.md)** - Practical examples
-- **[Version History](docs/VERSION_HISTORY.md)** - Release notes and changelog
-- **[Architecture Guide](docs/ARCHITECTURE.md)** - Technical implementation
-- **[Security Configuration](docs/SECURITY_CONFIGURATION.md)** - WiFi security setup
+- **[Features Overview](docs/features/FEATURES.md)** - Complete feature descriptions
+- **[Command Reference](docs/reference/COMMAND_REFERENCE.md)** - All available commands
+- **[Usage Examples](docs/reference/USAGE_EXAMPLES.md)** - Practical examples
+- **[Version History](docs/releases/VERSION_HISTORY.md)** - Release notes and changelog
+- **[Architecture Guide](docs/architecture/ARCHITECTURE.md)** - Technical implementation
+- **[Security Configuration](docs/security/SECURITY_CONFIGURATION.md)** - WiFi security setup
 - **[GitHub Wiki](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/wiki)** - Comprehensive guides
 
 ## 🎉 Latest Updates
@@ -30,7 +30,7 @@ A professional-grade ESP32 WiFi analysis and management suite featuring comprehe
 
 **Version 5.1.0** - Real-time latency testing UI improvements with live progress bars and statistics.
 
-See [Version History](docs/VERSION_HISTORY.md) for complete release notes and [CHANGELOG.md](CHANGELOG.md) for detailed changes.
+See [Version History](docs/releases/VERSION_HISTORY.md) for complete release notes and [CHANGELOG.md](CHANGELOG.md) for detailed changes.
 
 ## ✨ Key Features
 
@@ -71,7 +71,7 @@ See [Version History](docs/VERSION_HISTORY.md) for complete release notes and [C
 - **Adafruit Feather ESP32-S3 TFT**: Enhanced with NeoPixel RGB and TFT display
 - **Adafruit Feather ESP32-S3 Reverse TFT**: Same features with reversed display orientation
 
-See [Features Guide](docs/FEATURES.md) for complete feature descriptions.
+See [Features Guide](docs/features/FEATURES.md) for complete feature descriptions.
 
 ## 🛠️ Hardware Requirements
 
@@ -177,7 +177,7 @@ status                # Show device status
 help                  # List all commands
 ```
 
-See [Command Reference](docs/COMMAND_REFERENCE.md) for complete command documentation and [Usage Examples](docs/USAGE_EXAMPLES.md) for practical examples.
+See [Command Reference](docs/reference/COMMAND_REFERENCE.md) for complete command documentation and [Usage Examples](docs/reference/USAGE_EXAMPLES.md) for practical examples.
 
 ## 🔧 Configuration
 
@@ -197,7 +197,7 @@ ap save MyHotspot SecurePass123 6 wpa2 yes  # Save custom AP config
 station save HomeNetwork WiFiPass123 auto yes  # Save station config
 ```
 
-See [Security Configuration](docs/SECURITY_CONFIGURATION.md) for detailed security setup.
+See [Security Configuration](docs/security/SECURITY_CONFIGURATION.md) for detailed security setup.
 
 ## 🐛 Troubleshooting
 
@@ -277,7 +277,7 @@ pio test --environment test --without-uploading
 - **Test Coverage**: 19 comprehensive test cases
 - **Documentation**: 1,000+ pages across multiple guides
 
-See [Architecture Guide](docs/ARCHITECTURE.md) for detailed technical information.
+See [Architecture Guide](docs/architecture/ARCHITECTURE.md) for detailed technical information.
 
 ## 🤝 Contributing
 
@@ -302,7 +302,7 @@ This project is open source under the MIT License. See [LICENSE](LICENSE) for de
 If you encounter any issues or have questions:
 
 1. Check the [troubleshooting section](#troubleshooting) above
-2. Review the [command reference](docs/COMMAND_REFERENCE.md)
+2. Review the [command reference](docs/reference/COMMAND_REFERENCE.md)
 3. Check the [GitHub Wiki](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/wiki)
 4. Open an issue on the project repository
 

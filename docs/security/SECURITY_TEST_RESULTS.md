@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-This document captures the results of the Security Configuration Testing Suite for the ESP32 WiFi Utility. All tests are defined in [SECURITY_TESTING.md](SECURITY_TESTING.md).
+This document captures the results of the Security Configuration Testing Suite for the ESP32 WiFi Utility. All tests are defined in [SECURITY_TESTING.md](../security/SECURITY_TESTING.md).
 
 ### Overall Test Status
 
@@ -935,4 +935,4 @@ iperf -c <server_ip> -t 30
 
 **Document Version**: 1.0  
 **Last Updated**: _______________  
-**Related Documents**: [SECURITY_TESTING.md](SECURITY_TESTING.md), [SECURITY_CONFIGURATION.md](SECURITY_CONFIGURATION.md)
+**Related Documents**: [SECURITY_TESTING.md](../security/SECURITY_TESTING.md), [SECURITY_CONFIGURATION.md](../security/SECURITY_CONFIGURATION.md)
