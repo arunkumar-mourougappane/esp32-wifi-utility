@@ -466,7 +466,23 @@ void executeCommand(String command) {
     int spaceIndex = params.indexOf(' ');
     if (spaceIndex > 0) {
       String ssid = params.substring(0, spaceIndex);
-      String password = params.substring(spaceIndex + 1);
+      String remaining = params.substring(spaceIndex + 1);
+      remaining.trim();
+      
+      // Extract password and optional security preference
+      String password;
+      String securityStr = "auto"; // Default
+      int secondSpace = remaining.indexOf(' ');
+      
+      if (secondSpace < 0) {
+        password = remaining;
+      } else {
+        password = remaining.substring(0, secondSpace);
+        securityStr = remaining.substring(secondSpace + 1);
+        securityStr.trim();
+        securityStr.toLowerCase();
+      }
+      
       ssid.trim();
       password.trim();
       
@@ -480,13 +496,30 @@ void executeCommand(String command) {
         return;
       }
       
-      connectToNetwork(ssid, password);
+      // Parse security preference
+      StationSecurityPreference secPref = STA_SEC_AUTO;
+      if (securityStr == "auto") {
+        secPref = STA_SEC_AUTO;
+      } else if (securityStr == "wpa3prefer" || securityStr == "wpa3-prefer") {
+        secPref = STA_SEC_WPA3_PREFER;
+      } else if (securityStr == "wpa3only" || securityStr == "wpa3-only") {
+        secPref = STA_SEC_WPA3_ONLY;
+      } else if (securityStr == "wpa2min" || securityStr == "wpa2-min") {
+        secPref = STA_SEC_WPA2_MIN;
+      } else if (securityStr == "wpa2only" || securityStr == "wpa2-only") {
+        secPref = STA_SEC_WPA2_ONLY;
+      } else if (secondSpace >= 0) {
+        Serial.printf("⚠ Warning: Unknown security preference '%s', using AUTO\n", securityStr.c_str());
+      }
+      
+      connectToNetwork(ssid, password, secPref);
       
       // Check heap after processing
       uint32_t heapAfter = ESP.getFreeHeap();
       Serial.printf("[HEAP] Free heap after connect: %u bytes (diff: %d)\n", heapAfter, (int32_t)heapAfter - (int32_t)heapBefore);
     } else {
-      Serial.println("✗ Error: Usage: connect <ssid> <password>");
+      Serial.println("✗ Error: Usage: connect <ssid> <password> [security]");
+      Serial.println("  Security: auto, wpa3prefer, wpa3only, wpa2min, wpa2only");
     }
   }
   else if (command == "disconnect" && currentMode == MODE_STATION) {
@@ -512,6 +545,7 @@ void executeCommand(String command) {
       strncpy(config.password, WiFi.psk().c_str(), sizeof(config.password) - 1);
       config.password[sizeof(config.password) - 1] = '\0';
       config.autoConnect = true;
+      config.securityPreference = STA_SEC_AUTO; // Default for saved connections
       config.isValid = true;
       
       if (saveStationConfig(config)) {
@@ -524,8 +558,8 @@ void executeCommand(String command) {
       // Parse custom configuration
       int firstSpace = params.indexOf(' ');
       if (firstSpace < 0) {
-        Serial.println("✗ Error: Usage: station save <ssid> <password> [autoconnect]");
-        Serial.println("  Example: station save MyNetwork MyPass123 yes");
+        Serial.println("✗ Error: Usage: station save <ssid> <password> [security] [autoconnect]");
+        Serial.println("  Example: station save MyNetwork MyPass123 wpa2min yes");
         return;
       }
       
@@ -535,14 +569,24 @@ void executeCommand(String command) {
       
       int secondSpace = remaining.indexOf(' ');
       String password;
+      String securityStr = "auto"; // Default
       String autoConnectStr = "yes";
       
       if (secondSpace < 0) {
         password = remaining;
       } else {
         password = remaining.substring(0, secondSpace);
-        autoConnectStr = remaining.substring(secondSpace + 1);
-        autoConnectStr.trim();
+        remaining = remaining.substring(secondSpace + 1);
+        remaining.trim();
+        
+        int thirdSpace = remaining.indexOf(' ');
+        if (thirdSpace < 0) {
+          securityStr = remaining;
+        } else {
+          securityStr = remaining.substring(0, thirdSpace);
+          autoConnectStr = remaining.substring(thirdSpace + 1);
+          autoConnectStr.trim();
+        }
       }
       
       // Remove quotes if present
@@ -553,6 +597,21 @@ void executeCommand(String command) {
       if ((password.startsWith("\"") && password.endsWith("\"")) || 
           (password.startsWith("'") && password.endsWith("'"))) {
         password = password.substring(1, password.length() - 1);
+      }
+      
+      // Parse security preference
+      securityStr.toLowerCase();
+      StationSecurityPreference secPref = STA_SEC_AUTO;
+      if (securityStr == "auto") {
+        secPref = STA_SEC_AUTO;
+      } else if (securityStr == "wpa3prefer" || securityStr == "wpa3-prefer") {
+        secPref = STA_SEC_WPA3_PREFER;
+      } else if (securityStr == "wpa3only" || securityStr == "wpa3-only") {
+        secPref = STA_SEC_WPA3_ONLY;
+      } else if (securityStr == "wpa2min" || securityStr == "wpa2-min") {
+        secPref = STA_SEC_WPA2_MIN;
+      } else if (securityStr == "wpa2only" || securityStr == "wpa2-only") {
+        secPref = STA_SEC_WPA2_ONLY;
       }
       
       // Validate SSID
@@ -578,6 +637,7 @@ void executeCommand(String command) {
       strncpy(config.password, password.c_str(), sizeof(config.password) - 1);
       config.password[sizeof(config.password) - 1] = '\0';
       config.autoConnect = autoConnect;
+      config.securityPreference = secPref;
       config.isValid = true;
       
       if (saveStationConfig(config)) {
@@ -617,6 +677,9 @@ void executeCommand(String command) {
     } else {
       Serial.println("✗ Failed to clear station configuration");
     }
+  }
+  else if (command == "station" || command == "station help") {
+    printStationHelp();
   }
   else if (command.startsWith("iperf ")) {
     executeIperfCommand(command);
@@ -816,12 +879,15 @@ void printHelp() {
   Serial.println("│ scan now        │ Perform detailed scan immediately    │");
   Serial.println("│ scan info <id>  │ Show detailed info for network ID    │");
   Serial.println("│ connect <s> <p> │ Connect to network (station mode)    │");
+  Serial.println("│   [security]    │   Security: auto, wpa3prefer, etc.   │");
   Serial.println("│ disconnect      │ Disconnect from network (station)    │");
   Serial.println("│ station save    │ Save current WiFi connection         │");
-  Serial.println("│ station save .. │ Save custom WiFi network [auto]      │");
+  Serial.println("│ station save .. │ Save custom network [sec] [auto]     │");
+  Serial.println("│   <s> <p> [sec] │   Security: auto, wpa3prefer, etc.   │");
   Serial.println("│ station load    │ Load saved WiFi credentials          │");
   Serial.println("│ station show    │ Show saved station config            │");
   Serial.println("│ station clear   │ Clear saved WiFi credentials         │");
+  Serial.println("│ station         │ Show station & security help         │");
   Serial.println("│ status          │ Show current status                  │");
   Serial.println("│ ap info         │ Show AP details (when in AP mode)    │");
   Serial.println("│ ap clients      │ List connected clients (AP mode)     │");
@@ -859,6 +925,56 @@ void printHelp() {
   Serial.println("│ reset           │ Restart the ESP32 device             │");
   Serial.println("│ help            │ Show this help                       │");
   Serial.println("└─────────────────┴──────────────────────────────────────┘");
+  Serial.println();
+  Serial.println("💡 TIP: Use 'station', 'iperf', 'latency', 'channel', 'signal' for detailed help");
+  Serial.println();
+}
+
+void printStationHelp() {
+  Serial.println("📡 STATION MODE & SECURITY COMMANDS:");
+  Serial.println("┌──────────────────────────────────────────────────────────────┐");
+  Serial.println("│ CONNECTION COMMANDS                                          │");
+  Serial.println("├──────────────────────────────────────────────────────────────┤");
+  Serial.println("│ connect <ssid> <password>              Connect to network    │");
+  Serial.println("│ connect <ssid> <password> [security]   Connect with security │");
+  Serial.println("│ disconnect                             Disconnect from WiFi  │");
+  Serial.println("├──────────────────────────────────────────────────────────────┤");
+  Serial.println("│ CONFIGURATION MANAGEMENT                                     │");
+  Serial.println("├──────────────────────────────────────────────────────────────┤");
+  Serial.println("│ station save                           Save current network  │");
+  Serial.println("│ station save <ssid> <password>         Save custom network   │");
+  Serial.println("│   [security] [auto]                    with options          │");
+  Serial.println("│ station load                           Load saved config     │");
+  Serial.println("│ station show                           Show saved config     │");
+  Serial.println("│ station clear                          Clear saved config    │");
+  Serial.println("└──────────────────────────────────────────────────────────────┘");
+  Serial.println();
+  Serial.println("🔒 SECURITY OPTIONS:");
+  Serial.println("┌──────────────┬───────────────────────────────────────────────┐");
+  Serial.println("│ Option       │ Behavior                                      │");
+  Serial.println("├──────────────┼───────────────────────────────────────────────┤");
+  Serial.println("│ auto         │ Accept any security (default)                 │");
+  Serial.println("│ wpa3prefer   │ Prefer WPA3, fallback to WPA2                 │");
+  Serial.println("│ wpa3only     │ Require WPA3 (reject WPA2 and lower)          │");
+  Serial.println("│ wpa2min      │ Minimum WPA2 (reject WEP/Open)                │");
+  Serial.println("│ wpa2only     │ Require exactly WPA2                          │");
+  Serial.println("└──────────────┴───────────────────────────────────────────────┘");
+  Serial.println();
+  Serial.println("📋 EXAMPLES:");
+  Serial.println("  connect MyNetwork MyPass123");
+  Serial.println("  connect MyNetwork MyPass123 auto");
+  Serial.println("  connect SecureNet Pass456 wpa3prefer");
+  Serial.println("  connect HighSec Strong789 wpa3only");
+  Serial.println();
+  Serial.println("  station save MyNetwork MyPass123 wpa2min yes");
+  Serial.println("  station save SecureNet Pass456 wpa3prefer yes");
+  Serial.println();
+  Serial.println("💡 TIPS:");
+  Serial.println("• WPA3 offers stronger security than WPA2");
+  Serial.println("• Use wpa3prefer for best available security");
+  Serial.println("• Use wpa3only when strict security is required");
+  Serial.println("• Security preference persists across reboots");
+  Serial.println("• Device will auto-connect with saved security preference");
   Serial.println();
 }
 
