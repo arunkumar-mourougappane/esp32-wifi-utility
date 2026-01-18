@@ -5,6 +5,70 @@ All notable changes to the ESP32 WiFi Utility project are documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.0.0] - 2026-01-17
+
+### 🎉 Major Release - Documentation & UX Improvements
+
+#### Added
+
+##### Documentation Reorganization
+- **New Folder Structure**: Reorganized 32 documentation files into 7 logical categories
+  - `docs/reference/` - Command references and quick guides (4 files)
+  - `docs/configuration/` - Configuration and setup guides (4 files)
+  - `docs/features/` - Feature-specific documentation (6 files)
+  - `docs/security/` - Security documentation (4 files)
+  - `docs/releases/` - Version history and release notes (4 files)
+  - `docs/architecture/` - System architecture and design (3 files)
+  - `docs/guides/` - User guides (8 files, renamed from user-guides/)
+- **Documentation Index**: Updated `docs/README.md` with complete navigation system
+- **Cross-Reference Updates**: All 139 internal links updated to reflect new structure
+- **Git History Preserved**: Used `git mv` commands to maintain file history
+
+##### Web Interface Enhancements
+- **Password Visibility Toggle**: Added show/hide password functionality
+  - Eye icon (👁️) button on all password fields
+  - Click to toggle between visible and hidden
+  - Applied to AP and Station password inputs
+  - CSS styled for clean, modern appearance
+  - JavaScript `togglePassword()` function for seamless operation
+- **Dropdown Caret Indicators**: Visual down arrows (▼) on dropdown selectors
+  - Applied to AP channel selector
+  - Applied to security mode dropdowns
+  - Consistent CSS styling across interface
+
+#### Changed
+
+##### Documentation Structure
+- **README Streamlined**: Reduced main README from 2,182 lines to 311 lines (86% reduction)
+  - Focus on quick start and key features
+  - Links to detailed documentation in organized folders
+  - Improved badges and professional layout
+- **Folder Renaming**: `user-guides/` → `guides/` for simplicity
+- **File Organization**: Moved files from flat structure to categorized folders
+  - Configuration files to `configuration/`
+  - Reference docs to `reference/`
+  - Feature docs to `features/`
+  - Security docs to `security/`
+  - Release notes to `releases/`
+  - Architecture docs to `architecture/`
+
+##### Documentation Content
+- **Updated Paths**: All documentation now uses relative paths based on new structure
+- **Improved Navigation**: Category-based organization instead of alphabetical
+- **Better Discoverability**: Related content grouped together
+
+#### Fixed
+- **Broken Links**: Corrected all cross-references to match new folder structure
+- **Documentation Clarity**: Improved organization makes content easier to find
+
+### Benefits
+- ✅ Easier navigation - Find docs by category, not alphabetically
+- ✅ Better organization - Related content grouped together
+- ✅ Clearer purpose - Folder names indicate content type
+- ✅ Improved maintainability - Add new docs to appropriate folders
+- ✅ Professional structure - Follows documentation best practices
+- ✅ Enhanced UX - Password visibility and visual feedback improvements
+
 ## [5.2.1] - 2026-01-17
 
 ### Fixed

@@ -1,7 +1,7 @@
 # ESP32 WiFi Utility Suite
 
 ![Build Status](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/actions/workflows/build.yml/badge.svg)
-![Version](https://img.shields.io/badge/version-5.2.1-blue.svg)
+![Version](https://img.shields.io/badge/version-6.0.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-ESP32-blue.svg)
 ![Framework](https://img.shields.io/badge/framework-Arduino-green.svg)
 ![PlatformIO](https://img.shields.io/badge/build-PlatformIO-orange.svg)
@@ -24,11 +24,11 @@ A professional-grade ESP32 WiFi analysis and management suite featuring comprehe
 
 ## 🎉 Latest Updates
 
+**Version 6.0.0** - Major release with comprehensive documentation reorganization and enhanced web interface usability featuring password visibility toggles.
+
 **Version 5.2.1** - Documentation patch release with corrected TFT UI screenshot paths.
 
 **Version 5.2.0** - Complete TFT display UI redesign with modular architecture, color-coded status screens, and branded welcome experience.
-
-**Version 5.1.0** - Real-time latency testing UI improvements with live progress bars and statistics.
 
 See [Version History](docs/releases/VERSION_HISTORY.md) for complete release notes and [CHANGELOG.md](CHANGELOG.md) for detailed changes.
 

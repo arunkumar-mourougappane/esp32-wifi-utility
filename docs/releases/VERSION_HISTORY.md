@@ -2,6 +2,56 @@
 
 Complete changelog and release notes for all versions of ESP32 WiFi Utility.
 
+## 🎉 What's New in v6.0.0
+
+Version 6.0.0 is a **major release** focusing on **comprehensive documentation reorganization** and **enhanced web interface usability**. This release restructures the entire documentation system into logical categories and adds password visibility toggles to web forms.
+
+### 📚 **Documentation Reorganization**
+
+Complete restructuring of the `docs/` directory:
+
+**New Folder Structure:**
+```
+docs/
+├── 📖 reference/         → Command references & quick guides (4 files)
+├── ⚙️  configuration/     → Setup & config guides (4 files)
+├── ✨ features/          → Feature documentation (6 files)
+├── 🔒 security/          → Security documentation (4 files)
+├── 📦 releases/          → Version history (4 files)
+├── 🏗️  architecture/      → System design (3 files)
+└── 📚 guides/            → User guides (8 files)
+```
+
+**Key Improvements:**
+- ✅ **32 Files Reorganized** into logical categories
+- ✅ **86% README Reduction** - From 2,182 to 311 lines
+- ✅ **All Links Updated** - 139 cross-references corrected
+- ✅ **Git History Preserved** - Used `git mv` for all moves
+- ✅ **Better Navigation** - Category-based organization
+- ✅ **Improved Discoverability** - Related content grouped
+
+### 🔒 **Enhanced Web Interface**
+
+**Password Visibility Toggle:**
+- 👁️ Show/hide password with eye icon button
+- Applied to AP and Station password fields
+- Clean CSS styling with modern appearance
+- JavaScript `togglePassword()` function
+- Improved mobile usability
+
+**Visual Improvements:**
+- ▼ Dropdown caret indicators on selectors
+- Enhanced form user experience
+- Consistent design language
+
+### 🔗 **Quick Links**
+
+- **Release Notes**: [v6.0.0 Details](RELEASE_NOTES_V6.0.0.md)
+- **Documentation Index**: [docs/README.md](../README.md)
+- **Changelog**: [Full Version History](../../CHANGELOG.md)
+
+---
+
 ## 🎉 What's New in v5.2.1
 
 Version 5.2.1 is a **documentation patch release** that fixes image reference paths in the README to ensure proper display of the v5.2.0 TFT UI screenshots on GitHub.
