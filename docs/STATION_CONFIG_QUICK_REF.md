@@ -7,15 +7,19 @@
 station save
 
 # Save custom credentials
-station save MyNetwork Password123           # Auto-connect enabled
-station save MyNetwork Password123 yes       # Explicit auto-connect
-station save MyNetwork Password123 no        # No auto-connect
+station save MyNetwork Password123                      # Default: auto security, auto-connect
+station save MyNetwork Password123 auto yes            # Explicit auto security
+station save MyNetwork Password123 wpa3prefer yes      # Prefer WPA3, fallback WPA2
+station save MyNetwork Password123 wpa3only yes        # Require WPA3 only
+station save MyNetwork Password123 wpa2min yes         # Minimum WPA2 (reject WEP/Open)
+station save MyNetwork Password123 wpa2only yes        # Require exactly WPA2
+station save MyNetwork Password123 auto no             # No auto-connect
 
 # Open network (no password)
-station save OpenNetwork ""
+station save OpenNetwork "" auto yes
 
 # With spaces (use quotes)
-station save "My Network" "My Password 123" yes
+station save "My Network" "My Password 123" wpa2min yes
 ```
 
 ## View Configuration
@@ -41,11 +45,22 @@ station clear
 
 ## Parameters
 
-| Parameter | Required | Valid Values | Default |
-|-----------|----------|--------------|---------|
-| SSID      | Yes      | 1-32 chars   | -       |
-| Password  | Yes      | 0-63 chars   | -       |
-| Auto-connect| No     | yes/no, true/false, 1/0 | yes |
+| Parameter | Required | Valid Values | Default | Description |
+|-----------|----------|--------------|---------|-------------|
+| SSID      | Yes      | 1-32 chars   | -       | Network name |
+| Password  | Yes      | 0-63 chars   | -       | Password (empty for open) |
+| Security  | No       | auto, wpa3prefer, wpa3only, wpa2min, wpa2only | auto | Security preference |
+| Auto-connect | No    | yes/no, true/false, 1/0 | yes | Auto-connect on boot |
+
+## Security Preferences
+
+| Preference    | WPA3 Networks | WPA2 Networks | WEP/Open Networks | Use Case |
+|---------------|---------------|---------------|-------------------|----------|
+| `auto`        | ✅ Connect    | ✅ Connect    | ✅ Connect        | Maximum compatibility |
+| `wpa3prefer`  | ✅ Connect (preferred) | ✅ Connect (fallback) | ✗ Reject | Modern security with fallback |
+| `wpa3only`    | ✅ Connect    | ✗ Reject      | ✗ Reject          | Maximum security only |
+| `wpa2min`     | ✅ Connect    | ✅ Connect    | ✗ Reject          | Enforce modern security |
+| `wpa2only`    | ✗ Reject      | ✅ Connect    | ✗ Reject          | WPA2-specific networks |
 
 ## Boot Behavior
 
@@ -76,6 +91,36 @@ ap save MyAP APPass 6 yes
 ```
 
 ## Common Use Cases
+
+### Home Network (Prefer WPA3)
+```bash
+station save "Home WiFi" "HomePassword123" wpa3prefer yes
+# Auto-connects on boot, prefers WPA3
+```
+
+### Corporate Network (Minimum WPA2)
+```bash
+station save "Corporate WiFi" "CorpPass456!" wpa2min yes
+# Rejects insecure WEP/Open networks
+```
+
+### Public WiFi (No Auto-connect)
+```bash
+station save "Coffee Shop" "guest123" auto no
+# Manual connection required
+```
+
+### Maximum Security (WPA3 Only)
+```bash
+station save "Secure Network" "VerySecure!Pass" wpa3only yes
+# Only connects to WPA3 networks
+```
+
+### IoT Backend (Auto Security)
+```bash
+station save "IoT_Backend" "IoTPass789" auto yes
+# Accepts any security type
+```
 
 ### IoT Device (Home Network)
 ```bash
@@ -148,7 +193,7 @@ ap clear                 # Clear AP if needed
 **Wrong credentials saved?**
 ```bash
 station clear
-connect CorrectSSID CorrectPass
+connect CorrectSSID CorrectPass auto
 station save
 ```
 
@@ -158,18 +203,38 @@ mode station
 scan now                 # Check if network is visible
 # Verify SSID spelling and password
 station clear
-station save SSID Pass
+station save SSID Pass auto yes
 reset
+```
+
+**Security preference violation?**
+```bash
+# Check network's actual security
+scan now
+
+# Adjust security preference
+station save MyWiFi Pass wpa3prefer yes    # Allow WPA2 fallback
+# Or
+station save MyWiFi Pass auto yes          # Accept any security
+```
+
+**WPA3 connection fails?**
+```bash
+# Try WPA3 Prefer (allows WPA2 fallback)
+station save MyWiFi Pass wpa3prefer yes
+
+# Or enforce minimum WPA2
+station save MyWiFi Pass wpa2min yes
 ```
 
 **Want manual control?**
 ```bash
 # Save credentials but disable auto-connect
-station save MyWiFi MyPass no
+station save MyWiFi MyPass auto no
 
 # Connect manually when needed
 mode station
-connect MyWiFi MyPass
+connect MyWiFi MyPass auto
 ```
 
 ## Security Tips

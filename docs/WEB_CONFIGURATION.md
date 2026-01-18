@@ -76,11 +76,12 @@ Manage settings for when device operates as WiFi Access Point.
   - 1-32 characters
   - Current value pre-filled if configuration exists
 
-- **Password** (optional when updating)
-  - WPA2 password for the AP
-  - 8-63 characters
-  - **Leave empty to keep current password**
-  - Only enter new password when changing
+- **Password** (conditional)
+  - Password for WPA2/WPA3 security
+  - 8-63 characters for WPA2/WPA3
+  - Empty ("") for Open security
+  - **Leave empty to keep current password** (when updating)
+  - **Automatically disabled when "Open" security is selected**
 
 - **Channel**
   - WiFi channel (1-13)
@@ -88,11 +89,28 @@ Manage settings for when device operates as WiFi Access Point.
   - Default: Channel 1
   - Current value selected if configuration exists
 
+- **Security Type** (required)
+  - Dropdown selection with options:
+    - **Open (No Password)** - No encryption, public access
+    - **WPA2-PSK (Recommended)** - Standard secure AP (default)
+    - **WPA3-PSK (Maximum Security)** - Latest security standard (ESP32-S2/S3/C3/C6 only)
+    - **WPA2/WPA3 Mixed Mode** - Compatibility mode
+  - Default: WPA2-PSK
+  - **JavaScript behavior**: Password field automatically disables for Open security
+
 - **Auto-start on boot**
   - Checkbox to enable/disable
   - When checked: Device boots as AP automatically
   - When unchecked: Manual start required
   - Default: Checked
+
+**JavaScript Features:**
+
+- **Dynamic Password Field**: Automatically enables/disables based on security selection
+  - Open: Password field disabled (grayed out)
+  - WPA2/WPA3/Mixed: Password field enabled and required
+- **Validation**: Enforces 8-63 characters for WPA2/WPA3 passwords
+- **Real-time Feedback**: Shows errors and success messages
 
 **Actions:**
 
@@ -102,7 +120,7 @@ Manage settings for when device operates as WiFi Access Point.
 **After Saving:**
 
 Upon successful save, you'll see a confirmation page with:
-- Summary of saved settings
+- Summary of saved settings (including security type)
 - **🔄 Reboot Device** button - Opens modal to reboot immediately
 - **← Back to Configuration** link - Return without rebooting
 
@@ -111,6 +129,7 @@ Upon successful save, you'll see a confirmation page with:
 If configuration is saved, displays:
 - ✓ Saved Configuration
 - SSID: [saved network name]
+- Security: [Open / WPA2-PSK / WPA3-PSK / WPA2/WPA3 Mixed]
 - Channel: [saved channel]
 - Auto-start: Yes/No
 
@@ -125,17 +144,37 @@ Manage WiFi network credentials for Station mode.
   - 1-32 characters
   - Current value pre-filled if configuration exists
 
-- **WiFi Password** (optional when updating)
+- **WiFi Password** (required)
   - Password for the WiFi network
   - 0-63 characters (empty for open networks)
-  - **Leave empty to keep current password**
+  - **Leave empty to keep current password** (when updating)
   - Only enter new password when changing
+
+- **Security Preference** (required)
+  - Dropdown selection with options:
+    - **Auto (Accept Any Security)** - Connect to any security type (default)
+    - **Prefer WPA3 (Fallback to WPA2)** - Use WPA3 if available, otherwise WPA2
+    - **WPA3 Only (Reject WPA2)** - Only connect to WPA3 networks
+    - **WPA2 Minimum (Reject WEP/Open)** - Enforce modern security standards
+    - **WPA2 Only (Reject WPA3)** - Only connect to WPA2 networks
+  - Default: Auto (Accept Any Security)
+  - **Affects connection behavior**: ESP32 will reject networks not matching preference
 
 - **Auto-connect on boot**
   - Checkbox to enable/disable
   - When checked: Device connects automatically on boot
   - When unchecked: Manual connection required
   - Default: Checked
+
+**Security Preference Behavior:**
+
+| Preference | WPA3 Networks | WPA2 Networks | WEP/Open Networks |
+|------------|---------------|---------------|-------------------|
+| Auto       | ✅ Connect    | ✅ Connect    | ✅ Connect        |
+| Prefer WPA3 | ✅ Connect (preferred) | ✅ Connect (fallback) | ✗ Reject |
+| WPA3 Only  | ✅ Connect    | ✗ Reject      | ✗ Reject          |
+| WPA2 Min   | ✅ Connect    | ✅ Connect    | ✗ Reject          |
+| WPA2 Only  | ✗ Reject      | ✅ Connect    | ✗ Reject          |
 
 **Actions:**
 
@@ -145,7 +184,7 @@ Manage WiFi network credentials for Station mode.
 **After Saving:**
 
 Upon successful save, you'll see a confirmation page with:
-- Summary of saved settings
+- Summary of saved settings (including security preference)
 - **🔄 Reboot Device** button - Opens modal to reboot immediately
 - **← Back to Configuration** link - Return without rebooting
 
@@ -154,6 +193,7 @@ Upon successful save, you'll see a confirmation page with:
 If configuration is saved, displays:
 - ✓ Saved Configuration
 - SSID: [saved network name]
+- Security Preference: [Auto / Prefer WPA3 / WPA3 Only / WPA2 Minimum / WPA2 Only]
 - Auto-connect: Yes/No
 
 **Priority Warning:**
@@ -408,6 +448,65 @@ Device will boot in IDLE mode with no saved configurations.
   - `ap show` - shows AP config (password visible)
   - `station show` - shows Station config (password masked)
 
+## Security Considerations
+
+### Password Security
+
+**Web Interface Security:**
+
+- **Password Masking**: Saved passwords are never displayed in web interface
+- **HTTPS Not Available**: Web server uses HTTP (unencrypted)
+  - **Recommendation**: Configure on local network only
+  - Don't access over untrusted networks
+  - Credentials transmitted in plain text over HTTP
+
+- **Physical Access**: Anyone with device access can change configurations
+  - Secure device physically
+  - Consider disabling web server for production (if not needed)
+
+### Best Practices
+
+**Access Point Configuration:**
+- Use WPA2-PSK or WPA3-PSK (never Open for sensitive data)
+- Set strong passwords (16+ characters recommended)
+- Change default SSID to non-descriptive name
+- Select optimal channel (use channel analyzer)
+
+**Station Configuration:**
+- Use security preferences to enforce minimum standards
+  - `wpa2min` - Reject insecure WEP/Open networks
+  - `wpa3prefer` - Use WPA3 when available
+- Don't auto-connect to public WiFi
+- Clear credentials before device disposal
+
+**Network Security:**
+- Change passwords regularly (every 60-90 days)
+- Monitor connected clients (AP mode)
+- Use network segmentation (guest vs. production)
+- Implement firewall rules
+
+### JavaScript Security Features
+
+**Password Field Behavior:**
+```javascript
+// Automatic password field disable for Open security
+if (security === 'open') {
+  passwordField.disabled = true;
+  passwordField.value = '';
+} else {
+  passwordField.disabled = false;
+  passwordField.required = true;
+}
+```
+
+**Validation:**
+- WPA2/WPA3: Enforces 8-63 character passwords
+- Open: Disables password field (no password required)
+- Client-side validation before submission
+- Server-side validation on ESP32
+
+---
+
 ## Integration with Serial Commands
 
 Web interface and serial commands work together:
@@ -434,6 +533,8 @@ Web interface and serial commands work together:
 
 Both methods achieve the same result - use whichever is more convenient!
 
+---
+
 ## Mobile Access
 
 The web interface is fully responsive and works well on mobile devices:
@@ -454,6 +555,35 @@ The web interface is fully responsive and works well on mobile devices:
 4. Tap **⚙️ Config**
 5. Fill forms
 6. Save configurations
+
+---
+
+## Additional Resources
+
+### Documentation Links
+
+- **[Security Configuration Guide](SECURITY_CONFIGURATION.md)** - Comprehensive security documentation
+- **[Security Best Practices](SECURITY_BEST_PRACTICES.md)** - Security recommendations
+- **[AP Config Quick Reference](AP_CONFIG_QUICK_REF.md)** - Quick AP configuration guide
+- **[Station Config Quick Reference](STATION_CONFIG_QUICK_REF.md)** - Quick Station configuration guide
+- **[Configuration System](CONFIGURATION_SYSTEM.md)** - Technical implementation details
+
+### Serial Commands
+
+For advanced configuration, use serial console commands:
+- `help` - Display all available commands
+- `ap help` - Access Point specific commands
+- `station help` - Station mode specific commands
+- `status` - Show current device status
+
+### API Endpoints
+
+For programmatic access (advanced users):
+- `POST /config/ap` - Save AP configuration
+- `POST /config/station` - Save Station configuration
+- `POST /config/clear?type=[ap|station]` - Clear configuration
+- `POST /mode/switch?mode=[ap|station]` - Switch WiFi mode
+- `POST /reboot` - Reboot device
 7. Disconnect and restart device
 
 ## Advanced Usage

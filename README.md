@@ -1239,62 +1239,110 @@ See [Test Documentation](test/TEST_DOCUMENTATION.md) for detailed information.
 
 ### Mode Commands
 
-| Command                     | Description                                             |
-| --------------------------- | ------------------------------------------------------- |
-| `mode idle`                 | Set device to idle/standby mode (default startup state) |
-| `mode station`              | Switch to station mode for WiFi scanning                |
-| `mode ap`                   | Start Access Point mode with default settings           |
-| `mode ap <ssid> <password>` | Start Access Point with custom SSID and password        |
-| `mode off`                  | Disable WiFi completely                                 |
+| Command                                     | Description                                             |
+| ------------------------------------------- | ------------------------------------------------------- |
+| `mode idle`                                 | Set device to idle/standby mode (default startup state) |
+| `mode station`                              | Switch to station mode for WiFi scanning                |
+| `mode ap`                                   | Start Access Point mode with default settings           |
+| `mode ap <ssid> <password> [security]`      | Start Access Point with custom SSID and security type   |
+| `mode off`                                  | Disable WiFi completely                                 |
+
+**AP Security Types** (optional parameter):
+- `open` - Open network (no password required)
+- `wpa2` - WPA2-PSK (default, recommended)
+- `wpa3` - WPA3-PSK (maximum security, ESP32-S2/S3/C3+ only)
+- `mixed` - WPA2/WPA3 Mixed mode (compatibility mode)
+
+**Examples:**
+```bash
+mode ap MyHotspot MyPassword123           # WPA2 (default)
+mode ap MyHotspot MyPassword123 wpa3      # WPA3 only
+mode ap MyHotspot MyPassword123 mixed     # WPA2/WPA3 mixed
+mode ap OpenNetwork "" open               # Open network (no password)
+```
 
 ### 🆕 Access Point Configuration Commands (v4.2.0)
 
-| Command                                        | Description                                       |
-| ---------------------------------------------- | ------------------------------------------------- |
-| `ap config <ssid> <password> [channel] [auto]` | Save AP configuration (persistent across reboots) |
-| `ap config load`                               | Display current saved AP configuration            |
-| `ap config clear`                              | Clear saved AP configuration                      |
-| `ap start`                                     | Start AP with saved config (or defaults if none)  |
+| Command                                                          | Description                                       |
+| ---------------------------------------------------------------- | ------------------------------------------------- |
+| `ap save`                                                        | Save current AP settings (must be in AP mode)     |
+| `ap save <ssid> <password> [channel] [security] [autostart]`    | Save custom AP configuration                       |
+| `ap load`                                                        | Load and apply saved AP configuration             |
+| `ap show`                                                        | Display saved or default AP configuration         |
+| `ap clear`                                                       | Clear saved AP configuration                      |
 
 **Parameters:**
 
 - `ssid`: Network name (1-32 characters)
-- `password`: WPA2 password (8-63 characters)
+- `password`: Password (8-63 characters for WPA2/WPA3, empty "" for open)
 - `channel`: WiFi channel 1-13 (optional, default: 1)
-- `auto`: Enable auto-start on boot (optional, default: false)
+- `security`: Security type (optional, default: `wpa2`)
+  - `open` - No password required
+  - `wpa2` - WPA2-PSK (recommended)
+  - `wpa3` - WPA3-PSK (ESP32-S2/S3/C3+ only)
+  - `mixed` - WPA2/WPA3 Mixed mode
+- `autostart`: Enable auto-start on boot - `yes`/`no`, `true`/`false`, `1`/`0` (optional, default: yes)
 
 **Examples:**
 
 ```bash
-ap config "MyHotspot" "SecurePass123" 6 auto  # Save with auto-start
-ap start                                       # Start with saved config
-ap config load                                 # Show saved config
-ap config clear                                # Clear configuration
+ap save                                           # Save current AP settings
+ap save MyHotspot SecurePass123 6 wpa2 yes       # WPA2 network on channel 6
+ap save MyHotspot SecurePass123 11 wpa3 yes      # WPA3 network (secure)
+ap save "Guest WiFi" "" 1 open yes               # Open network (no password)
+ap save MyHotspot SecurePass123 6 mixed no       # Mixed mode, no auto-start
+ap show                                          # View saved configuration
+ap load                                          # Load saved config
+mode ap                                          # Start AP with loaded settings
+ap clear                                         # Remove saved configuration
 ```
 
 ### 🆕 Station Configuration Commands (v4.2.0)
 
-| Command                                   | Description                                     |
-| ----------------------------------------- | ----------------------------------------------- |
-| `station config <ssid> <password> [auto]` | Save station config (persistent across reboots) |
-| `station config load`                     | Display current saved station configuration     |
-| `station config clear`                    | Clear saved station configuration               |
-| `station connect`                         | Connect using saved config (or prompt if none)  |
+| Command                                                   | Description                                     |
+| --------------------------------------------------------- | ----------------------------------------------- |
+| `station save`                                            | Save current connection (must be connected)     |
+| `station save <ssid> <password> [security] [autoconnect]` | Save custom station configuration               |
+| `station load`                                            | Load and display saved station configuration    |
+| `station show`                                            | Display saved station config (password masked)  |
+| `station clear`                                           | Clear saved station configuration               |
 
 **Parameters:**
 
-- `ssid`: Network name to connect to
-- `password`: Network password
-- `auto`: Enable auto-connect on boot (optional, default: false)
+- `ssid`: Network name to connect to (1-32 characters)
+- `password`: Network password (0-63 characters, empty "" for open networks)
+- `security`: Security preference (optional, default: `auto`)
+  - `auto` - Accept any security type (default)
+  - `wpa3prefer` - Prefer WPA3, fallback to WPA2 if unavailable
+  - `wpa3only` - Require WPA3 (reject WPA2 and lower)
+  - `wpa2min` - Minimum WPA2 (reject WEP/Open networks)
+  - `wpa2only` - Require exactly WPA2 (reject WPA3, WEP, Open)
+- `autoconnect`: Auto-connect on boot - `yes`/`no`, `true`/`false`, `1`/`0` (optional, default: yes)
 
 **Examples:**
 
 ```bash
-station config "HomeNetwork" "WiFiPass123" auto  # Save with auto-connect
-station connect                                   # Connect with saved config
-station config load                               # Show saved config
-station config clear                              # Clear configuration
+station save                                          # Save current connection
+station save HomeNetwork WiFiPass123 auto yes        # Save with any security
+station save HomeNetwork WiFiPass123 wpa3prefer yes  # Prefer WPA3
+station save HomeNetwork WiFiPass123 wpa3only yes    # Require WPA3
+station save HomeNetwork WiFiPass123 wpa2min yes     # Minimum WPA2 security
+station save "Public WiFi" "" auto no                # Open network, no auto-connect
+station show                                         # View saved config (password hidden)
+station load                                         # Load saved config
+mode station && connect HomeNetwork WiFiPass123      # Connect manually
+station clear                                        # Remove saved configuration
 ```
+
+**Security Preference Behavior:**
+
+| Preference    | WPA3 Network | WPA2 Network | WEP/Open Network |
+|---------------|--------------|--------------|------------------|
+| `auto`        | ✓ Connect    | ✓ Connect    | ✓ Connect        |
+| `wpa3prefer`  | ✓ Connect    | ✓ Fallback   | ✗ Reject         |
+| `wpa3only`    | ✓ Connect    | ✗ Reject     | ✗ Reject         |
+| `wpa2min`     | ✓ Connect    | ✓ Connect    | ✗ Reject         |
+| `wpa2only`    | ✗ Reject     | ✓ Connect    | ✗ Reject         |
 
 ### Scanning Commands (Station Mode)
 
@@ -1334,10 +1382,25 @@ network diagnostics with AI-powered recommendations. See [Channel Analysis Guide
 
 ### Network Connection Commands (Station Mode)
 
-| Command                     | Description                                          |
-| --------------------------- | ---------------------------------------------------- |
-| `connect <ssid> <password>` | Connect to a WiFi network with specified credentials |
-| `disconnect`                | Disconnect from current WiFi network                 |
+| Command                                   | Description                                          |
+| ----------------------------------------- | ---------------------------------------------------- |
+| `connect <ssid> <password> [security]`    | Connect to a WiFi network with security preferences  |
+| `disconnect`                              | Disconnect from current WiFi network                 |
+
+**Security Parameters** (optional for `connect` command):
+- `auto` - Accept any security type (default)
+- `wpa3prefer` - Prefer WPA3, fallback to WPA2
+- `wpa3only` - Require WPA3 only
+- `wpa2min` - Minimum WPA2 (reject WEP/Open)
+- `wpa2only` - Require exactly WPA2
+
+**Examples:**
+```bash
+connect HomeNetwork MyPassword                    # Auto-negotiate security
+connect HomeNetwork MyPassword wpa3prefer        # Prefer WPA3
+connect HomeNetwork MyPassword wpa3only          # Require WPA3
+connect "Coffee Shop" "" auto                    # Open network
+```
 
 ### Network Performance Testing Commands
 
