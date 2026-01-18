@@ -34,6 +34,7 @@ static unsigned long connectionStartTime = 0;
 static String connectingSSID = "";
 static String connectingPassword = "";
 static int connectionAttempts = 0;
+static StationSecurityPreference currentSecurityPreference = STA_SEC_AUTO;
 
 // ==========================================
 // ACCESS POINT CONFIGURATION VARIABLES
@@ -99,6 +100,90 @@ const char* securityTypeToString(APSecurityType security) {
   }
 }
 
+/**
+ * @brief Convert wifi_auth_mode_t to human-readable string
+ */
+static const char* authModeToString(wifi_auth_mode_t authMode) {
+  switch(authMode) {
+    case WIFI_AUTH_OPEN:
+      return "Open";
+    case WIFI_AUTH_WEP:
+      return "WEP";
+    case WIFI_AUTH_WPA_PSK:
+      return "WPA-PSK";
+    case WIFI_AUTH_WPA2_PSK:
+      return "WPA2-PSK";
+    case WIFI_AUTH_WPA_WPA2_PSK:
+      return "WPA/WPA2-PSK";
+    case WIFI_AUTH_WPA3_PSK:
+      return "WPA3-PSK";
+    case WIFI_AUTH_WPA2_WPA3_PSK:
+      return "WPA2/WPA3-PSK";
+    case WIFI_AUTH_WAPI_PSK:
+      return "WAPI-PSK";
+    default:
+      return "Unknown";
+  }
+}
+
+/**
+ * @brief Check if auth mode meets security preference requirements
+ */
+static bool isSecurityAcceptable(wifi_auth_mode_t authMode, StationSecurityPreference preference) {
+  switch(preference) {
+    case STA_SEC_AUTO:
+      // Accept any security level
+      return true;
+    
+    case STA_SEC_WPA3_PREFER:
+      // Prefer WPA3, but accept WPA2
+      return (authMode == WIFI_AUTH_WPA3_PSK || 
+              authMode == WIFI_AUTH_WPA2_WPA3_PSK ||
+              authMode == WIFI_AUTH_WPA2_PSK ||
+              authMode == WIFI_AUTH_WPA_WPA2_PSK);
+    
+    case STA_SEC_WPA3_ONLY:
+      // Require WPA3
+      return (authMode == WIFI_AUTH_WPA3_PSK || 
+              authMode == WIFI_AUTH_WPA2_WPA3_PSK);
+    
+    case STA_SEC_WPA2_MIN:
+      // Minimum WPA2 (reject WEP/Open)
+      return (authMode == WIFI_AUTH_WPA2_PSK ||
+              authMode == WIFI_AUTH_WPA_WPA2_PSK ||
+              authMode == WIFI_AUTH_WPA3_PSK ||
+              authMode == WIFI_AUTH_WPA2_WPA3_PSK);
+    
+    case STA_SEC_WPA2_ONLY:
+      // Require exactly WPA2
+      return (authMode == WIFI_AUTH_WPA2_PSK ||
+              authMode == WIFI_AUTH_WPA_WPA2_PSK);
+    
+    default:
+      return true;
+  }
+}
+
+/**
+ * @brief Convert StationSecurityPreference to human-readable string
+ */
+static const char* securityPreferenceToString(StationSecurityPreference preference) {
+  switch(preference) {
+    case STA_SEC_AUTO:
+      return "Auto (any security)";
+    case STA_SEC_WPA3_PREFER:
+      return "Prefer WPA3";
+    case STA_SEC_WPA3_ONLY:
+      return "WPA3 only";
+    case STA_SEC_WPA2_MIN:
+      return "WPA2 minimum";
+    case STA_SEC_WPA2_ONLY:
+      return "WPA2 only";
+    default:
+      return "Unknown";
+  }
+}
+
 // ==========================================
 // WIFI INITIALIZATION
 // ==========================================
@@ -135,8 +220,9 @@ void initializeWiFi() {
     delay(100);
     currentMode = MODE_STATION;
     
-    // Attempt connection
-    connectToNetwork(String(savedStaConfig.ssid), String(savedStaConfig.password));
+    // Attempt connection with saved security preference
+    connectToNetwork(String(savedStaConfig.ssid), String(savedStaConfig.password), 
+                    savedStaConfig.securityPreference);
   }
 }
 
@@ -750,6 +836,96 @@ void showNetworkDetails(int networkId) {
 // ==========================================
 
 /**
+ * @brief Find network by SSID in scan results
+ * @param ssid Network SSID to find
+ * @return Network index (0-based) or -1 if not found
+ */
+static int findNetworkBySSID(const String& ssid) {
+  int n = WiFi.scanComplete();
+  if (n <= 0) {
+    return -1;
+  }
+  
+  for (int i = 0; i < n; i++) {
+    if (WiFi.SSID(i).equals(ssid)) {
+      return i;
+    }
+  }
+  
+  return -1;
+}
+
+/**
+ * @brief Find best matching network based on security preference
+ * @param ssid Target network SSID
+ * @param preference Security preference
+ * @return Best matching network index or -1 if no suitable network found
+ */
+static int findBestSecurityMatch(const String& ssid, StationSecurityPreference preference) {
+  int n = WiFi.scanComplete();
+  if (n <= 0) {
+    return -1;
+  }
+  
+  int bestMatch = -1;
+  int bestScore = -1;
+  
+  // For WPA3_PREFER, find the most secure version of the network
+  if (preference == STA_SEC_WPA3_PREFER) {
+    for (int i = 0; i < n; i++) {
+      if (!WiFi.SSID(i).equals(ssid)) {
+        continue;
+      }
+      
+      wifi_auth_mode_t authMode = (wifi_auth_mode_t)WiFi.encryptionType(i);
+      int score = 0;
+      
+      // Score networks by security level
+      switch(authMode) {
+        case WIFI_AUTH_WPA3_PSK:
+          score = 100;
+          break;
+        case WIFI_AUTH_WPA2_WPA3_PSK:
+          score = 90;
+          break;
+        case WIFI_AUTH_WPA2_PSK:
+          score = 70;
+          break;
+        case WIFI_AUTH_WPA_WPA2_PSK:
+          score = 60;
+          break;
+        case WIFI_AUTH_WPA_PSK:
+          score = 40;
+          break;
+        case WIFI_AUTH_WEP:
+          score = 20;
+          break;
+        case WIFI_AUTH_OPEN:
+          score = 10;
+          break;
+        default:
+          score = 0;
+      }
+      
+      // Factor in signal strength
+      int rssi = WiFi.RSSI(i);
+      if (rssi > -50) score += 10;
+      else if (rssi > -70) score += 5;
+      
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatch = i;
+      }
+    }
+  } else {
+    // For other preferences, just find the first matching network
+    bestMatch = findNetworkBySSID(ssid);
+  }
+  
+  return bestMatch;
+}
+
+/**
  * @brief Connects to a WiFi network using SSID and password (non-blocking)
  * 
  * This function initiates a connection to a specific WiFi network when
@@ -757,8 +933,12 @@ void showNetworkDetails(int networkId) {
  * this function starts the connection and returns immediately. Call
  * handleWiFiConnection() periodically to monitor connection progress.
  * 
+ * For WPA3_PREFER mode, this function will scan available networks first
+ * and select the most secure version (WPA3 if available, fallback to WPA2).
+ * 
  * @param ssid Network name to connect to
  * @param password Network password for authentication
+ * @param securityPreference Security level requirement (default: AUTO)
  * 
  * @pre Device must be in station mode (MODE_STATION)
  * @pre SSID must be available and in range
@@ -767,10 +947,11 @@ void showNetworkDetails(int networkId) {
  * @note Connection timeout is set to 10 seconds
  * @note This is a non-blocking call - returns immediately after initiating connection
  * @note Use handleWiFiConnection() in main loop to monitor progress
+ * @note Security validation occurs after connection is established
  * 
  * @return void Outputs connection start message to Serial
  */
-void connectToNetwork(String ssid, String password) {
+void connectToNetwork(String ssid, String password, StationSecurityPreference securityPreference) {
   if (currentMode != MODE_STATION) {
     LOG_ERROR(TAG_WIFI, "Must be in station mode to connect. Use 'mode station' first");
     return;
@@ -783,6 +964,52 @@ void connectToNetwork(String ssid, String password) {
   }
   
   LOG_INFO(TAG_WIFI, "Connecting to '%s'...", ssid.c_str());
+  if (securityPreference != STA_SEC_AUTO) {
+    LOG_INFO(TAG_WIFI, "Security preference: %s", securityPreferenceToString(securityPreference));
+  }
+  
+  // For WPA3_PREFER or strict security modes, scan networks first
+  if (securityPreference != STA_SEC_AUTO) {
+    LOG_DEBUG(TAG_WIFI, "Scanning networks for security validation...");
+    int scanResult = WiFi.scanNetworks(false, false, false, 300);
+    
+    if (scanResult > 0) {
+      int networkIndex = findBestSecurityMatch(ssid, securityPreference);
+      
+      if (networkIndex >= 0) {
+        wifi_auth_mode_t authMode = (wifi_auth_mode_t)WiFi.encryptionType(networkIndex);
+        
+        // Pre-validate security before connecting
+        if (!isSecurityAcceptable(authMode, securityPreference)) {
+          LOG_ERROR(TAG_WIFI, "Network '%s' found but security is incompatible", ssid.c_str());
+          LOG_ERROR(TAG_WIFI, "Network uses: %s", authModeToString(authMode));
+          LOG_ERROR(TAG_WIFI, "Required: %s", securityPreferenceToString(securityPreference));
+          LOG_INFO(TAG_WIFI, "Suggestion: Use 'auto' mode or change security preference");
+          
+          WiFi.scanDelete();
+          
+#if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
+          sendTFTStatus("Security\nMismatch");
+#endif
+          
+#ifdef USE_NEOPIXEL
+          setNeoPixelColor(255, 0, 0); // Red for security failure
+#endif
+          
+          return;
+        }
+        
+        LOG_INFO(TAG_WIFI, "Found compatible network with %s security", authModeToString(authMode));
+      } else {
+        LOG_WARN(TAG_WIFI, "Network '%s' not found in scan", ssid.c_str());
+        LOG_INFO(TAG_WIFI, "Attempting connection anyway...");
+      }
+      
+      WiFi.scanDelete();
+    } else {
+      LOG_WARN(TAG_WIFI, "Network scan failed, attempting direct connection");
+    }
+  }
   
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
   // Show connecting animation on TFT
@@ -802,6 +1029,7 @@ void connectToNetwork(String ssid, String password) {
   connectionStartTime = millis();
   connectingSSID = ssid;
   connectingPassword = password;
+  currentSecurityPreference = securityPreference;
   connectionAttempts = 0;
   
   Serial.println("  Connection initiated (non-blocking)");
@@ -831,6 +1059,42 @@ void handleWiFiConnection() {
   // Check if connected successfully
   if (status == WL_CONNECTED) {
     Serial.println();
+    
+    // Validate security level if preference is set
+    if (currentSecurityPreference != STA_SEC_AUTO) {
+      // Get the network's actual security type
+      wifi_ap_record_t ap_info;
+      if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK) {
+        wifi_auth_mode_t authMode = ap_info.authmode;
+        
+        LOG_DEBUG(TAG_WIFI, "Network security: %s", authModeToString(authMode));
+        
+        // Check if security meets requirements
+        if (!isSecurityAcceptable(authMode, currentSecurityPreference)) {
+          Serial.println();
+          LOG_ERROR(TAG_WIFI, "Security validation failed!");
+          LOG_ERROR(TAG_WIFI, "Network '%s' uses: %s", WiFi.SSID().c_str(), authModeToString(authMode));
+          LOG_ERROR(TAG_WIFI, "Required: %s", securityPreferenceToString(currentSecurityPreference));
+          
+#if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
+          sendTFTStatus("Security\nMismatch");
+#endif
+          
+#ifdef USE_NEOPIXEL
+          setNeoPixelColor(255, 0, 0); // Red for security failure
+#endif
+          
+          // Disconnect due to security mismatch
+          WiFi.disconnect();
+          isConnecting = false;
+          RESET_PROMPT();
+          return;
+        }
+        
+        LOG_INFO(TAG_WIFI, "Security validated: %s", authModeToString(authMode));
+      }
+    }
+    
     LOG_INFO(TAG_WIFI, "Connected to '%s'", WiFi.SSID().c_str());
     LOG_INFO(TAG_WIFI, "IP Address: %s", WiFi.localIP().toString().c_str());
     LOG_DEBUG(TAG_WIFI, "Gateway: %s", WiFi.gatewayIP().toString().c_str());

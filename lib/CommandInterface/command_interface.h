@@ -23,6 +23,9 @@ void clearConsole();
 void printHelp();
 void printStatus();
 
+// Station configuration command handlers
+void printStationHelp();
+
 // Latency test command handlers
 void executeLatencyCommand(String command);
 void executeJitterAnalysis();

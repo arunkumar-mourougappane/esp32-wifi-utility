@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include "config.h"
 #include "ap_config.h"  // For APSecurityType enum
+#include "station_config.h"  // For StationSecurityPreference enum
 
 // ==========================================
 // GLOBAL STATE VARIABLES
@@ -67,10 +68,11 @@ void showNetworkDetails(int networkId);
  * @brief Connects to a WiFi network using SSID and password (non-blocking)
  * @param ssid Network name to connect to
  * @param password Network password for authentication
+ * @param securityPreference Security level requirement (default: AUTO)
  * @note This is non-blocking - call handleWiFiConnection() in main loop
  * @see wifi_manager.cpp for detailed implementation documentation
  */
-void connectToNetwork(String ssid, String password);
+void connectToNetwork(String ssid, String password, StationSecurityPreference securityPreference = STA_SEC_AUTO);
 
 /**
  * @brief Monitors WiFi connection progress (call from main loop)

@@ -192,6 +192,26 @@ void printStationConfig(const StationConfig& config) {
         Serial.println("  Password:     (none - open network)");
     }
     
+    // Display security preference
+    const char* secPrefName = "Unknown";
+    switch(config.securityPreference) {
+        case STA_SEC_AUTO:
+            secPrefName = "Auto (any security)";
+            break;
+        case STA_SEC_WPA3_PREFER:
+            secPrefName = "Prefer WPA3";
+            break;
+        case STA_SEC_WPA3_ONLY:
+            secPrefName = "WPA3 only";
+            break;
+        case STA_SEC_WPA2_MIN:
+            secPrefName = "WPA2 minimum";
+            break;
+        case STA_SEC_WPA2_ONLY:
+            secPrefName = "WPA2 only";
+            break;
+    }
+    Serial.printf("  Security:     %s\n", secPrefName);
     Serial.printf("  Auto-Connect: %s\n", config.autoConnect ? "Yes" : "No");
     Serial.printf("  Valid:        %s\n", config.isValid ? "Yes" : "No");
     Serial.println("==========================================");
