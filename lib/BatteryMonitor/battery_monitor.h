@@ -1,3 +1,16 @@
+/**
+ * @file battery_monitor.h
+ * @brief Battery monitoring system for ESP32 devices with battery support
+ * 
+ * This header defines the interface for monitoring battery voltage and charge
+ * percentage on ESP32 devices equipped with battery management hardware.
+ * Uses FreeRTOS task for periodic monitoring and callback notifications.
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 4.3.0
+ * @date 2026-01-17
+ */
+
 #pragma once
 
 #ifdef BATTERY_MONITOR_SUPPORT

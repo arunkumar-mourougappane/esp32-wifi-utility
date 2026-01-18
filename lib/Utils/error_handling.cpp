@@ -1,3 +1,18 @@
+/**
+ * @file error_handling.cpp
+ * @brief Unified error handling implementation
+ * 
+ * This file implements error handling functionality:
+ * - Error code to human-readable message mapping
+ * - Centralized error reporting
+ * - Error severity categorization
+ * - System-wide error code definitions
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 4.2.0
+ * @date 2026-01-17
+ */
+
 #include "error_handling.h"
 
 // ==========================================

@@ -1,6 +1,6 @@
 {
   "name": "NetworkTools",
-  "version": "1.0.0",
+  "version": "3.0.0",
   "description": "Network diagnostic tools including port scanner, latency analyzer, and iPerf manager",
   "keywords": "network, tools, port-scanner, latency, iperf, esp32",
   "authors": [

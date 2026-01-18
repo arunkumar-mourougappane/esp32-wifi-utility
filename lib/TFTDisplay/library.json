@@ -1,6 +1,6 @@
 {
   "name": "TFTDisplay",
-  "version": "1.0.0",
+  "version": "4.3.0",
   "description": "TFT display management for ESP32 with QR code and WiFi status display",
   "keywords": "tft, display, st7789, qrcode, esp32",
   "authors": [

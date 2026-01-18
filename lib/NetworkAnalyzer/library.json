@@ -1,6 +1,6 @@
 {
   "name": "NetworkAnalyzer",
-  "version": "1.0.0",
+  "version": "3.0.0",
   "description": "Network analysis tools including channel analyzer, signal monitor, and performance monitor",
   "keywords": "network, analyzer, channel, signal, performance, esp32",
   "authors": [

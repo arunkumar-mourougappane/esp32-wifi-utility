@@ -1,3 +1,19 @@
+/**
+ * @file performance_monitor.cpp
+ * @brief Performance monitoring and profiling implementation
+ * 
+ * This file implements execution time profiling and performance tracking:
+ * - Microsecond-precision execution time measurement
+ * - Statistical analysis (min, max, average)
+ * - Sample counting and tracking
+ * - Thread-safe operation in RTOS environments
+ * - Performance metrics reporting and reset
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 4.2.0
+ * @date 2026-01-17
+ */
+
 #include "performance_monitor.h"
 #include "logging.h"
 

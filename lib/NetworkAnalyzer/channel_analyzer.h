@@ -1,3 +1,17 @@
+/**
+ * @file channel_analyzer.h
+ * @brief WiFi channel congestion analysis and spectrum monitoring
+ * 
+ * This header defines structures and functions for analyzing WiFi channel
+ * congestion, interference detection, and optimal channel recommendation.
+ * Supports comprehensive 2.4GHz spectrum analysis with overlapping channel
+ * detection and continuous monitoring capabilities.
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 3.0.0
+ * @date 2026-01-17
+ */
+
 #pragma once
 #include <Arduino.h>
 #include <WiFi.h>

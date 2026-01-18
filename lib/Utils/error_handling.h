@@ -1,3 +1,16 @@
+/**
+ * @file error_handling.h
+ * @brief Unified error handling and result types
+ * 
+ * Provides consistent error handling across all modules with proper error
+ * propagation, logging, and recovery. Defines system-wide error codes for
+ * WiFi, network, storage, and hardware operations.
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 4.2.0
+ * @date 2026-01-17
+ */
+
 #pragma once
 
 #include <Arduino.h>
@@ -5,17 +18,6 @@
 // ==========================================
 // UNIFIED ERROR HANDLING SYSTEM
 // ==========================================
-
-/**
- * @file error_handling.h
- * @brief Unified error handling and result types
- * 
- * Provides consistent error handling across all modules
- * with proper error propagation and logging.
- * 
- * @version 4.2.0
- * @date 2025-10-25
- */
 
 /**
  * @brief System-wide error codes

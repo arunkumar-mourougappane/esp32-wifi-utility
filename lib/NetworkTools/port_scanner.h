@@ -1,3 +1,17 @@
+/**
+ * @file port_scanner.h
+ * @brief TCP port scanning and service discovery interface
+ * 
+ * This header defines structures and functions for network port scanning
+ * and service identification. Supports concurrent port scanning with
+ * configurable timeout and port ranges. Identifies common services
+ * (HTTP, SSH, FTP, etc.) running on open ports.
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 4.3.0
+ * @date 2026-01-17
+ */
+
 #pragma once
 
 #include <Arduino.h>

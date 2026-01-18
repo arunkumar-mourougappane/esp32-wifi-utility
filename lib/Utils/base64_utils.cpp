@@ -4,9 +4,11 @@
  * 
  * Implements base64 encoding and decoding for password storage.
  * Uses ESP32's built-in mbedtls library for efficient encoding/decoding.
+ * Prevents special characters in passwords from corrupting NVS storage.
  * 
- * @version 1.0
- * @date 2025-10-25
+ * @author Arunkumar Mourougappane
+ * @version 4.2.0
+ * @date 2026-01-17
  */
 
 #include "base64_utils.h"

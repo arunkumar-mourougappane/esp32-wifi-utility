@@ -1,3 +1,17 @@
+/**
+ * @file tft_display.h
+ * @brief TFT display interface for Adafruit Feather ESP32-S3 TFT boards
+ * 
+ * This header defines the interface for controlling the ST7789 TFT display
+ * on Adafruit Feather ESP32-S3 TFT and Reverse TFT boards. Supports display
+ * initialization, status rendering, QR code generation, and FreeRTOS task
+ * management for efficient display updates.
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 4.3.0
+ * @date 2026-01-17
+ */
+
 #pragma once
 
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)

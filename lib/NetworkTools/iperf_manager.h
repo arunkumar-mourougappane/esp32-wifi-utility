@@ -1,3 +1,17 @@
+/**
+ * @file iperf_manager.h
+ * @brief iPerf network performance testing interface
+ * 
+ * This header defines structures and functions for iPerf-compatible network
+ * performance testing. Supports both TCP and UDP protocols in client/server
+ * modes with configurable bandwidth, duration, and parallel streams.
+ * Compatible with standard iPerf2/iPerf3 tools.
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 3.0.0
+ * @date 2026-01-17
+ */
+
 #pragma once
 
 #include <Arduino.h>

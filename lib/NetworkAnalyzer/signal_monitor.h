@@ -1,3 +1,17 @@
+/**
+ * @file signal_monitor.h
+ * @brief WiFi signal strength monitoring and quality analysis
+ * 
+ * This header defines structures and functions for monitoring WiFi signal
+ * strength (RSSI), calculating signal quality metrics, and tracking
+ * connection quality over time. Provides RSSI-to-quality conversion
+ * and nearby network signal scanning.
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 4.3.0
+ * @date 2026-01-17
+ */
+
 #pragma once
 #include <Arduino.h>
 #include <vector>

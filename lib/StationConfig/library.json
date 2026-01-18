@@ -1,6 +1,6 @@
 {
   "name": "StationConfig",
-  "version": "1.0.0",
+  "version": "4.2.0",
   "description": "Station mode configuration management with persistent storage",
   "keywords": "station, config, preferences, esp32",
   "authors": [

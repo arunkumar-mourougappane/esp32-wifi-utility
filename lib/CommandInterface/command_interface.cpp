@@ -1,3 +1,24 @@
+/**
+ * @file command_interface.cpp
+ * @brief Serial command interface implementation for ESP32 WiFi Utility
+ * 
+ * This file implements the command-line interface for controlling the ESP32
+ * WiFi Utility through serial communication. It handles command parsing,
+ * execution, and provides interactive help and status information.
+ * 
+ * Supported command categories:
+ * - WiFi scanning and network management
+ * - Station/AP mode configuration with security preferences
+ * - Network analysis (latency, channel, signal monitoring)
+ * - iPerf performance testing
+ * - Web server control
+ * - System information and control
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 1.0.0
+ * @date 2026-01-17
+ */
+
 #include "command_interface.h"
 #include "wifi_manager.h"
 #include "wifi_task.h"

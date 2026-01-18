@@ -1,3 +1,20 @@
+/**
+ * @file latency_analyzer.cpp
+ * @brief Network latency and jitter analysis implementation
+ * 
+ * This file implements comprehensive latency testing:
+ * - UDP echo latency measurement
+ * - TCP connection time testing
+ * - HTTP request latency analysis
+ * - Statistical analysis (min, max, average, jitter)
+ * - Real-time monitoring with configurable intervals
+ * - Packet loss detection
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 3.0.0
+ * @date 2026-01-17
+ */
+
 #include "latency_analyzer.h"
 #include "config.h"
 #ifdef USE_NEOPIXEL

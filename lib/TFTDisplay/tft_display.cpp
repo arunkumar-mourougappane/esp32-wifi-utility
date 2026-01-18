@@ -1,3 +1,22 @@
+/**
+ * @file tft_display.cpp
+ * @brief TFT display implementation for Adafruit Feather ESP32-S3 boards
+ * 
+ * This file implements comprehensive TFT display functionality using the
+ * ST7789 display controller. Features include:
+ * - System status display with WiFi state, IP, SSID, signal strength
+ * - Battery level indicator
+ * - QR code generation for AP credentials
+ * - Network scan results display
+ * - Performance statistics
+ * - FreeRTOS task for efficient display updates
+ * - Board-specific pin configurations (TFT and Reverse TFT variants)
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 4.3.0
+ * @date 2026-01-17
+ */
+
 #include "tft_display.h"
 
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)

@@ -1,6 +1,6 @@
 {
   "name": "BatteryMonitor",
-  "version": "1.0.0",
+  "version": "4.3.0",
   "description": "Battery voltage monitoring for Adafruit Feather ESP32-S3 boards",
   "keywords": ["battery", "monitoring", "voltage", "adc", "lipo"],
   "authors": [

@@ -2,17 +2,16 @@
  * @file ap_manager.cpp
  * @brief Access Point client management and deauthentication functionality
  * 
- * This module provides comprehensive management of WiFi clients connected to the ESP32
- * when operating in Access Point (AP) mode. It includes functionality for listing
- * connected clients, managing client connections, and performing selective or mass
- * deauthentication operations.
+ * This module provides comprehensive management of WiFi clients connected to
+ * the ESP32 when operating in Access Point (AP) mode. Functionality includes:
+ * - Listing connected clients with MAC addresses and connection info
+ * - Managing client connections and monitoring
+ * - Selective and mass deauthentication operations
+ * - Integration with ESP-IDF WiFi API for low-level client control
  * 
- * The module integrates with the ESP-IDF WiFi API to retrieve client information
- * and uses the Arduino WiFi library for client management operations.
- * 
- * @author ESP32 WiFi Scanner Project
- * @version 1.0
- * @date 2025-10-13
+ * @author Arunkumar Mourougappane
+ * @version 3.0.0
+ * @date 2026-01-17
  * 
  * @see wifi_manager.h for WiFi mode management
  * @see command_interface.h for user command processing

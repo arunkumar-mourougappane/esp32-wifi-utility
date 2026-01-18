@@ -1,3 +1,24 @@
+/**
+ * @file web_server.cpp
+ * @brief Web server implementation for browser-based configuration
+ * 
+ * This file implements the complete web interface for the ESP32 WiFi Utility.
+ * Features include:
+ * - Responsive HTML5 web interface with modern CSS styling
+ * - WiFi configuration forms (AP and Station with security options)
+ * - Network scanning and detailed network information
+ * - Channel analysis with graphical visualization
+ * - Latency testing interface and results
+ * - iPerf performance testing with real-time updates
+ * - System status dashboard with connection info
+ * - Automatic web server restart on WiFi state changes
+ * - Scan result caching for improved performance
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 1.0.0
+ * @date 2026-01-17
+ */
+
 #include "web_server.h"
 
 #ifdef USE_WEBSERVER  // Web server available when enabled

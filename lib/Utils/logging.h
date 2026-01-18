@@ -1,3 +1,16 @@
+/**
+ * @file logging.h
+ * @brief Structured logging with configurable levels
+ * 
+ * Provides centralized logging with different severity levels, timestamps,
+ * and categorization by component. Supports DEBUG, INFO, WARN, and ERROR
+ * levels with optional timestamp and component tagging.
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 5.0.0
+ * @date 2026-01-17
+ */
+
 #pragma once
 
 #include <Arduino.h>
@@ -6,17 +19,6 @@
 // ==========================================
 // STRUCTURED LOGGING SYSTEM
 // ==========================================
-
-/**
- * @file logging.h
- * @brief Structured logging with configurable levels
- * 
- * Provides centralized logging with different severity levels,
- * timestamps, and categorization by component.
- * 
- * @version 4.2.0
- * @date 2025-10-25
- */
 
 // ==========================================
 // LOG LEVELS
