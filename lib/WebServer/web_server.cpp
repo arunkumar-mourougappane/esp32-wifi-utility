@@ -2691,6 +2691,7 @@ void handleConfig() {
         html += "<span class='status-saved'>✓ Saved Configuration</span><br>";
         html += "SSID: <strong>" + String(apConfig.ssid) + "</strong><br>";
         html += "Channel: <strong>" + String(apConfig.channel) + "</strong><br>";
+        html += "Security: <strong>" + String(securityTypeToString(apConfig.security)) + "</strong><br>";
         html += "Auto-start: <strong>" + String(apConfig.autoStart ? "Yes" : "No") + "</strong>";
         html += "</div>";
     } else {
@@ -2711,11 +2712,76 @@ void handleConfig() {
             </div>
             
             <div class="form-group">
-                <label for="ap_password">Password *</label>
+                <label for="ap_password">Password</label>
                 <input type="password" id="ap_password" name="password" 
                        placeholder="Enter new password (8-63 chars)" minlength="8" maxlength="63">
-                <small>Leave empty to keep current password. 8-63 characters for new password.</small>
+                <small id="ap_password_help">Leave empty to keep current password. 8-63 characters for new password.</small>
             </div>
+            
+            <div class="form-group">
+                <label for="ap_security">Security Type</label>
+                <select id="ap_security" name="security" class="form-control" required>
+                    <option value="open">🔓 Open (No Password)</option>
+                    <option value="wpa2" )rawliteral";
+    if (!hasAP || apConfig.security == AP_SEC_WPA2_PSK) {
+        html += " selected";
+    }
+    html += R"rawliteral(>🔒 WPA2-PSK (Recommended)</option>
+                    <option value="wpa3" )rawliteral";
+    if (hasAP && apConfig.security == AP_SEC_WPA3_PSK) {
+        html += " selected";
+    }
+    html += R"rawliteral(>🔐 WPA3-PSK (Modern Devices)</option>
+                    <option value="mixed" )rawliteral";
+    if (hasAP && apConfig.security == AP_SEC_WPA2_WPA3) {
+        html += " selected";
+    }
+    html += R"rawliteral(>🔐 WPA2/WPA3 Mixed</option>
+                </select>
+                <small class="form-text text-muted" id="security_help">
+                    🔒 WPA2 is recommended for compatibility. Open networks allow connections without a password.
+                </small>
+            </div>
+            
+            <script>
+            document.getElementById('ap_security').addEventListener('change', function() {
+                const passwordField = document.getElementById('ap_password');
+                const passwordLabel = document.querySelector('label[for="ap_password"]');
+                const passwordHelp = document.getElementById('ap_password_help');
+                const securityHelp = document.getElementById('security_help');
+                
+                if (this.value === 'open') {
+                    passwordField.disabled = true;
+                    passwordField.value = '';
+                    passwordField.required = false;
+                    passwordField.placeholder = 'Not required for Open network';
+                    passwordLabel.textContent = 'Password (Not Required)';
+                    passwordHelp.textContent = 'Open networks do not require a password. Anyone can connect.';
+                    securityHelp.innerHTML = '⚠️ <strong>Warning:</strong> Open networks are not secure. Anyone can connect and potentially intercept data.';
+                    securityHelp.style.color = '#f44336';
+                } else {
+                    passwordField.disabled = false;
+                    passwordField.required = false; // Not required if keeping existing
+                    passwordField.placeholder = 'Enter new password (8-63 chars)';
+                    passwordLabel.textContent = 'Password';
+                    passwordHelp.textContent = 'Leave empty to keep current password. 8-63 characters for new password.';
+                    
+                    if (this.value === 'wpa2') {
+                        securityHelp.innerHTML = '🔒 WPA2 is recommended for compatibility with most devices.';
+                        securityHelp.style.color = '#666';
+                    } else if (this.value === 'wpa3') {
+                        securityHelp.innerHTML = '🔐 WPA3 provides enhanced security but requires modern devices (2018+).';
+                        securityHelp.style.color = '#666';
+                    } else if (this.value === 'mixed') {
+                        securityHelp.innerHTML = '🔐 Mixed mode provides WPA3 security for modern devices with WPA2 fallback for older devices.';
+                        securityHelp.style.color = '#666';
+                    }
+                }
+            });
+            
+            // Trigger on page load to set initial state
+            document.getElementById('ap_security').dispatchEvent(new Event('change'));
+            </script>
             
             <div class="form-group">
                 <label for="ap_channel">Channel</label>
@@ -2777,6 +2843,27 @@ void handleConfig() {
         html += "<div class='config-status'>";
         html += "<span class='status-saved'>✓ Saved Configuration</span><br>";
         html += "SSID: <strong>" + String(staConfig.ssid) + "</strong><br>";
+        
+        // Display security preference
+        const char* secPrefName = "Auto";
+        switch(staConfig.securityPreference) {
+            case STA_SEC_AUTO:
+                secPrefName = "Auto (any security)";
+                break;
+            case STA_SEC_WPA3_PREFER:
+                secPrefName = "Prefer WPA3";
+                break;
+            case STA_SEC_WPA3_ONLY:
+                secPrefName = "WPA3 only";
+                break;
+            case STA_SEC_WPA2_MIN:
+                secPrefName = "WPA2 minimum";
+                break;
+            case STA_SEC_WPA2_ONLY:
+                secPrefName = "WPA2 only";
+                break;
+        }
+        html += "Security: <strong>" + String(secPrefName) + "</strong><br>";
         html += "Auto-connect: <strong>" + String(staConfig.autoConnect ? "Yes" : "No") + "</strong>";
         html += "</div>";
     } else {
@@ -2802,6 +2889,68 @@ void handleConfig() {
                        placeholder="Enter new password (0-63 chars)" maxlength="63">
                 <small>Leave empty to keep current password. 0-63 characters for new password (empty for open network).</small>
             </div>
+            
+            <div class="form-group">
+                <label for="sta_security">Security Preference</label>
+                <select id="sta_security" name="sec_pref" class="form-control">
+                    <option value="auto" )rawliteral";
+    if (!hasStation || staConfig.securityPreference == STA_SEC_AUTO) {
+        html += " selected";
+    }
+    html += R"rawliteral(>Auto-negotiate (Compatible)</option>
+                    <option value="wpa3prefer" )rawliteral";
+    if (hasStation && staConfig.securityPreference == STA_SEC_WPA3_PREFER) {
+        html += " selected";
+    }
+    html += R"rawliteral(>🔐 WPA3 Preferred (Fallback to WPA2)</option>
+                    <option value="wpa3only" )rawliteral";
+    if (hasStation && staConfig.securityPreference == STA_SEC_WPA3_ONLY) {
+        html += " selected";
+    }
+    html += R"rawliteral(>🔐 WPA3 Only (Strict)</option>
+                    <option value="wpa2min" )rawliteral";
+    if (hasStation && staConfig.securityPreference == STA_SEC_WPA2_MIN) {
+        html += " selected";
+    }
+    html += R"rawliteral(>🔒 WPA2 Minimum (No WEP/Open)</option>
+                    <option value="wpa2only" )rawliteral";
+    if (hasStation && staConfig.securityPreference == STA_SEC_WPA2_ONLY) {
+        html += " selected";
+    }
+    html += R"rawliteral(>🔒 WPA2 Only</option>
+                </select>
+                <small class="form-text text-muted" id="sta_security_help">
+                    <span style="display: inline-block; vertical-align: middle;">ℹ️</span> 
+                    <span id="sta_security_desc">Auto-negotiate works with all networks and is recommended for most users.</span>
+                </small>
+            </div>
+            
+            <script>
+            document.getElementById('sta_security').addEventListener('change', function() {
+                const securityDesc = document.getElementById('sta_security_desc');
+                
+                switch(this.value) {
+                    case 'auto':
+                        securityDesc.textContent = 'Auto-negotiate works with all networks and is recommended for most users.';
+                        break;
+                    case 'wpa3prefer':
+                        securityDesc.textContent = 'Prefers WPA3 when available but falls back to WPA2. Best balance of security and compatibility.';
+                        break;
+                    case 'wpa3only':
+                        securityDesc.innerHTML = '<strong>Strict mode:</strong> Only connects to WPA3 networks. May fail on older routers (pre-2018).';
+                        break;
+                    case 'wpa2min':
+                        securityDesc.textContent = 'Requires at least WPA2 security. Rejects insecure WEP and Open networks.';
+                        break;
+                    case 'wpa2only':
+                        securityDesc.textContent = 'Only connects to WPA2 networks. Rejects WPA3, WEP, and Open networks.';
+                        break;
+                }
+            });
+            
+            // Trigger on page load
+            document.getElementById('sta_security').dispatchEvent(new Event('change'));
+            </script>
             
             <div class="checkbox-group">
                 <input type="checkbox" id="sta_autoconnect" name="autoconnect" value="1" )rawliteral";
@@ -2884,6 +3033,7 @@ void handleConfigAP() {
     String ssid = webServer->arg("ssid");
     String password = webServer->arg("password");
     String channelStr = webServer->arg("channel");
+    String securityStr = webServer->arg("security");
     bool autoStart = webServer->hasArg("autostart");
     
     // Validate SSID
@@ -2892,23 +3042,41 @@ void handleConfigAP() {
         return;
     }
     
+    // Parse security type
+    APSecurityType security = AP_SEC_WPA2_PSK; // Default
+    if (securityStr == "open") {
+        security = AP_SEC_OPEN;
+    } else if (securityStr == "wpa2") {
+        security = AP_SEC_WPA2_PSK;
+    } else if (securityStr == "wpa3") {
+        security = AP_SEC_WPA3_PSK;
+    } else if (securityStr == "mixed") {
+        security = AP_SEC_WPA2_WPA3;
+    }
+    
     // Check if we're updating existing config
     APConfig config;
     bool hasExisting = loadAPConfig(config);
     
-    // If password is empty and we have existing config, keep old password
-    if (password.length() == 0 && hasExisting) {
-        // Keep existing password
-        Serial.println("[Web Config] Keeping existing AP password");
+    // Validate password based on security type
+    if (security == AP_SEC_OPEN) {
+        // Open network - clear password
+        config.password[0] = '\0';
     } else {
-        // Validate new password
-        if (password.length() < 8 || password.length() > 63) {
-            webServer->send(400, "text/plain", "Password must be 8-63 characters");
-            return;
+        // If password is empty and we have existing config, keep old password
+        if (password.length() == 0 && hasExisting) {
+            // Keep existing password
+            Serial.println("[Web Config] Keeping existing AP password");
+        } else {
+            // Validate new password
+            if (password.length() < 8 || password.length() > 63) {
+                webServer->send(400, "text/plain", "Password must be 8-63 characters for WPA2/WPA3");
+                return;
+            }
+            // Use new password
+            strncpy(config.password, password.c_str(), sizeof(config.password) - 1);
+            config.password[sizeof(config.password) - 1] = '\0';
         }
-        // Use new password
-        strncpy(config.password, password.c_str(), sizeof(config.password) - 1);
-        config.password[sizeof(config.password) - 1] = '\0';
     }
     
     // Set SSID
@@ -2921,6 +3089,9 @@ void handleConfigAP() {
         channel = 1;
     }
     config.channel = channel;
+    
+    // Set security type
+    config.security = security;
     
     // Set auto-start
     config.autoStart = autoStart;
@@ -2941,6 +3112,9 @@ void handleConfigAP() {
         <div style="text-align: center; padding: 40px;">
             <p style="font-size: 16px; color: #666;">
                 SSID: <strong>)rawliteral" + ssid + R"rawliteral(</strong><br>
+                Security: <strong>)rawliteral" + String(security == AP_SEC_OPEN ? "Open" : 
+                                                          security == AP_SEC_WPA2_PSK ? "WPA2-PSK" :
+                                                          security == AP_SEC_WPA3_PSK ? "WPA3-PSK" : "WPA2/WPA3") + R"rawliteral(</strong><br>
                 Channel: <strong>)rawliteral" + String(channel) + R"rawliteral(</strong><br>
                 Auto-start: <strong>)rawliteral" + String(autoStart ? "Yes" : "No") + R"rawliteral(</strong>
             </p>
@@ -3043,6 +3217,21 @@ void handleConfigStation() {
     String ssid = webServer->arg("ssid");
     String password = webServer->arg("password");
     bool autoConnect = webServer->hasArg("autoconnect");
+    String secPrefStr = webServer->arg("sec_pref");
+    
+    // Parse security preference
+    StationSecurityPreference secPref = STA_SEC_AUTO; // Default
+    if (secPrefStr == "auto") {
+        secPref = STA_SEC_AUTO;
+    } else if (secPrefStr == "wpa3prefer") {
+        secPref = STA_SEC_WPA3_PREFER;
+    } else if (secPrefStr == "wpa3only") {
+        secPref = STA_SEC_WPA3_ONLY;
+    } else if (secPrefStr == "wpa2min") {
+        secPref = STA_SEC_WPA2_MIN;
+    } else if (secPrefStr == "wpa2only") {
+        secPref = STA_SEC_WPA2_ONLY;
+    }
     
     // Validate SSID
     if (ssid.length() == 0 || ssid.length() > 32) {
@@ -3073,6 +3262,9 @@ void handleConfigStation() {
     strncpy(config.ssid, ssid.c_str(), sizeof(config.ssid) - 1);
     config.ssid[sizeof(config.ssid) - 1] = '\0';
     
+    // Set security preference
+    config.securityPreference = secPref;
+    
     // Set auto-connect
     config.autoConnect = autoConnect;
     config.isValid = true;
@@ -3092,6 +3284,10 @@ void handleConfigStation() {
         <div style="text-align: center; padding: 40px;">
             <p style="font-size: 16px; color: #666;">
                 SSID: <strong>)rawliteral" + ssid + R"rawliteral(</strong><br>
+                Security Preference: <strong>)rawliteral" + String(secPref == STA_SEC_AUTO ? "Auto" :
+                                                                      secPref == STA_SEC_WPA3_PREFER ? "WPA3 Preferred" :
+                                                                      secPref == STA_SEC_WPA3_ONLY ? "WPA3 Only" :
+                                                                      secPref == STA_SEC_WPA2_MIN ? "WPA2 Minimum" : "WPA2 Only") + R"rawliteral(</strong><br>
                 Auto-connect: <strong>)rawliteral" + String(autoConnect ? "Yes" : "No") + R"rawliteral(</strong>
             </p>
             <p style="margin-top: 30px;">
