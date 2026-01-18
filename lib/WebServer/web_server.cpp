@@ -2831,6 +2831,7 @@ void handleConfig() {
             
             <div class="form-group">
                 <label for="ap_channel">Channel</label>
+                <div class="select-wrapper">
                 <select id="ap_channel" name="channel">
     )rawliteral";
     
@@ -2846,6 +2847,7 @@ void handleConfig() {
     
     html += R"rawliteral(
                 </select>
+                </div>
             </div>
             
             <div class="checkbox-group">
