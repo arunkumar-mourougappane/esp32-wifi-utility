@@ -282,6 +282,30 @@ a:hover { color: #0a58ca; text-decoration: underline; }
     padding-right: 2.5rem;
 }
 
+/* Password input with toggle visibility */
+.password-wrapper {
+    position: relative;
+    display: block;
+    width: 100%;
+}
+.password-wrapper input {
+    padding-right: 2.5rem;
+}
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #6c757d;
+    font-size: 1.2rem;
+    user-select: none;
+    transition: color 0.2s;
+}
+.password-toggle:hover {
+    color: #0d6efd;
+}
+
 .form-row { display: flex; flex-wrap: wrap; margin-right: -0.5rem; margin-left: -0.5rem; }
 .form-row > .form-group { flex: 0 0 auto; width: 50%; padding-right: 0.5rem; padding-left: 0.5rem; }
 
@@ -446,6 +470,7 @@ function hideProgress(){const b=document.getElementById('progressBackdrop');if(b
 function startScan(u,t,m){showProgress(t,m);window.location.href=u}
 function toggleMenu(){const h=document.querySelector('.hamburger'),n=document.querySelector('.nav-items');h.classList.toggle('active');n.classList.toggle('active')}
 function toggleDropdown(e){if(window.innerWidth<=768){e.preventDefault();const d=e.target.closest('.dropdown');d.classList.toggle('active')}}
+function togglePassword(id){const p=document.getElementById(id);const t=p.nextElementSibling;if(p.type==='password'){p.type='text';t.textContent='🔒'}else{p.type='password';t.textContent='👁'}}
 document.addEventListener('DOMContentLoaded',function(){const dl=document.querySelectorAll('.dropdown > a');dl.forEach(l=>{l.addEventListener('click',toggleDropdown)})})
 </script>
 </head>
@@ -2757,8 +2782,11 @@ void handleConfig() {
             
             <div class="form-group">
                 <label for="ap_password">Password</label>
-                <input type="password" id="ap_password" name="password" 
-                       placeholder="Enter new password (8-63 chars)" minlength="8" maxlength="63">
+                <div class="password-wrapper">
+                    <input type="password" id="ap_password" name="password" 
+                           placeholder="Enter new password (8-63 chars)" minlength="8" maxlength="63">
+                    <span class="password-toggle" onclick="togglePassword('ap_password')">👁</span>
+                </div>
                 <small id="ap_password_help">Leave empty to keep current password. 8-63 characters for new password.</small>
             </div>
             
@@ -2933,8 +2961,11 @@ void handleConfig() {
             
             <div class="form-group">
                 <label for="sta_password">WiFi Password *</label>
-                <input type="password" id="sta_password" name="password" 
-                       placeholder="Enter new password (0-63 chars)" maxlength="63">
+                <div class="password-wrapper">
+                    <input type="password" id="sta_password" name="password" 
+                           placeholder="Enter new password (0-63 chars)" maxlength="63">
+                    <span class="password-toggle" onclick="togglePassword('sta_password')">👁</span>
+                </div>
                 <small>Leave empty to keep current password. 0-63 characters for new password (empty for open network).</small>
             </div>
             
