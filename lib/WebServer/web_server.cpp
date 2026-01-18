@@ -261,6 +261,27 @@ a:hover { color: #0a58ca; text-decoration: underline; }
     outline: 0;
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
+
+/* Select dropdown with caret indicator */
+.select-wrapper {
+    position: relative;
+    display: block;
+    width: 100%;
+}
+.select-wrapper::after {
+    content: '▼';
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #6c757d;
+    font-size: 0.75rem;
+}
+.select-wrapper select {
+    padding-right: 2.5rem;
+}
+
 .form-row { display: flex; flex-wrap: wrap; margin-right: -0.5rem; margin-left: -0.5rem; }
 .form-row > .form-group { flex: 0 0 auto; width: 50%; padding-right: 0.5rem; padding-left: 0.5rem; }
 
@@ -2359,11 +2380,13 @@ void handleLatency() {
             
             <div class="form-group">
                 <label for="testType">Test Type</label>
+                <div class="select-wrapper">
                 <select id="testType" name="testType" required>
                     <option value="udp">UDP Echo (Fast, Low Overhead)</option>
                     <option value="tcp">TCP Connect (Connection Time)</option>
                     <option value="http">HTTP Request (Real-World Latency)</option>
                 </select>
+                </div>
             </div>
             
             <div class="form-row">
@@ -2741,6 +2764,7 @@ void handleConfig() {
             
             <div class="form-group">
                 <label for="ap_security">Security Type</label>
+                <div class="select-wrapper">
                 <select id="ap_security" name="security" class="form-control" required>
                     <option value="open">🔓 Open (No Password)</option>
                     <option value="wpa2" )rawliteral";
@@ -2759,6 +2783,7 @@ void handleConfig() {
     }
     html += R"rawliteral(>🔐 WPA2/WPA3 Mixed</option>
                 </select>
+                </div>
                 <small class="form-text text-muted" id="security_help">
                     🔒 WPA2 is recommended for compatibility. Open networks allow connections without a password.
                 </small>
@@ -2913,6 +2938,7 @@ void handleConfig() {
             
             <div class="form-group">
                 <label for="sta_security">Security Preference</label>
+                <div class="select-wrapper">
                 <select id="sta_security" name="sec_pref" class="form-control">
                     <option value="auto" )rawliteral";
     if (!hasStation || staConfig.securityPreference == STA_SEC_AUTO) {
@@ -2940,6 +2966,7 @@ void handleConfig() {
     }
     html += R"rawliteral(>🔒 WPA2 Only</option>
                 </select>
+                </div>
                 <small class="form-text text-muted" id="sta_security_help">
                     <span style="display: inline-block; vertical-align: middle;">ℹ️</span> 
                     <span id="sta_security_desc">Auto-negotiate works with all networks and is recommended for most users.</span>
