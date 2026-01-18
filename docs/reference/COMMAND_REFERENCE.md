@@ -396,9 +396,9 @@ The command prompt dynamically shows the current device state:
 ## Related Documentation
 
 - [Usage Examples](USAGE_EXAMPLES.md) - Practical examples for all commands
-- [Quick Start Guide](../README.md#quick-start) - Getting started
-- [Features Guide](FEATURES.md) - Complete feature documentation
-- [Security Configuration](SECURITY_CONFIGURATION.md) - Security setup guide
-- [Channel Analysis Guide](user-guides/CHANNEL_GUIDE.md) - Spectrum analysis
-- [Latency Testing Guide](user-guides/LATENCY_GUIDE.md) - Network performance
-- [iPerf Guide](user-guides/IPERF_GUIDE.md) - Bandwidth testing
+- [Quick Start Guide](../../README.md#quick-start) - Getting started
+- [Features Guide](../features/FEATURES.md) - Complete feature documentation
+- [Security Configuration](../security/SECURITY_CONFIGURATION.md) - Security setup guide
+- [Channel Analysis Guide](../guides/CHANNEL_GUIDE.md) - Spectrum analysis
+- [Latency Testing Guide](../guides/LATENCY_GUIDE.md) - Network performance
+- [iPerf Guide](../guides/IPERF_GUIDE.md) - Bandwidth testing

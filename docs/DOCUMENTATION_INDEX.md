@@ -26,7 +26,7 @@
 | **[Main README](../README.md)**                         | Project overview, features, and setup | Everyone  |
 | **[Quick Start](../README.md#quick-start)**             | Build and deploy in 5 minutes         | Beginners |
 | **[Command Reference](../README.md#command-reference)** | Complete command list                 | All users |
-| **[Web Configuration Guide](WEB_CONFIGURATION.md)**     | Browser-based configuration           | All users |
+| **[Web Configuration Guide](configuration/WEB_CONFIGURATION.md)**     | Browser-based configuration           | All users |
 
 **Recommended reading order:**
 
@@ -52,7 +52,7 @@
 
 | Feature                     | Documentation                                                                                |
 | --------------------------- | -------------------------------------------------------------------------------------------- |
-| **TFT UI Redesign** 🎨       | **[TFT UI Redesign Guide](TFT_UI_REDESIGN.md)** - Complete UI overhaul                      |
+| **TFT UI Redesign** 🎨       | **[TFT UI Redesign Guide](features/TFT_UI_REDESIGN.md)** - Complete UI overhaul                      |
 | **Welcome Screen**          | [TFT UI Redesign - Welcome Screen](TFT_UI_REDESIGN.md#welcome-screen)                       |
 | **Color-Coded Status**      | [TFT UI Redesign - Status System](TFT_UI_REDESIGN.md#color-coded-status-system)             |
 | **Modular Architecture**    | [TFT UI Redesign - Architecture](TFT_UI_REDESIGN.md#modular-architecture)                   |
@@ -73,9 +73,9 @@
 
 | Feature                     | Documentation                                      |
 | --------------------------- | -------------------------------------------------- |
-| **Port Scanner**            | [Port Scanner Guide](PORT_SCANNER.md)              |
-| **Signal Strength Monitor** | [Signal Monitor Guide](SIGNAL_STRENGTH_MONITOR.md) |
-| **Channel Graph**           | [Channel Graph Guide](CHANNEL_GRAPH.md)            |
+| **Port Scanner**            | [Port Scanner Guide](features/PORT_SCANNER.md)              |
+| **Signal Strength Monitor** | [Signal Monitor Guide](features/SIGNAL_STRENGTH_MONITOR.md) |
+| **Channel Graph**           | [Channel Graph Guide](features/CHANNEL_GRAPH.md)            |
 
 ---
 
@@ -85,18 +85,18 @@
 
 | Document                                                | Description                          | Level        |
 | ------------------------------------------------------- | ------------------------------------ | ------------ |
-| **[Web Configuration Guide](WEB_CONFIGURATION.md)**     | Complete web interface documentation | Beginner     |
+| **[Web Configuration Guide](configuration/WEB_CONFIGURATION.md)**     | Complete web interface documentation | Beginner     |
 | **[Web Interface Guide](user-guides/WEB_INTERFACE.md)** | Dashboard and analysis features      | Beginner     |
-| **[Configuration System](CONFIGURATION_SYSTEM.md)**     | Overview of persistent configuration | Intermediate |
-| **[Responsive Menu Guide](RESPONSIVE_MENU.md)**         | Mobile interface usage               | Beginner     |
+| **[Configuration System](configuration/CONFIGURATION_SYSTEM.md)**     | Overview of persistent configuration | Intermediate |
+| **[Responsive Menu Guide](features/RESPONSIVE_MENU.md)**         | Mobile interface usage               | Beginner     |
 
 ### Network Analysis & Testing
 
 | Document                                                   | Description                           | Level        |
 | ---------------------------------------------------------- | ------------------------------------- | ------------ |
-| **[Port Scanner](PORT_SCANNER.md)**                        | Port scanning and service detection   | Intermediate |
-| **[Signal Strength Monitor](SIGNAL_STRENGTH_MONITOR.md)**  | RSSI monitoring and analysis          | Beginner     |
-| **[Channel Graph](CHANNEL_GRAPH.md)**                      | Visual spectrum analysis              | Intermediate |
+| **[Port Scanner](features/PORT_SCANNER.md)**                        | Port scanning and service detection   | Intermediate |
+| **[Signal Strength Monitor](features/SIGNAL_STRENGTH_MONITOR.md)**  | RSSI monitoring and analysis          | Beginner     |
+| **[Channel Graph](features/CHANNEL_GRAPH.md)**                      | Visual spectrum analysis              | Intermediate |
 | **[Channel Analysis Guide](user-guides/CHANNEL_GUIDE.md)** | Spectrum analysis and recommendations | Intermediate |
 | **[Latency Testing Guide](user-guides/LATENCY_GUIDE.md)**  | Network performance testing           | Intermediate |
 | **[iPerf Guide](user-guides/IPERF_GUIDE.md)**              | Throughput measurement                | Advanced     |
@@ -106,10 +106,10 @@
 
 | Document                                                      | Description                             | Level        |
 | ------------------------------------------------------------- | --------------------------------------- | ------------ |
-| **[Security Configuration Guide](SECURITY_CONFIGURATION.md)** | Complete WiFi security configuration    | Beginner     |
-| **[Security Best Practices](SECURITY_BEST_PRACTICES.md)**     | Security recommendations and compliance | Intermediate |
-| **[Security Testing Suite](SECURITY_TESTING.md)**             | Comprehensive testing procedures        | Advanced     |
-| **[Security Test Results](SECURITY_TEST_RESULTS.md)**         | Test execution results and validation   | Advanced     |
+| **[Security Configuration Guide](security/SECURITY_CONFIGURATION.md)** | Complete WiFi security configuration    | Beginner     |
+| **[Security Best Practices](security/SECURITY_BEST_PRACTICES.md)**     | Security recommendations and compliance | Intermediate |
+| **[Security Testing Suite](security/SECURITY_TESTING.md)**             | Comprehensive testing procedures        | Advanced     |
+| **[Security Test Results](security/SECURITY_TEST_RESULTS.md)**         | Test execution results and validation   | Advanced     |
 
 ### Hardware-Specific
 
@@ -142,15 +142,15 @@
 
 | Document                                                        | Description                     | Audience   |
 | --------------------------------------------------------------- | ------------------------------- | ---------- |
-| **[AP Config Persistence](AP_CONFIG_PERSISTENCE.md)**           | AP configuration deep dive      | Developers |
-| **[Station Config Persistence](STATION_CONFIG_PERSISTENCE.md)** | Station configuration deep dive | Developers |
-| **[Configuration System](CONFIGURATION_SYSTEM.md)**             | NVS-based persistence           | Developers |
+| **[AP Config Persistence](configuration/AP_CONFIG_PERSISTENCE.md)**           | AP configuration deep dive      | Developers |
+| **[Station Config Persistence](configuration/STATION_CONFIG_PERSISTENCE.md)** | Station configuration deep dive | Developers |
+| **[Configuration System](configuration/CONFIGURATION_SYSTEM.md)**             | NVS-based persistence           | Developers |
 
 ### Implementation & Architecture
 
 | Document                                                                  | Description                   | Audience   |
 | ------------------------------------------------------------------------- | ----------------------------- | ---------- |
-| **[Library Structure](LIBRARY_STRUCTURE.md)**                             | Modular architecture overview | Developers |
+| **[Library Structure](architecture/LIBRARY_STRUCTURE.md)**                             | Modular architecture overview | Developers |
 | **[Implementation Summary](technical/IMPLEMENTATION_SUMMARY.md)**         | System architecture overview  | Developers |
 | **[Channel Implementation](technical/CHANNEL_IMPLEMENTATION.md)**         | Spectrum analysis algorithms  | Developers |
 | **[Project Completion Summary](technical/PROJECT_COMPLETION_SUMMARY.md)** | Project achievements          | All        |
@@ -159,8 +159,8 @@
 
 | Document                                                    | Description                       | Audience     |
 | ----------------------------------------------------------- | --------------------------------- | ------------ |
-| **[Security Testing Suite](SECURITY_TESTING.md)**           | WiFi security testing procedures  | QA/Testers   |
-| **[Security Test Results](SECURITY_TEST_RESULTS.md)**       | Test results and validation       | QA/Testers   |
+| **[Security Testing Suite](security/SECURITY_TESTING.md)**           | WiFi security testing procedures  | QA/Testers   |
+| **[Security Test Results](security/SECURITY_TEST_RESULTS.md)**       | Test results and validation       | QA/Testers   |
 | **[Test Infrastructure](technical/TEST_INFRASTRUCTURE.md)** | Testing framework                 | Developers   |
 | **[Automated Releases](technical/AUTOMATED_RELEASES.md)**   | CI/CD pipeline                    | Contributors |
 | **[Workflow Summary](technical/WORKFLOW_SUMMARY.md)**       | Complete automation overview      | Contributors |
@@ -173,8 +173,8 @@
 
 | Guide                                                       | Commands                   | Use Case                    |
 | ----------------------------------------------------------- | -------------------------- | --------------------------- |
-| **[AP Config Quick Ref](AP_CONFIG_QUICK_REF.md)**           | Access Point configuration | Setting up WiFi hotspot     |
-| **[Station Config Quick Ref](STATION_CONFIG_QUICK_REF.md)** | Station configuration      | Connecting to WiFi networks |
+| **[AP Config Quick Ref](reference/AP_CONFIG_QUICK_REF.md)**           | Access Point configuration | Setting up WiFi hotspot     |
+| **[Station Config Quick Ref](reference/STATION_CONFIG_QUICK_REF.md)** | Station configuration      | Connecting to WiFi networks |
 
 **Web Interface Quick Access:**
 
@@ -236,19 +236,19 @@
 1. [Main README](../README.md) - Understand capabilities
 2. [Quick Start](../README.md#quick-start) - Build and deploy
 3. [Command Reference](../README.md#command-reference) - Learn commands
-4. [Web Configuration](WEB_CONFIGURATION.md) - Configure via browser
+4. [Web Configuration](configuration/WEB_CONFIGURATION.md) - Configure via browser
 
 ### Use Case: Configure WiFi Hotspot
 
-1. [AP Config Quick Ref](AP_CONFIG_QUICK_REF.md) - Command syntax
-2. [AP Config Persistence](AP_CONFIG_PERSISTENCE.md) - Detailed guide
-3. [Web Configuration](WEB_CONFIGURATION.md) - Web interface method
+1. [AP Config Quick Ref](reference/AP_CONFIG_QUICK_REF.md) - Command syntax
+2. [AP Config Persistence](configuration/AP_CONFIG_PERSISTENCE.md) - Detailed guide
+3. [Web Configuration](configuration/WEB_CONFIGURATION.md) - Web interface method
 
 ### Use Case: Connect to WiFi Network
 
-1. [Station Config Quick Ref](STATION_CONFIG_QUICK_REF.md) - Command syntax
-2. [Station Config Persistence](STATION_CONFIG_PERSISTENCE.md) - Detailed guide
-3. [Web Configuration](WEB_CONFIGURATION.md) - Web interface method
+1. [Station Config Quick Ref](reference/STATION_CONFIG_QUICK_REF.md) - Command syntax
+2. [Station Config Persistence](configuration/STATION_CONFIG_PERSISTENCE.md) - Detailed guide
+3. [Web Configuration](configuration/WEB_CONFIGURATION.md) - Web interface method
 
 ### Use Case: Network Analysis
 
@@ -259,23 +259,23 @@
 
 ### Use Case: Security Configuration
 
-1. [Security Configuration Guide](SECURITY_CONFIGURATION.md) - Complete security setup
-2. [Security Best Practices](SECURITY_BEST_PRACTICES.md) - Security recommendations
-3. [AP Config Quick Ref](AP_CONFIG_QUICK_REF.md) - AP security commands
-4. [Station Config Quick Ref](STATION_CONFIG_QUICK_REF.md) - Station security preferences
-5. [Web Configuration](WEB_CONFIGURATION.md) - Security via web interface
+1. [Security Configuration Guide](security/SECURITY_CONFIGURATION.md) - Complete security setup
+2. [Security Best Practices](security/SECURITY_BEST_PRACTICES.md) - Security recommendations
+3. [AP Config Quick Ref](reference/AP_CONFIG_QUICK_REF.md) - AP security commands
+4. [Station Config Quick Ref](reference/STATION_CONFIG_QUICK_REF.md) - Station security preferences
+5. [Web Configuration](configuration/WEB_CONFIGURATION.md) - Security via web interface
 
 ### Use Case: Testing WiFi Security
 
-1. [Security Testing Suite](SECURITY_TESTING.md) - Test procedures
-2. [Security Test Results](SECURITY_TEST_RESULTS.md) - Results documentation
+1. [Security Testing Suite](security/SECURITY_TESTING.md) - Test procedures
+2. [Security Test Results](security/SECURITY_TEST_RESULTS.md) - Results documentation
 3. Test all security types: Open, WPA2, WPA3, Mixed
 4. Validate QR code generation and scanning
 
 ### Use Case: Mobile Configuration
 
-1. [Web Configuration](WEB_CONFIGURATION.md) - Mobile interface
-2. [Responsive Menu Guide](RESPONSIVE_MENU.md) - Mobile navigation
+1. [Web Configuration](configuration/WEB_CONFIGURATION.md) - Mobile interface
+2. [Responsive Menu Guide](features/RESPONSIVE_MENU.md) - Mobile navigation
 3. [Web Interface Guide](user-guides/WEB_INTERFACE.md) - Touch-friendly features
 
 ### Use Case: Contributing

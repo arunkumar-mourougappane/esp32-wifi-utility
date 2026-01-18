@@ -796,17 +796,17 @@ station save MyWiFi MyPass auto yes
 ## Additional Resources
 
 - **Quick Reference Guides:**
-  - [AP Config Quick Reference](AP_CONFIG_QUICK_REF.md)
-  - [Station Config Quick Reference](STATION_CONFIG_QUICK_REF.md)
+  - [AP Config Quick Reference](../reference/AP_CONFIG_QUICK_REF.md)
+  - [Station Config Quick Reference](../reference/STATION_CONFIG_QUICK_REF.md)
 
 - **Security Best Practices:**
-  - [Security Best Practices Guide](SECURITY_BEST_PRACTICES.md)
+  - [Security Best Practices Guide](../security/SECURITY_BEST_PRACTICES.md)
 
 - **Web Interface:**
-  - [Web Configuration Guide](WEB_CONFIGURATION.md)
+  - [Web Configuration Guide](../configuration/WEB_CONFIGURATION.md)
 
 - **Technical Details:**
-  - [Configuration System Architecture](CONFIGURATION_SYSTEM.md)
+  - [Configuration System Architecture](../configuration/CONFIGURATION_SYSTEM.md)
   - [WiFi Task Architecture](technical/WIFI_TASK_ARCHITECTURE.md)
 
 ---

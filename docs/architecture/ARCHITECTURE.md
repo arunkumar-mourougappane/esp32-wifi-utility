@@ -510,8 +510,8 @@ See [Test Infrastructure Guide](technical/TEST_INFRASTRUCTURE.md) for details.
 
 ## Related Documentation
 
-- [Features Guide](FEATURES.md) - Complete feature descriptions
-- [Command Reference](COMMAND_REFERENCE.md) - All commands
+- [Features Guide](../features/FEATURES.md) - Complete feature descriptions
+- [Command Reference](../reference/COMMAND_REFERENCE.md) - All commands
 - [Test Infrastructure](technical/TEST_INFRASTRUCTURE.md) - Testing details
 - [Implementation Summary](technical/IMPLEMENTATION_SUMMARY.md) - System overview
 - [Quick Start Guide](../README.md#quick-start) - Getting started

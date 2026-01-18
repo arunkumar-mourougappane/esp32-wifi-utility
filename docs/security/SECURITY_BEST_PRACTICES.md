@@ -828,10 +828,10 @@ Security is not a one-time configuration but an ongoing process. By following th
 
 ### Additional Resources
 
-- [Security Configuration Guide](SECURITY_CONFIGURATION.md)
-- [AP Config Quick Reference](AP_CONFIG_QUICK_REF.md)
-- [Station Config Quick Reference](STATION_CONFIG_QUICK_REF.md)
-- [Web Configuration Guide](WEB_CONFIGURATION.md)
+- [Security Configuration Guide](../security/SECURITY_CONFIGURATION.md)
+- [AP Config Quick Reference](../reference/AP_CONFIG_QUICK_REF.md)
+- [Station Config Quick Reference](../reference/STATION_CONFIG_QUICK_REF.md)
+- [Web Configuration Guide](../configuration/WEB_CONFIGURATION.md)
 - [WiFi Alliance WPA3 Specification](https://www.wi-fi.org/discover-wi-fi/security)
 
 ---

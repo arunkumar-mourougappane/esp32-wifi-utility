@@ -40,10 +40,10 @@ This document provides comprehensive testing procedures for the WiFi Security Co
 
 ### Related Documentation
 
-- [Security Configuration Guide](SECURITY_CONFIGURATION.md)
-- [Security Best Practices](SECURITY_BEST_PRACTICES.md)
-- [AP Configuration Quick Reference](AP_CONFIG_QUICK_REF.md)
-- [Station Configuration Quick Reference](STATION_CONFIG_QUICK_REF.md)
+- [Security Configuration Guide](../security/SECURITY_CONFIGURATION.md)
+- [Security Best Practices](../security/SECURITY_BEST_PRACTICES.md)
+- [AP Configuration Quick Reference](../reference/AP_CONFIG_QUICK_REF.md)
+- [Station Configuration Quick Reference](../reference/STATION_CONFIG_QUICK_REF.md)
 
 ---
 
@@ -1524,7 +1524,7 @@ pio test -e native
 This testing suite provides comprehensive validation of the WiFi Security Configuration features. Complete all tests before releasing updates to ensure security and reliability.
 
 For questions or issues, refer to:
-- [Security Configuration Guide](SECURITY_CONFIGURATION.md)
+- [Security Configuration Guide](../security/SECURITY_CONFIGURATION.md)
 - [Project Issue Tracker](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/issues)
 - [Documentation Index](DOCUMENTATION_INDEX.md)
 

@@ -462,6 +462,6 @@ Potential improvements for future versions:
 
 ## See Also
 
-- [Web Configuration Guide](WEB_CONFIGURATION.md)
-- [Configuration System Overview](CONFIGURATION_SYSTEM.md)
+- [Web Configuration Guide](../configuration/WEB_CONFIGURATION.md)
+- [Configuration System Overview](../configuration/CONFIGURATION_SYSTEM.md)
 - Main project README for serial commands

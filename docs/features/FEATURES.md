@@ -122,7 +122,7 @@ Enterprise-grade spectrum analysis and optimization:
 - `channel recommend` - AI-powered optimal channel suggestions
 - `channel export` - JSON data export for analysis
 
-See [Channel Analysis Guide](user-guides/CHANNEL_GUIDE.md) for complete details.
+See [Channel Analysis Guide](../guides/CHANNEL_GUIDE.md) for complete details.
 
 ---
 
@@ -151,7 +151,7 @@ Full-featured iPerf implementation for bandwidth testing:
 - **Interactive Control**: Start, stop, and monitor tests via simple serial commands
 - **Network Optimization**: Identify bottlenecks and optimize network performance
 
-See [iPerf Testing Guide](user-guides/IPERF_GUIDE.md) and [Latency Testing Guide](user-guides/LATENCY_GUIDE.md) for complete details.
+See [iPerf Testing Guide](../guides/IPERF_GUIDE.md) and [Latency Testing Guide](../guides/LATENCY_GUIDE.md) for complete details.
 
 ---
 
@@ -367,7 +367,7 @@ Comprehensive WiFi security support:
   - Saved passwords never displayed
   - Secure NVS storage
 
-See [Security Configuration Guide](SECURITY_CONFIGURATION.md) for complete details.
+See [Security Configuration Guide](../security/SECURITY_CONFIGURATION.md) for complete details.
 
 ---
 
@@ -410,11 +410,11 @@ See [Security Configuration Guide](SECURITY_CONFIGURATION.md) for complete detai
 
 ## Related Documentation
 
-- [Command Reference](COMMAND_REFERENCE.md) - Complete command documentation
-- [Usage Examples](USAGE_EXAMPLES.md) - Practical examples
-- [Architecture Guide](ARCHITECTURE.md) - Technical implementation details
+- [Command Reference](../reference/COMMAND_REFERENCE.md) - Complete command documentation
+- [Usage Examples](../reference/USAGE_EXAMPLES.md) - Practical examples
+- [Architecture Guide](../architecture/ARCHITECTURE.md) - Technical implementation details
 - [Quick Start Guide](../README.md#quick-start) - Getting started
-- [Channel Analysis Guide](user-guides/CHANNEL_GUIDE.md) - Spectrum analysis
-- [Latency Testing Guide](user-guides/LATENCY_GUIDE.md) - Performance testing
-- [iPerf Guide](user-guides/IPERF_GUIDE.md) - Bandwidth measurement
-- [Security Guide](SECURITY_CONFIGURATION.md) - Security configuration
+- [Channel Analysis Guide](../guides/CHANNEL_GUIDE.md) - Spectrum analysis
+- [Latency Testing Guide](../guides/LATENCY_GUIDE.md) - Performance testing
+- [iPerf Guide](../guides/IPERF_GUIDE.md) - Bandwidth measurement
+- [Security Guide](../security/SECURITY_CONFIGURATION.md) - Security configuration
