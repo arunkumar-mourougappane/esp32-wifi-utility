@@ -1,3 +1,20 @@
+/**
+ * @file iperf_manager.cpp
+ * @brief iPerf network performance testing implementation
+ * 
+ * This file implements iPerf-compatible network throughput testing:
+ * - TCP throughput testing (client and server modes)
+ * - UDP throughput with bandwidth limiting
+ * - Bidirectional testing support
+ * - Real-time statistics and reporting
+ * - Compatible with standard iPerf2/iPerf3 tools
+ * - Jitter and packet loss measurement for UDP
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 3.0.0
+ * @date 2026-01-17
+ */
+
 #include "iperf_manager.h"
 #include "config.h"
 

@@ -1,3 +1,17 @@
+/**
+ * @file config.h
+ * @brief System-wide configuration constants and hardware definitions
+ * 
+ * This file contains all system-wide configuration parameters including
+ * hardware pin assignments, timing constants, WiFi settings, and compile-time
+ * validations. It serves as the central configuration hub for the ESP32
+ * WiFi Utility project.
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 1.0.0
+ * @date 2026-01-17
+ */
+
 #pragma once
 
 // ==========================================

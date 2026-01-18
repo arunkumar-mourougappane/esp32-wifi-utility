@@ -1,3 +1,19 @@
+/**
+ * @file led_controller.cpp
+ * @brief LED and NeoPixel control implementation
+ * 
+ * This file implements LED control functionality for both standard GPIO LEDs
+ * and Adafruit NeoPixel RGB LEDs. Features include:
+ * - Status indication with color-coded states
+ * - Blinking and pulsing effects
+ * - WiFi mode-specific visual feedback
+ * - Smooth brightness transitions
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 1.0.0
+ * @date 2026-01-17
+ */
+
 #include "led_controller.h"
 #include "wifi_manager.h"
 

@@ -1,3 +1,16 @@
+/**
+ * @file performance_monitor.h
+ * @brief Performance monitoring and profiling utilities
+ * 
+ * Provides tools to measure and track execution times, CPU usage,
+ * and performance bottlenecks. Supports thread-safe RTOS monitoring
+ * and statistical analysis of execution metrics.
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 4.2.0
+ * @date 2026-01-17
+ */
+
 #pragma once
 
 #include <Arduino.h>

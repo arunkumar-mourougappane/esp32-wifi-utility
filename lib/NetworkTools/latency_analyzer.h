@@ -1,3 +1,17 @@
+/**
+ * @file latency_analyzer.h
+ * @brief Network latency and jitter analysis tools
+ * 
+ * This header defines structures and functions for comprehensive network
+ * latency testing and jitter analysis. Supports multiple test methods:
+ * ICMP ping, UDP echo, TCP connection timing, and HTTP request latency.
+ * Provides statistical analysis including min, max, average, and jitter.
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 3.0.0
+ * @date 2026-01-17
+ */
+
 #pragma once
 
 #include <Arduino.h>

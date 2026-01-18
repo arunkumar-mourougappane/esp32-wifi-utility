@@ -10,8 +10,8 @@
  * The module integrates with ESP-IDF WiFi APIs for low-level client management
  * and provides high-level functions for user interaction and administration.
  * 
- * @author ESP32 WiFi Scanner Project
- * @version 1.0
+ * @author Arunkumar Mourougappane
+ * @version 3.0.0
  * @date 2025-10-13
  */
 

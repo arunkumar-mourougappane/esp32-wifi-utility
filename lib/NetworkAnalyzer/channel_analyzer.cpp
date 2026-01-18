@@ -1,3 +1,20 @@
+/**
+ * @file channel_analyzer.cpp
+ * @brief WiFi channel congestion analysis implementation
+ * 
+ * This file implements comprehensive channel analysis functionality:
+ * - 2.4GHz spectrum scanning across channels 1-14
+ * - Congestion scoring based on network count and signal strength
+ * - Overlapping channel interference detection
+ * - Best/worst channel recommendations
+ * - Continuous background monitoring support
+ * - Channel utilization visualization data
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 3.0.0
+ * @date 2026-01-17
+ */
+
 #include "channel_analyzer.h"
 #include "config.h"
 #ifdef USE_NEOPIXEL

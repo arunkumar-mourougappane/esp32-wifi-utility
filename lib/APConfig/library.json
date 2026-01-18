@@ -1,6 +1,6 @@
 {
   "name": "APConfig",
-  "version": "1.0.0",
+  "version": "4.2.0",
   "description": "Access Point configuration management with persistent storage",
   "keywords": "ap, config, preferences, esp32",
   "authors": [

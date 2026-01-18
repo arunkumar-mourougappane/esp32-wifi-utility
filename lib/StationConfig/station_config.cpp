@@ -3,9 +3,13 @@
  * @brief Station mode configuration persistence implementation
  * 
  * Implements saving and loading of Station configuration using ESP32 NVS.
+ * Includes support for WiFi credentials, auto-connect settings, and
+ * security preferences (Auto, WPA3 Prefer, WPA3 Only, WPA2 Min, WPA2 Only).
+ * Uses Base64 encoding for secure password storage.
  * 
- * @version 1.0
- * @date 2025-10-25
+ * @author Arunkumar Mourougappane
+ * @version 4.2.0
+ * @date 2026-01-17
  */
 
 #include "station_config.h"

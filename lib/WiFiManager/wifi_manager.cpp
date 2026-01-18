@@ -1,3 +1,20 @@
+/**
+ * @file wifi_manager.cpp
+ * @brief WiFi state management and network operations implementation
+ * 
+ * This file implements all WiFi management functionality including:
+ * - WiFi mode control (Station, AP, Idle)
+ * - Network scanning with security validation
+ * - Network connection with security preference enforcement
+ * - Access Point configuration and startup
+ * - QR code generation for AP credentials
+ * - Security type validation and filtering
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 1.0.0
+ * @date 2026-01-17
+ */
+
 #include "wifi_manager.h"
 #include "command_interface.h"
 #include "led_controller.h"

@@ -5,7 +5,7 @@
  * Provides functionality to save and load Station mode configuration
  * (WiFi network credentials) to/from ESP32 Non-Volatile Storage.
  * 
- * @version 1.0
+ * @version 4.2.0
  * @date 2025-10-25
  */
 

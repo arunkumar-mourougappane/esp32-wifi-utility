@@ -1,3 +1,19 @@
+/**
+ * @file logging.cpp
+ * @brief Structured logging system implementation
+ * 
+ * This file implements the logging system:
+ * - Configurable log levels (DEBUG, INFO, WARN, ERROR)
+ * - Optional timestamps and color output
+ * - Component-tagged messages
+ * - Printf-style formatted logging
+ * - Global log level filtering
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 5.0.0
+ * @date 2026-01-17
+ */
+
 #include "logging.h"
 #include "config.h"
 

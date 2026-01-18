@@ -1,3 +1,20 @@
+/**
+ * @file signal_monitor.cpp
+ * @brief WiFi signal strength monitoring implementation
+ * 
+ * This file implements signal strength monitoring and quality analysis:
+ * - RSSI (signal strength) measurement and conversion
+ * - Signal quality percentage calculation (0-100%)
+ * - Descriptive quality text (Excellent, Good, Fair, Weak)
+ * - Real-time monitoring of connected network
+ * - Nearby network signal scanning
+ * - Continuous monitoring with configurable intervals
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 4.3.0
+ * @date 2026-01-17
+ */
+
 #include "signal_monitor.h"
 #include "logging.h"
 #include <WiFi.h>

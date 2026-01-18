@@ -1,3 +1,20 @@
+/**
+ * @file port_scanner.cpp
+ * @brief TCP port scanning and service discovery implementation
+ * 
+ * This file implements network port scanning functionality:
+ * - TCP connection-based port scanning
+ * - Concurrent scanning for improved performance
+ * - Common service identification (HTTP, SSH, FTP, etc.)
+ * - Response time measurement
+ * - Progress tracking and cancellation support
+ * - Configurable timeout and port ranges
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 4.3.0
+ * @date 2026-01-17
+ */
+
 #include "port_scanner.h"
 #include "logging.h"
 #include <WiFiClient.h>

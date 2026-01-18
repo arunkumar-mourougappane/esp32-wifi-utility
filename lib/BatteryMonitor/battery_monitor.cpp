@@ -1,3 +1,20 @@
+/**
+ * @file battery_monitor.cpp
+ * @brief Battery monitoring system implementation
+ * 
+ * This file implements battery monitoring for ESP32 devices with battery
+ * management hardware. Supports:
+ * - Adafruit MAX17048 LiPo fuel gauge
+ * - Adafruit LC709203F battery fuel gauge
+ * - FreeRTOS task for periodic monitoring
+ * - Callback notifications on significant battery changes
+ * - Voltage and percentage reporting
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 4.3.0
+ * @date 2026-01-17
+ */
+
 #include "battery_monitor.h"
 
 #ifdef BATTERY_MONITOR_SUPPORT

@@ -4,7 +4,7 @@
  * 
  * Implements saving and loading of AP configuration using ESP32 NVS.
  * 
- * @version 1.0
+ * @version 4.2.0
  * @date 2025-10-25
  */
 

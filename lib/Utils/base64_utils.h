@@ -3,9 +3,11 @@
  * @brief Base64 encoding/decoding utilities for password storage
  * 
  * Provides base64 encoding and decoding for secure password storage in NVS.
+ * Prevents special characters in passwords from corrupting NVS storage.
  * 
- * @version 1.0
- * @date 2025-10-25
+ * @author Arunkumar Mourougappane
+ * @version 4.2.0
+ * @date 2026-01-17
  */
 
 #ifndef BASE64_UTILS_H

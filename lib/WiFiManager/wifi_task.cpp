@@ -1,3 +1,19 @@
+/**
+ * @file wifi_task.cpp
+ * @brief FreeRTOS WiFi command task implementation
+ * 
+ * This file implements the FreeRTOS task for WiFi mode switching:
+ * - Command queue processing for thread-safe WiFi control
+ * - Asynchronous mode switching (AP, Station, Idle)
+ * - AP configuration loading from NVS
+ * - Safe WiFi state transitions
+ * - Core 1 execution for optimal performance
+ * 
+ * @author Arunkumar Mourougappane
+ * @version 5.0.0
+ * @date 2026-01-17
+ */
+
 #include "wifi_task.h"
 #include "wifi_manager.h"
 #include "ap_config.h"
