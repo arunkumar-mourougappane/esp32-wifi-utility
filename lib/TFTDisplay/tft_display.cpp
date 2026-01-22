@@ -67,11 +67,24 @@ static TFTDisplayMode currentDisplayMode = TFT_MODE_OFF;
 // NTP and time tracking
 static bool ntpSynced = false;
 static int lastDisplayedDay = -1;
+static bool rtcInitialized = false;  // Track if RTC has valid time
+
+// QR Code cache structure (Phase 3 optimization)
+struct QRCodeCache {
+    char qrData[256];    // Store QR data string
+    uint16_t* buffer;    // Pre-rendered pixel buffer (100x100)
+    bool valid;          // Cache validity flag
+};
+
+// QR code caches (one for AP, one for Station)
+static QRCodeCache qrCacheAP = {.qrData = {0}, .buffer = nullptr, .valid = false};
+static QRCodeCache qrCacheStation = {.qrData = {0}, .buffer = nullptr, .valid = false};
 
 // Forward declarations for internal functions
-static void drawQRCode(const String& qrData, int offsetX, int offsetY);
+static void drawQRCode(const String& qrData, int offsetX, int offsetY, bool isAP = true);
 static void displayAPInfoInternal(const TFTAPInfo& apInfo);
 static void displayStationDetailsInternal(const TFTStationInfo& stationInfo);
+static void updateStationInfoPartial(const TFTStationInfo& stationInfo);
 static void displayAPInitializingScreen();
 static void displayWiFiStatusScreen(uint16_t iconColor, uint16_t textColor, const char* line1, const char* line2 = nullptr);
 static void displayStationConnectingScreen();
@@ -81,6 +94,7 @@ static void updateDateDisplay();
 static void updateClientsDisplay(uint8_t clients);
 static void updateBatteryDisplay(uint8_t percent);
 static void initializeNTP();
+static bool hasValidRTCTime();
 static void tftDisplayTask(void* parameter);
 static void onBatteryUpdate(uint8_t percentage, float voltage);
 
@@ -135,6 +149,24 @@ void initializeTFT() {
     if (result != pdPASS) {
         Serial.println("❌ Failed to create TFT display task");
         return;
+    }
+    
+    // Check if RTC has valid time from previous session
+    if (hasValidRTCTime()) {
+        rtcInitialized = true;
+        struct tm timeinfo;
+        if (getLocalTime(&timeinfo, 0)) {
+            Serial.printf("🕐 RTC has valid time: %04d-%02d-%02d %02d:%02d:%02d\n",
+                         timeinfo.tm_year + 1900,
+                         timeinfo.tm_mon + 1,
+                         timeinfo.tm_mday,
+                         timeinfo.tm_hour,
+                         timeinfo.tm_min,
+                         timeinfo.tm_sec);
+            Serial.println("💡 Time will be displayed even without WiFi (until power loss)");
+        }
+    } else {
+        Serial.println("⏰ RTC not initialized - time will sync when WiFi connects");
     }
     
     Serial.println("✅ TFT Display initialized with FreeRTOS task on Core 1");
@@ -271,6 +303,10 @@ void initializeTFTTime() {
     }
 }
 
+bool tftHasValidTime() {
+    return rtcInitialized && hasValidRTCTime();
+}
+
 // ==========================================
 // BATTERY MONITORING CALLBACK
 // ==========================================
@@ -355,10 +391,33 @@ static void updateBatteryDisplay(uint8_t percent) {
 }
 
 // ==========================================
-// QR CODE UTILITIES
+// QR CODE UTILITIES (PHASE 3 OPTIMIZED)
 // ==========================================
-static void drawQRCode(const String& qrData, int offsetX, int offsetY) {
+static void drawQRCode(const String& qrData, int offsetX, int offsetY, bool isAP = true) {
     if (!tft) return;
+    
+    // Select appropriate cache
+    QRCodeCache* cache = isAP ? &qrCacheAP : &qrCacheStation;
+    
+    // Check if we can use cached version
+    if (cache->valid && strcmp(cache->qrData, qrData.c_str()) == 0 && cache->buffer != nullptr) {
+        // Draw from cached buffer (single fast operation)
+        tft->drawRGBBitmap(offsetX, offsetY, cache->buffer, 100, 100);
+        return;
+    }
+    
+    // Cache miss - generate and cache the QR code
+    Serial.println("🔄 Generating QR code (cache miss)");
+    
+    // Allocate buffer if needed
+    if (cache->buffer == nullptr) {
+        cache->buffer = (uint16_t*)malloc(100 * 100 * sizeof(uint16_t));
+        if (cache->buffer == nullptr) {
+            Serial.println("⚠️  Failed to allocate QR cache buffer, using non-cached render");
+            cache->valid = false;
+            // Fall through to non-cached rendering
+        }
+    }
     
     // Create QR code (version 3 for WiFi credentials)
     QRCode qrcode;
@@ -366,26 +425,58 @@ static void drawQRCode(const String& qrData, int offsetX, int offsetY) {
     qrcode_initText(&qrcode, qrcodeData, 3, ECC_LOW, qrData.c_str());
     
     // Calculate module size to fit 100x100 pixel area
-    // QR code version 3 is 29x29 modules
-    // 100 / 29 = ~3.4, so use 3 pixels per module for 87x87, centered in 100x100
     int moduleSize = 3;
-    int qrSize = qrcode.size * moduleSize; // Should be ~87x87
-    
-    // Center the QR code in the 100x100 area
+    int qrSize = qrcode.size * moduleSize;
     int centerOffsetX = (100 - qrSize) / 2;
     int centerOffsetY = (100 - qrSize) / 2;
     
-    // Draw white background for entire 100x100 QR code area
-    tft->fillRect(offsetX, offsetY, 100, 100, ST77XX_WHITE);
-    
-    // Draw QR code modules centered in the white area
-    for (uint8_t y = 0; y < qrcode.size; y++) {
-        for (uint8_t x = 0; x < qrcode.size; x++) {
-            if (qrcode_getModule(&qrcode, x, y)) {
-                tft->fillRect(offsetX + centerOffsetX + (x * moduleSize), 
-                            offsetY + centerOffsetY + (y * moduleSize), 
-                            moduleSize, moduleSize, 
-                            ST77XX_BLACK);
+    if (cache->buffer != nullptr) {
+        // Pre-render to buffer
+        for (int y = 0; y < 100; y++) {
+            for (int x = 0; x < 100; x++) {
+                // Default to white background
+                uint16_t color = ST77XX_WHITE;
+                
+                // Check if this pixel is part of a QR module
+                int qrX = x - centerOffsetX;
+                int qrY = y - centerOffsetY;
+                
+                if (qrX >= 0 && qrX < qrSize && qrY >= 0 && qrY < qrSize) {
+                    int moduleX = qrX / moduleSize;
+                    int moduleY = qrY / moduleSize;
+                    
+                    if (moduleX < qrcode.size && moduleY < qrcode.size) {
+                        if (qrcode_getModule(&qrcode, moduleX, moduleY)) {
+                            color = ST77XX_BLACK;
+                        }
+                    }
+                }
+                
+                cache->buffer[y * 100 + x] = color;
+            }
+        }
+        
+        // Draw from buffer
+        tft->drawRGBBitmap(offsetX, offsetY, cache->buffer, 100, 100);
+        
+        // Update cache metadata
+        strncpy(cache->qrData, qrData.c_str(), sizeof(cache->qrData) - 1);
+        cache->qrData[sizeof(cache->qrData) - 1] = '\0';
+        cache->valid = true;
+        
+        Serial.println("✅ QR code cached");
+    } else {
+        // Fallback to non-cached rendering (original method)
+        tft->fillRect(offsetX, offsetY, 100, 100, ST77XX_WHITE);
+        
+        for (uint8_t y = 0; y < qrcode.size; y++) {
+            for (uint8_t x = 0; x < qrcode.size; x++) {
+                if (qrcode_getModule(&qrcode, x, y)) {
+                    tft->fillRect(offsetX + centerOffsetX + (x * moduleSize), 
+                                offsetY + centerOffsetY + (y * moduleSize), 
+                                moduleSize, moduleSize, 
+                                ST77XX_BLACK);
+                }
             }
         }
     }
@@ -627,18 +718,53 @@ static void displayAPInfoInternal(const TFTAPInfo& apInfo) {
     tft->print(String(apInfo.clients));
 }
 
-// Initialize NTP time synchronization
+// Initialize NTP time synchronization and save to RTC
 static void initializeNTP() {
     if (WiFi.status() == WL_CONNECTED && !ntpSynced) {
+        Serial.println("🕐 Syncing time from NTP...");
+        
+        // Configure NTP with timezone offset and DST
+        // Note: Adjust timezone as needed (-8 * 3600 = PST, 3600 = 1 hour DST)
         configTime(-8 * 3600, 3600, "pool.ntp.org", "time.nist.gov");
-        // Wait a bit for time to sync
+        
+        // Wait for time to sync from NTP
         delay(100);
         struct tm timeinfo;
         if (getLocalTime(&timeinfo, 2000)) {
             ntpSynced = true;
-            Serial.println("✅ NTP time synchronized");
+            rtcInitialized = true;
+            
+            Serial.printf("✅ NTP time synchronized: %04d-%02d-%02d %02d:%02d:%02d\n",
+                         timeinfo.tm_year + 1900,
+                         timeinfo.tm_mon + 1,
+                         timeinfo.tm_mday,
+                         timeinfo.tm_hour,
+                         timeinfo.tm_min,
+                         timeinfo.tm_sec);
+            
+            // Time is now stored in ESP32's built-in RTC
+            // It will persist while device is powered, even without WiFi
+            Serial.println("💾 Time saved to RTC (persists until power loss)");
+        } else {
+            Serial.println("⚠️  NTP sync failed, will retry");
         }
     }
+}
+
+// Check if RTC has valid time (not epoch/default time)
+static bool hasValidRTCTime() {
+    struct tm timeinfo;
+    if (!getLocalTime(&timeinfo, 0)) {
+        return false;
+    }
+    
+    // Check if time is reasonable (after year 2020)
+    // ESP32 RTC resets to epoch (1970) on power loss
+    if (timeinfo.tm_year + 1900 < 2020) {
+        return false;
+    }
+    
+    return true;
 }
 
 // Update only the date display (called when day changes)
@@ -671,11 +797,16 @@ static void updateDateDisplay() {
 static void updateTimeDisplay() {
     if (!tft) return;
     
-    // Get current time from RTC
+    // Get current time from RTC (works even without WiFi if previously synced)
     struct tm timeinfo;
     if (!getLocalTime(&timeinfo, 0)) {
-        // If time not available, try to sync NTP
-        initializeNTP();
+        // RTC has no valid time
+        if (!rtcInitialized) {
+            // Try to sync from NTP if WiFi is connected
+            initializeNTP();
+        }
+        
+        // Check again after potential NTP sync
         if (!getLocalTime(&timeinfo, 0)) {
             // Still no time, show placeholder
             tft->fillRect(152, 4, 48, 8, ST77XX_BLACK);
@@ -685,6 +816,12 @@ static void updateTimeDisplay() {
             tft->print("--:--:--");
             return;
         }
+    }
+    
+    // Mark RTC as initialized if we got valid time
+    if (!rtcInitialized && hasValidRTCTime()) {
+        rtcInitialized = true;
+        Serial.println("🕐 RTC has valid time (from previous sync or NTP)");
     }
     
     // Check if date changed and update if needed
@@ -801,7 +938,7 @@ static void displayStationDetailsInternal(const TFTStationInfo& stationInfo) {
     // QR Code for WiFi credentials (left side, starting at y=29)
     // Generate QR data for WiFi connection
     String qrData = "WIFI:T:WPA;S:" + String(stationInfo.ssid) + ";P:" + String(stationInfo.password) + ";;";
-    drawQRCode(qrData, 4, 29);
+    drawQRCode(qrData, 4, 29, false);  // false = Station mode cache
     
     // Right side information panel (starting at x=111)
     // IP: label and value
@@ -851,6 +988,65 @@ static void displayStationDetailsInternal(const TFTStationInfo& stationInfo) {
 }
 
 // ==========================================
+// PARTIAL STATION INFO UPDATE (PHASE 2)
+// ==========================================
+static void updateStationInfoPartial(const TFTStationInfo& stationInfo) {
+    if (!tft) return;
+    
+    static int8_t lastRSSI = 0;
+    static char lastIP[16] = {0};
+    
+    // Define colors (RGB565)
+    uint16_t COLOR_CYAN = 0x5FA;
+    uint16_t COLOR_WHITE = 0xFFFF;
+    uint16_t COLOR_YELLOW = 0xFFE0;
+    uint16_t COLOR_RED = 0xF800;
+    
+    tft->setTextWrap(false);
+    tft->setTextSize(1);
+    
+    // Update time display (already optimized)
+    updateTimeDisplay();
+    
+    // Update IP only if changed
+    if (strcmp(lastIP, stationInfo.ip) != 0) {
+        // Clear IP value area (15 chars max = ~90 pixels)
+        tft->fillRect(141, 33, 90, 8, ST77XX_BLACK);
+        
+        tft->setTextColor(COLOR_WHITE);
+        tft->setCursor(141, 33);
+        tft->print(stationInfo.ip);
+        
+        strncpy(lastIP, stationInfo.ip, sizeof(lastIP) - 1);
+    }
+    
+    // Update RSSI only if changed significantly (>5 dBm to avoid flicker)
+    if (abs(stationInfo.rssi - lastRSSI) >= 5) {
+        // Clear RSSI area (10 chars = ~60 pixels)
+        tft->fillRect(153, 49, 90, 8, ST77XX_BLACK);
+        
+        // Color based on signal strength
+        int8_t rssi = stationInfo.rssi;
+        if (rssi >= -60) {
+            tft->setTextColor(0x07E0);  // Bright green
+        } else if (rssi >= -70) {
+            tft->setTextColor(COLOR_YELLOW);
+        } else {
+            tft->setTextColor(COLOR_RED);
+        }
+        
+        tft->setCursor(153, 49);
+        tft->print(String(rssi));
+        tft->setTextColor(COLOR_WHITE);
+        tft->print(" dBm");
+        
+        lastRSSI = rssi;
+    }
+    
+    // Note: QR code, SSID, Gateway, BSSID remain static - no redraw needed
+}
+
+// ==========================================
 // FREERTOS DISPLAY TASK
 // ==========================================
 static void tftDisplayTask(void* parameter) {
@@ -858,9 +1054,11 @@ static void tftDisplayTask(void* parameter) {
     TickType_t lastTimeUpdate = 0;
     TickType_t lastClientsCheck = 0;
     TickType_t lastStationUpdate = 0;
+    TickType_t lastNTPCheck = 0;
     const TickType_t TIME_UPDATE_INTERVAL = pdMS_TO_TICKS(1000);      // 1 second
     const TickType_t CLIENTS_CHECK_INTERVAL = pdMS_TO_TICKS(1000);    // 1 second
-    const TickType_t STATION_UPDATE_INTERVAL = pdMS_TO_TICKS(10000);  // 10 seconds
+    const TickType_t STATION_UPDATE_INTERVAL = pdMS_TO_TICKS(30000);  // 30 seconds (Phase 1 optimization)
+    const TickType_t NTP_CHECK_INTERVAL = pdMS_TO_TICKS(60000);       // 60 seconds - check if we should sync NTP
     
     TFTAPInfo lastAPInfo = {};
     TFTStationInfo lastStationInfo = {};
@@ -869,8 +1067,8 @@ static void tftDisplayTask(void* parameter) {
     Serial.println("🎯 TFT Display task started on Core 1");
     
     while (true) {
-        // Wait for messages with timeout for periodic updates
-        if (xQueueReceive(tftQueue, &msg, pdMS_TO_TICKS(100)) == pdTRUE) {
+        // Wait for messages with timeout aligned to fastest update interval (Phase 1 optimization)
+        if (xQueueReceive(tftQueue, &msg, TIME_UPDATE_INTERVAL) == pdTRUE) {
             // Process new message
             switch (msg.mode) {
                 case TFT_MODE_OFF:
@@ -902,7 +1100,7 @@ static void tftDisplayTask(void* parameter) {
                         int offsetY = 29;     // Below SSID line
                         
                         // Draw QR code at the placeholder location
-                        drawQRCode(qrData, offsetX, offsetY);
+                        drawQRCode(qrData, offsetX, offsetY, true);  // true = AP mode cache
                     }
                     
                     // Save for periodic updates
@@ -1013,15 +1211,24 @@ static void tftDisplayTask(void* parameter) {
                     // Device disconnected - show status message
                     displayStatus("WiFi Disconnected", false);
                 } else {
-                    // Still connected - refresh display
-                    displayStationDetailsInternal(lastStationInfo);
+                    // Still connected - use partial update (Phase 2 optimization)
+                    updateStationInfoPartial(lastStationInfo);
                 }
                 lastStationUpdate = currentTick;
             }
         }
         
-        // Small yield to prevent task starvation
-        vTaskDelay(pdMS_TO_TICKS(10));
+        // Periodic NTP sync check (every 60 seconds)
+        // Try to sync time if RTC not initialized and WiFi is connected
+        if ((currentTick - lastNTPCheck) >= NTP_CHECK_INTERVAL) {
+            if (!rtcInitialized && WiFi.status() == WL_CONNECTED) {
+                Serial.println("⏰ RTC not initialized, attempting NTP sync...");
+                initializeNTP();
+            }
+            lastNTPCheck = currentTick;
+        }
+        
+        // No vTaskDelay needed - queue timeout provides blocking (Phase 1 optimization)
     }
 }
 

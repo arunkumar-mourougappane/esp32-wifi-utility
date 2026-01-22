@@ -202,10 +202,17 @@ void tftBacklightOff();
 void tftBacklightOn();
 
 /**
- * @brief Initialize NTP time synchronization
+ * @brief Initialize NTP time synchronization and save to RTC
  * @note Called automatically when WiFi connects, but can be called manually
+ * @note Time persists in RTC until power loss, works even without WiFi after sync
  */
 void initializeTFTTime();
+
+/**
+ * @brief Check if RTC has valid time (not default/epoch time)
+ * @return true if RTC has been initialized with valid time, false otherwise
+ */
+bool tftHasValidTime();
 
 /**
  * @brief Display welcome screen with ESP32 logo and WiFi Utility text
