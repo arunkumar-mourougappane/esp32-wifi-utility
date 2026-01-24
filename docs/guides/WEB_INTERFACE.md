@@ -15,6 +15,15 @@ device features through an intuitive, mobile-responsive interface with interacti
 - Same feature set across both platforms
 - Automatic board detection and configuration
 
+### Mobile Navigation Enhancements
+- **Animated Hamburger Menu**: Smooth toggle animation transforming into an X when opened
+  - First bar rotates 45° and translates down
+  - Middle bar fades out for clean appearance
+  - Third bar rotates -45° and translates up
+- **Current Page Indicator**: Mobile navigation displays current page name next to hamburger icon
+- **Full-Width Navigation Bar**: Navigation spans full width while content stays centered (max-width: 1200px)
+- **Professional CSS Animations**: All menu transitions use smooth 0.3s animations
+
 ### Clickable Network Details
 - **Click any network** in scan results to view comprehensive information
 - **8-level signal quality assessment** from "Excellent (Very Close)" to "Extremely Weak"
@@ -79,19 +88,34 @@ ESP32> webserver stop
 The web interface features a **hierarchical dropdown menu** for organized access to all features:
 
 ```
-🏠 Home | 📊 Status | 🔍 Scan Networks | 🔬 Analysis ▼
+🏠 Home | 📊 Status | ⚙️ Config | 🔬 Analysis ▼
                                             └─ 📊 Dashboard
+                                            └─ 🔍 Network Scan
+                                            └─ 📶 Signal
+                                            └─ 🔒 Port Scanner
                                             └─ ⚡ iPerf
                                             └─ 📉 Latency
                                             └─ 📡 Channel
 ```
 
-**Navigation Features:**
+**Desktop Navigation Features:**
 
 - **Hover Menus**: Desktop users hover over "Analysis" to see testing tools
-- **Mobile-Responsive**: Touch-friendly dropdown activation on mobile devices
+- **Centered Layout**: Navigation content centered with max-width of 1200px
 - **Active Indicators**: Current page highlighted in navigation
 - **Consistent Layout**: Same navigation on every page for easy access
+
+**Mobile Navigation Features:**
+
+- **Animated Hamburger Menu** (three horizontal lines):
+  - Smooth toggle animation with 0.3s transitions
+  - Transforms into an X shape when menu is open
+  - Located on the right side of the navigation bar
+- **Current Page Display**: Page title (e.g., "🏠 Home", "📊 Status") shown next to hamburger icon
+- **Touch-Friendly**: Large tap targets for easy mobile interaction
+- **Dropdown Behavior**: Analysis submenu expands accordion-style with indented items
+- **Overlay Prevention**: Proper z-index stacking ensures menu appears above all content
+- **Full-Width Bar**: Navigation spans entire screen width on mobile devices
 
 ### Progress Indicators
 

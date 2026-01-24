@@ -16,11 +16,13 @@ The ESP32 WiFi Utility web interface features a fully responsive navigation menu
 
 ### Mobile (≤ 768px)
 
-- **Hamburger Menu**: 3-line icon in top-right corner
-- **Collapsible Menu**: Menu hidden by default, toggles on tap
+- **Hamburger Menu**: 3-line icon in top-right corner with animated X toggle
+- **Current Page Display**: Page title shown next to hamburger for orientation
+- **Collapsible Menu**: Menu hidden by default, toggles on tap with smooth animation
 - **Vertical Stack**: All items stacked vertically when open
 - **Tap Dropdowns**: Analysis submenu expands on tap
-- **Full-Width Items**: Each menu item spans full width
+- **Full-Width Navigation Bar**: Navigation spans full screen width
+- **Centered Content**: Page content centered with max-width of 1200px
 - **Touch-Friendly**: Larger tap targets for fingers
 
 ### Tablet Landscape (769px - 1024px)
@@ -43,17 +45,78 @@ The ESP32 WiFi Utility web interface features a fully responsive navigation menu
 
 **Visual Design:**
 
-- 3 horizontal lines (bars)
-- White color on purple background
+- 3 horizontal lines (bars), each 25px wide × 3px tall with 5px spacing
+- Dark gray color (#212529) on light background
 - Animated transformation to X when active
-- Position: Top-right corner of navigation area
+- Position: Absolute right (1rem from edge)
+- Padding: 0.5rem with light background (#f8f9fa)
+- Border radius: 0.25rem for rounded corners
 
-**Animation:**
+**Animation Details:**
 
-- Top bar rotates 45° and moves down
-- Middle bar fades out
-- Bottom bar rotates -45° and moves up
-- Smooth 0.3s transition
+- **First Bar**: `transform: rotate(45deg) translate(5px, 5px)`
+- **Middle Bar**: `opacity: 0` (fades out)
+- **Third Bar**: `transform: rotate(-45deg) translate(7px, -6px)`
+- **Transition**: All transforms use smooth 0.3s ease transitions
+- **Active Class**: `.hamburger.active` triggers the X transformation
+
+**CSS Implementation:**
+
+```css
+.hamburger.active span:nth-child(1) { 
+    transform: rotate(45deg) translate(5px, 5px); 
+}
+.hamburger.active span:nth-child(2) { 
+    opacity: 0; 
+}
+.hamburger.active span:nth-child(3) { 
+    transform: rotate(-45deg) translate(7px, -6px); 
+}
+```
+
+### Page Title Display
+
+**Purpose:** Shows users which page they're currently viewing in mobile navigation
+
+**Visual Design:**
+
+- **Position**: Between content and hamburger icon in navigation bar
+- **Typography**: 1.125rem font size, font-weight 500
+- **Color**: Dark gray (#212529) for good readability
+- **Layout**: Flex: 1 with center text alignment
+- **Padding**: 0 1rem for proper spacing
+
+**Display Behavior:**
+
+- **Desktop (> 768px)**: Hidden (display: none)
+- **Mobile (≤ 768px)**: Visible (display: block)
+- **Dynamic Content**: Updated per page (e.g., "🏠 Home", "📊 Status", "⚙️ Config")
+
+**Page Titles:**
+
+| Page              | Title Display         |
+| ----------------- | --------------------- |
+| Home              | 🏠 Home              |
+| Status            | 📊 Status            |
+| Config            | ⚙️ Config            |
+| Network Scan      | 🔍 Network Scan      |
+| Network Details   | 🔍 Network Details   |
+| Analysis Dashboard| 🔬 Analysis          |
+| Channel           | 📡 Channel           |
+| Signal Monitor    | 📶 Signal            |
+| iPerf             | ⚡ iPerf             |
+| Latency           | 📉 Latency           |
+| Port Scanner      | 🔒 Port Scanner      |
+
+**Implementation:**
+
+```javascript
+// JavaScript sets title dynamically on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const t = document.getElementById('pageTitle');
+    if(t) t.textContent = '🏠 Home'; // Example for home page
+});
+```
 
 ### Menu Toggle Behavior
 
@@ -128,22 +191,57 @@ The ESP32 WiFi Utility web interface features a fully responsive navigation menu
 Navigation Bar
 ├── 🏠 Home
 ├── 📊 Status
-├── 🔍 Scan
 ├── ⚙️ Config
 └── 🔬 Analysis (Dropdown)
     ├── 📊 Dashboard
+    ├── 🔍 Network Scan
+    ├── 📶 Signal
+    ├── 🔒 Port Scanner
     ├── ⚡ iPerf
     ├── 📉 Latency
     └── 📡 Channel
+```
+
+## Mobile Navigation Layout
+
+```
++------------------------------------------+
+| [Page Title]               [☰/×]       |
++------------------------------------------+
+| (Menu items shown when hamburger active) |
++------------------------------------------+
+```
+
+**Example (Home Page):**
+
+```
++------------------------------------------+
+| 🏠 Home                         [☰]       |
++------------------------------------------+
+```
+
+**Example (Menu Open):**
+
+```
++------------------------------------------+
+| 🏠 Home                         [×]       |
++------------------------------------------+
+| 🏠 Home                                  |
+| 📊 Status                                |
+| ⚙️ Config                                |
+| 🔬 Analysis ▾                          |
++------------------------------------------+
 ```
 
 ## CSS Classes Reference
 
 ### Main Navigation
 
-- `.nav` - Navigation container
-- `.nav-items` - Items wrapper (responsive)
-- `.hamburger` - Mobile menu toggle button
+- `.nav` - Navigation container (full-width, z-index: 1000)
+- `.nav-container` - Inner container for centered content (max-width: 1200px)
+- `.nav-items` - Items wrapper (responsive, z-index: 1020 on mobile)
+- `.hamburger` - Mobile menu toggle button (z-index: 1030)
+- `.page-title` - Current page indicator (mobile only, flex: 1)
 
 ### Menu Items
 

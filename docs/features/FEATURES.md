@@ -163,16 +163,21 @@ Professional browser-based control interface (available on both ESP32dev and Fea
 
 - **Browser-Based Control**: Access device features via any web browser
 - **Mobile-Responsive Design**: Beautiful interface optimized for phones, tablets, and desktops
+- **Animated Hamburger Menu**: Smooth toggle animation transforming into an X when opened
+- **Current Page Indicator**: Mobile navigation displays current page name for better orientation
+- **Full-Width Navigation**: Navigation spans full width while content stays centered (max-width: 1200px)
 - **Hierarchical Navigation**: Professional dropdown menu system for organized access
 - **Progress Indicators**: Visual feedback with backdrop overlay during scan operations
 - **Real-Time Monitoring**: Live system status, WiFi statistics, and client information
 - **Network Visualization**: Interactive WiFi scanning with clickable network details
+- **Professional CSS Animations**: All menu transitions use smooth 0.3s animations
 
 ### Professional Dashboard Pages
 
 - 🏠 **Home** - Quick stats and system overview with unified metrics
 - 📊 **Status** - Detailed system information and configuration with modern grid layout
-- 🔍 **Scan Networks** - Interactive WiFi scanning with clickable network details
+- ⚙️ **Config** - Web-based configuration for AP and Station modes
+- 🔍 **Network Scan** - Interactive WiFi scanning with clickable network details
   - Click any network to view comprehensive information
   - Signal quality assessment with 8-level scale
   - Channel congestion analysis and recommendations
@@ -191,7 +196,8 @@ Professional browser-based control interface (available on both ESP32dev and Fea
 - Full-screen progress overlays with animated spinners
 - Smart status badges for connection state and mode
 - Responsive grid layouts and card-based design
-- Hamburger menu for mobile devices
+- Animated hamburger menu for mobile devices with X toggle effect
+- Current page title display in mobile navigation bar
 - Zero Configuration: Automatic IP detection and URL generation
 - Multi-Mode Support: Works in both AP mode and Station mode
 
