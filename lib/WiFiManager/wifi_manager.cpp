@@ -1118,9 +1118,17 @@ void handleWiFiConnection() {
     LOG_DEBUG(TAG_WIFI, "DNS: %s", WiFi.dnsIP().toString().c_str());
     
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
+    // Get encryption type for display
+    wifi_ap_record_t ap_info;
+    uint8_t encType = 0;  // Default to WIFI_AUTH_OPEN
+    if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK) {
+        encType = (uint8_t)ap_info.authmode;
+        LOG_DEBUG(TAG_WIFI, "Encryption type for TFT display: %s", authModeToString(ap_info.authmode));
+    }
+    
     // Send station mode info to TFT display task via queue (with password for QR code)
     sendTFTStationUpdate(connectingSSID.c_str(), connectingPassword.c_str(), 
-                        WiFi.localIP().toString().c_str(), WiFi.RSSI());
+                        WiFi.localIP().toString().c_str(), WiFi.RSSI(), encType);
 #endif
     
 #ifdef USE_NEOPIXEL

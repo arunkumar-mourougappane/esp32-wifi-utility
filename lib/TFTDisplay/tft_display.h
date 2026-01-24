@@ -91,6 +91,7 @@ struct TFTStationInfo {
     char password[64];   // WiFi password (for QR code generation)
     char ip[16];         // Assigned IP address
     int8_t rssi;         // Signal strength in dBm
+    uint8_t encryptionType; // WiFi encryption type (wifi_auth_mode_t)
 };
 
 // Status message structure (for queue)
@@ -138,9 +139,10 @@ bool sendTFTAPUpdate(const char* ssid, const char* password, const char* ip, uin
  * @param password WiFi network password (for QR code)
  * @param ip IP address string
  * @param rssi Signal strength in dBm
+ * @param encryptionType WiFi encryption type (wifi_auth_mode_t)
  * @return true if message was sent successfully, false if queue is full
  */
-bool sendTFTStationUpdate(const char* ssid, const char* password, const char* ip, int8_t rssi);
+bool sendTFTStationUpdate(const char* ssid, const char* password, const char* ip, int8_t rssi, uint8_t encryptionType);
 
 /**
  * @brief Show connecting animation screen on TFT
