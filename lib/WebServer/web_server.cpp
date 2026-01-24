@@ -187,12 +187,20 @@ a:hover { color: #0a58ca; text-decoration: underline; }
     max-width: 1200px;
     margin: 0 auto;
     background: var(--bs-white);
-    padding: 2rem;
+    padding: 0;
     border-radius: 0.5rem;
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    position: relative;
 }
 
-.header { text-align: center; margin-bottom: 2rem; }
+.content-wrapper {
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+.header { text-align: center; margin-bottom: 2rem; padding: 1rem 2rem 0 2rem; position: relative; z-index: 1; }
 
 /* Buttons */
 .btn, button, .submit-btn {
@@ -327,6 +335,8 @@ a:hover { color: #0a58ca; text-decoration: underline; }
     color: #fff;
     border: none;
     padding: 1.5rem;
+    position: relative;
+    z-index: 1;
 }
 .config-section { padding: 1.5rem; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); border: none; }
 
@@ -380,14 +390,35 @@ a:hover { color: #0a58ca; text-decoration: underline; }
 .network-item:hover { z-index: 2; color: #495057; text-decoration: none; background-color: #f8f9fa; }
 
 /* Nav */
-.nav { display: flex; flex-wrap: wrap; padding-left: 0; margin-bottom: 0; list-style: none; justify-content: center; gap: 0.5rem; margin-bottom: 2rem; position: relative; }
-.nav a { display: block; padding: 0.5rem 1rem; border-radius: 0.25rem; }
+.nav { 
+    width: 100%; 
+    background: var(--bs-white); 
+    padding: 1rem 0; 
+    margin: 0;
+    position: relative;
+    border-bottom: 1px solid #dee2e6;
+    z-index: 1000;
+}
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+.nav a { display: block; padding: 0.5rem 1rem; border-radius: 0.25rem; white-space: nowrap; }
 .nav-items { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; align-items: center; }
-.hamburger { display: none; cursor: pointer; padding: 0.5rem; border: 1px solid transparent; border-radius: 0.25rem; }
+.hamburger { display: none; cursor: pointer; padding: 0.5rem; background: var(--bs-light); border-radius: 0.25rem; position: absolute; right: 1rem; z-index: 1030; }
 .hamburger span { display: block; width: 25px; height: 3px; background-color: #212529; margin: 5px 0; transition: all 0.3s; }
+.hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+.hamburger.active span:nth-child(2) { opacity: 0; }
+.hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(7px, -6px); }
+.page-title { display: none; font-size: 1.125rem; font-weight: 500; color: #212529; }
 
 .dropdown { position: relative; display: inline-block; }
-.dropdown-content { display: none; position: absolute; background-color: var(--bs-primary); min-width: 200px; box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15); z-index: 1000; border-radius: 0.25rem; margin-top: 0; left: 0; transform: none; }
+.dropdown-content { display: none; position: absolute; background-color: var(--bs-primary); min-width: 200px; box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15); z-index: 1100; border-radius: 0.25rem; margin-top: 0; left: 0; transform: none; }
 .dropdown-content a { color: #fff; padding: 0.5rem 1rem; text-decoration: none; display: block; border-radius: 0; margin: 0; }
 .dropdown-content a:hover { background-color: rgba(255,255,255,0.1); }
 .dropdown:hover .dropdown-content { display: block; }
@@ -443,19 +474,37 @@ a:hover { color: #0a58ca; text-decoration: underline; }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .container { padding: 1rem; width: 100%; max-width: 100%; }
+    .container { width: 100%; max-width: 100%; border-radius: 0; }
+    .content-wrapper { padding: 1rem; }
     .form-row > .form-group { width: 100%; }
-    .nav { flex-direction: column; }
-    .nav a { width: 100%; text-align: center; }
+    .nav { padding: 0.75rem 0; }
+    .nav-container { padding: 0 0.5rem; }
     .network-item { flex-direction: column; align-items: flex-start; }
     .signal-strength { margin-top: 0.5rem; align-self: flex-end; }
     
-    .hamburger { display: block; position: absolute; right: 20px; top: 20px; z-index: 1030; }
-    .nav-items { display: none; }
+    .hamburger { display: block; z-index: 1030; }
+    .page-title { display: block; flex: 1; text-align: center; padding: 0 1rem; }
+    .nav-items { 
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--bs-white);
+        border-bottom: 1px solid #dee2e6;
+        flex-direction: column;
+        padding: 0.5rem 0;
+        box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
+        z-index: 1020;
+    }
     .nav-items.active { display: flex; }
-    .nav a, .dropdown { width: 100%; text-align: center; }
-    .dropdown-content { position: static; transform: none; width: 100%; box-shadow: none; margin-top: 0; display: none; }
+    .nav-items > div { width: 100%; }
+    .nav a { width: 100%; text-align: center; padding: 0.75rem 1rem; }
+    .dropdown { width: 100%; }
+    .dropdown-content { position: static; transform: none; width: 100%; box-shadow: none; margin-top: 0; display: none; border-radius: 0; }
     .dropdown.active .dropdown-content { display: block; }
+    .dropdown-content a { padding-left: 2rem; }
+    .stat-grid { grid-template-columns: 1fr; }
 }
 
 /* Animations */
@@ -486,15 +535,21 @@ String generateHtmlFooter() {
     footer += getVersionString();
     footer += F(" | ");
     footer += getDeviceName();
-    footer += F("</p></div></div></body></html>");
+    footer += F("</p></div></div></div></body></html>");
     return footer;
 }
 
 // Generate common navigation menu - stored in PROGMEM
-const char NAV_MENU[] PROGMEM = "<div class=\"nav\"><div class=\"hamburger\" onclick=\"toggleMenu()\"><span></span><span></span><span></span></div><div class=\"nav-items\"><div><a href=\"/\">🏠 Home</a></div><div><a href=\"/status\">📊 Status</a></div><div><a href=\"/scan\">🔍 Scan</a></div><div><a href=\"/config\">⚙️ Config</a></div><div class=\"dropdown\"><a href=\"/analysis\">🔬 Analysis</a><div class=\"dropdown-content\"><a href=\"/analysis\">📊 Dashboard</a><a href=\"/signal\">📶 Signal</a><a href=\"/portscan\">🔒 Port Scanner</a><a href=\"/iperf\">⚡ iPerf</a><a href=\"/latency\">📉 Latency</a><a href=\"/channel\">📡 Channel</a></div></div></div></div>";
+const char NAV_MENU_START[] PROGMEM = "<div class=\"nav\"><div class=\"nav-container\"><div class=\"hamburger\" onclick=\"toggleMenu()\"><span></span><span></span><span></span></div><div class=\"page-title\" id=\"pageTitle\"></div><div class=\"nav-items\"><div><a href=\"/\">🏠 Home</a></div><div><a href=\"/status\">📊 Status</a></div><div><a href=\"/config\">⚙️ Config</a></div><div class=\"dropdown\"><a href=\"/analysis\">🔬 Analysis ▾</a><div class=\"dropdown-content\"><a href=\"/analysis\">📊 Dashboard</a><a href=\"/scan\">🔍 Network Scan</a><a href=\"/signal\">📶 Signal</a><a href=\"/portscan\">🔒 Port Scanner</a><a href=\"/iperf\">⚡ iPerf</a><a href=\"/latency\">📉 Latency</a><a href=\"/channel\">📡 Channel</a></div></div></div></div></div>";
 
-String generateNav() {
-    return FPSTR(NAV_MENU);
+String generateNav(const String& pageTitle = "") {
+    String nav = FPSTR(NAV_MENU_START);
+    if (pageTitle.length() > 0) {
+        nav += F("<script>document.addEventListener('DOMContentLoaded',function(){const t=document.getElementById('pageTitle');if(t)t.textContent='");
+        nav += pageTitle;
+        nav += F("'})</script>");
+    }
+    return nav;
 }
 
 // ==========================================
@@ -693,15 +748,19 @@ String getWebServerURL() {
 
 void handleRoot() {
     String html;
-    html.reserve(4096);  // Pre-allocate to reduce heap fragmentation
+    html.reserve(8192);  // Increased allocation for enhanced content
     html = FPSTR(HTML_HEADER);  // Read from PROGMEM
     
-    html += F("<div class=\"header\"><h1>ESP32 WiFi</h1><p>Network Analysis & Testing</p><div><span class=\"badge info\">");
+    // Header with device info and status badges
+    html += F("<div class=\"header\"><h1>🛜 ESP32 WiFi Utility</h1><p>Advanced Network Analysis & Testing Platform</p><div><span class=\"badge info\">");
     html += getDeviceName();
+    html += F(" </span><span class=\"badge\" style=\"background:var(--bs-purple)\">");
+    html += F("v");
+    html += getVersionString();
     html += F("</span>");
     
     if (currentMode == MODE_AP) {
-        html += F("<span class=\"badge success\">Access Point Mode</span>");
+        html += F("<span class=\"badge success\">Access Point Active</span>");
     } else if (WiFi.status() == WL_CONNECTED) {
         html += F("<span class=\"badge success\">Connected</span>");
     } else {
@@ -709,18 +768,24 @@ void handleRoot() {
     }
     
     html += F("</div></div>");
-    html += generateNav();
-    html += F("<h2>📊 Stats</h2><div class=\"stat-grid\"><div class=\"stat-card\"><div class=\"stat-label\">📡 Mode</div><div class=\"stat-value\">");
+    html += generateNav("🏠 Home");
+    html += F("<div class=\"content-wrapper\">");
     
+    // Quick Stats Grid
+    html += F("<h2>📊 System Status</h2><div class=\"stat-grid\">");
+    
+    // WiFi Mode Card
+    html += F("<div class=\"stat-card\"><div class=\"stat-label\">📡 WiFi Mode</div><div class=\"stat-value\">");
     switch (currentMode) {
         case MODE_IDLE: html += F("IDLE"); break;
         case MODE_STATION: html += F("STATION"); break;
         case MODE_AP: html += F("AP"); break;
         case MODE_OFF: html += F("OFF"); break;
     }
+    html += F("</div></div>");
     
-    html += F("</div></div><div class=\"stat-card\"><div class=\"stat-label\">🌐 IP Address</div><div class=\"stat-value\" style=\"font-size:1.2em\">");
-    
+    // IP Address Card
+    html += F("<div class=\"stat-card\"><div class=\"stat-label\">🌐 IP Address</div><div class=\"stat-value\" style=\"font-size:1.2em\">");
     if (currentMode == MODE_AP) {
         html += WiFi.softAPIP().toString();
     } else if (WiFi.status() == WL_CONNECTED) {
@@ -728,30 +793,147 @@ void handleRoot() {
     } else {
         html += F("N/A");
     }
+    html += F("</div></div>");
     
-    html += F("</div></div><div class=\"stat-card\"><div class=\"stat-label\">🧠 Free Heap</div><div class=\"stat-value\">");
-    html += ESP.getFreeHeap() / 1024;
-    html += F(" KB</div></div><div class=\"stat-card\"><div class=\"stat-label\">👥 Clients</div><div class=\"stat-value\">");
+    // Connection Info Card
+    html += F("<div class=\"stat-card\"><div class=\"stat-label\">");
+    if (currentMode == MODE_AP) {
+        html += F("📱 Network Name");
+    } else if (WiFi.status() == WL_CONNECTED) {
+        html += F("📶 Connected To");
+    } else {
+        html += F("🔌 Network");
+    }
+    html += F("</div><div class=\"stat-value\" style=\"font-size:1em\">");
+    if (currentMode == MODE_AP) {
+        html += currentAPSSID;
+    } else if (WiFi.status() == WL_CONNECTED) {
+        html += WiFi.SSID();
+    } else {
+        html += F("Not Connected");
+    }
+    html += F("</div></div>");
     
+    // Clients/Signal Card
+    html += F("<div class=\"stat-card\"><div class=\"stat-label\">");
+    if (currentMode == MODE_AP) {
+        html += F("👥 Connected Clients");
+    } else if (WiFi.status() == WL_CONNECTED) {
+        html += F("📡 Signal Strength");
+    } else {
+        html += F("📊 Status");
+    }
+    html += F("</div><div class=\"stat-value\">");
     if (currentMode == MODE_AP) {
         html += WiFi.softAPgetStationNum();
+    } else if (WiFi.status() == WL_CONNECTED) {
+        int rssi = WiFi.RSSI();
+        html += String(rssi) + " dBm";
+    } else {
+        html += F("Idle");
+    }
+    html += F("</div></div>");
+    
+    // Memory Card
+    html += F("<div class=\"stat-card\"><div class=\"stat-label\">🧠 Free Memory</div><div class=\"stat-value\">");
+    html += String(ESP.getFreeHeap() / 1024) + " KB";
+    html += F("</div></div>");
+    
+    // CPU Frequency Card
+    html += F("<div class=\"stat-card\"><div class=\"stat-label\">⚡ CPU Speed</div><div class=\"stat-value\">");
+    html += String(ESP.getCpuFreqMHz()) + " MHz";
+    html += F("</div></div>");
+    
+    // Uptime Card
+    html += F("<div class=\"stat-card\"><div class=\"stat-label\">⏱️ Uptime</div><div class=\"stat-value\">");
+    uint32_t uptimeSeconds = millis() / 1000;
+    uint32_t days = uptimeSeconds / 86400;
+    uint32_t hours = (uptimeSeconds % 86400) / 3600;
+    uint32_t minutes = (uptimeSeconds % 3600) / 60;
+    if (days > 0) {
+        html += String(days) + "d " + String(hours) + "h";
+    } else if (hours > 0) {
+        html += String(hours) + "h " + String(minutes) + "m";
+    } else {
+        html += String(minutes) + "m";
+    }
+    html += F("</div></div>");
+    
+    // Channel Card (if applicable)
+    html += F("<div class=\"stat-card\"><div class=\"stat-label\">📻 WiFi Channel</div><div class=\"stat-value\">");
+    if (currentMode == MODE_AP) {
+        uint8_t primaryChan, secondChan;
+        wifi_second_chan_t secondType;
+        esp_wifi_get_channel(&primaryChan, &secondType);
+        html += String(primaryChan);
+    } else if (WiFi.status() == WL_CONNECTED) {
+        html += String(WiFi.channel());
     } else {
         html += F("N/A");
     }
+    html += F("</div></div>");
     
-    html += F("</div></div></div>");
+    html += F("</div>");  // End stat-grid
     
     // QR Code for AP mode
     if (currentMode == MODE_AP) {
-        html += F("<h2>📱 Connect</h2><div style=\"background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:30px;border-radius:10px;text-align:center;color:#fff\"><p style=\"font-size:1.3em;margin-bottom:20px;font-weight:bold\">📷 Scan QR Code</p><div style=\"display:inline-block;background:#fff;padding:15px;border-radius:10px\">");
+        html += F("<div class=\"card\" style=\"margin-top:20px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;border:none;padding:30px;text-align:center\">");
+        html += F("<h2 style=\"color:#fff;border-bottom:1px solid rgba(255,255,255,0.2);padding-bottom:15px;margin-top:0\">📱 Quick Connect</h2>");
+        html += F("<p style=\"font-size:1.2em;margin-bottom:20px\">📷 Scan QR Code to Connect Instantly</p>");
+        html += F("<div style=\"display:inline-block;background:#fff;padding:15px;border-radius:10px;box-shadow:0 10px 25px rgba(0,0,0,0.2)\">");
         html += F("<div style='width:250px;height:250px'>");
         html += generateQRCodeSVG(currentAPSSID, currentAPPassword, "WPA");
-        html += F("</div></div><div style=\"margin-top:20px\"><p><strong>Network:</strong> ");
+        html += F("</div></div>");
+        html += F("<div style=\"margin-top:20px;background:rgba(255,255,255,0.1);padding:15px;border-radius:8px;display:inline-block\">");
+        html += F("<p style=\"margin:5px 0\"><strong>SSID:</strong> ");
         html += currentAPSSID;
+        html += F("</p><p style=\"margin:5px 0\"><strong>IP:</strong> ");
+        html += WiFi.softAPIP().toString();
+        html += F("</p><p style=\"margin:5px 0\"><strong>Clients:</strong> ");
+        html += String(WiFi.softAPgetStationNum());
         html += F("</p></div></div>");
+    } else if (WiFi.status() == WL_CONNECTED) {
+        // Connected network details
+        html += F("<div class=\"card\" style=\"margin-top:20px\"><h2 style=\"margin-top:0;border-bottom:2px solid #f8f9fa;padding-bottom:10px\">🌐 Network Details</h2>");
+        html += F("<ul class=\"network-list\">");
+        html += F("<li class=\"network-item\"><span class=\"network-name\">Connected To</span><span>");
+        html += WiFi.SSID();
+        html += F("</span></li>");
+        html += F("<li class=\"network-item\"><span class=\"network-name\">IP Address</span><span>");
+        html += WiFi.localIP().toString();
+        html += F("</span></li>");
+        html += F("<li class=\"network-item\"><span class=\"network-name\">Gateway</span><span>");
+        html += WiFi.gatewayIP().toString();
+        html += F("</span></li>");
+        html += F("<li class=\"network-item\"><span class=\"network-name\">Subnet Mask</span><span>");
+        html += WiFi.subnetMask().toString();
+        html += F("</span></li>");
+        html += F("<li class=\"network-item\"><span class=\"network-name\">MAC Address</span><span>");
+        html += WiFi.macAddress();
+        html += F("</span></li>");
+        html += F("<li class=\"network-item\"><span class=\"network-name\">Signal Strength</span><span>");
+        int rssi = WiFi.RSSI();
+        html += String(rssi) + " dBm";
+        if (rssi >= -50) {
+            html += F(" <span class=\"badge success\">Excellent</span>");
+        } else if (rssi >= -60) {
+            html += F(" <span class=\"badge info\">Good</span>");
+        } else if (rssi >= -70) {
+            html += F(" <span class=\"badge warning\">Fair</span>");
+        } else {
+            html += F(" <span class=\"badge danger\">Weak</span>");
+        }
+        html += F("</span></li>");
+        html += F("</ul></div>");
     }
-
-    html += F("<h2>ℹ️ Features</h2><ul style=\"margin:15px 0 15px 30px;line-height:1.8\"><li>📡 <strong>Channel Analysis</strong>: 2.4GHz spectrum scanning</li><li>🔍 <strong>Network Scanning</strong>: WiFi discovery</li><li>⚡ <strong>iPerf Testing</strong>: Bandwidth measurement</li><li>📊 <strong>Latency Analysis</strong>: Jitter & packet loss testing</li><li>🌐 <strong>Access Point</strong>: WiFi hotspot with QR</li></ul>");
+    
+    // Quick Actions
+    html += F("<div class=\"card\" style=\"margin-top:20px\"><h2 style=\"margin-top:0;border-bottom:2px solid #f8f9fa;padding-bottom:10px\">⏱️ Quick Actions</h2>");
+    html += F("<div style=\"display:flex;flex-wrap:wrap;gap:15px;margin-top:20px\">");
+    html += F("<a href=\"/scan\" style=\"padding:15px 30px;background:var(--bs-primary);color:#fff;text-decoration:none;border-radius:8px;font-weight:bold;box-shadow:0 4px 12px rgba(13,110,253,0.3);transition:all 0.3s\">🔍 Scan Networks</a>");
+    html += F("<a href=\"/channel\" style=\"padding:15px 30px;background:var(--bs-purple);color:#fff;text-decoration:none;border-radius:8px;font-weight:bold;box-shadow:0 4px 12px rgba(111,66,193,0.3);transition:all 0.3s\">📡 Channel Graph</a>");
+    html += F("<a href=\"/status\" style=\"padding:15px 30px;background:var(--bs-success);color:#fff;text-decoration:none;border-radius:8px;font-weight:bold;box-shadow:0 4px 12px rgba(25,135,84,0.3);transition:all 0.3s\">📊 Full Status</a>");
+    html += F("</div></div>");
     
     html += generateHtmlFooter();
     webServer->send(200, "text/html", html);
@@ -763,7 +945,7 @@ void handleStatus() {
     html = FPSTR(HTML_HEADER);
     
     html += F("<div class=\"header\"><h1>📊 Status</h1><p>System & Network Health</p></div>");
-    html += generateNav();
+    html += generateNav("📊 Status");
     
     html += F("<div class=\"card\"><h2 style=\"margin-top:0;border-bottom:1px solid #dee2e6;padding-bottom:10px;margin-bottom:20px\">🔧 System Information</h2>");
     html += F("<div style=\"display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2rem\">");
@@ -938,7 +1120,7 @@ void handleScan() {
     String html;
     html.reserve(8192);  // Pre-allocate for scan results
     html = FPSTR(HTML_HEADER);
-    html += generateNav();
+    html += generateNav("🔍 Network Scan");
     html += FPSTR(SCAN_HEADER);
     
     // Check if scan was requested
@@ -1061,7 +1243,7 @@ void handleScanDetails() {
     // Header with back button
     html += F("<div class=\"header\"><a href=\"/scan?doscan=1\" style=\"position:absolute;left:30px;top:30px;color:#667eea;text-decoration:none;font-weight:bold;font-size:1.1em\">← Back to Scan</a><h1>🔍 Network Details</h1></div>");
     
-    html += generateNav();
+    html += generateNav("🔍 Network Details");
     
     // Network name section
     html += F("<h2>📡 Network Information</h2>");
@@ -1304,7 +1486,7 @@ void handleNetworkAnalysis() {
     </div>
     )rawliteral";
     
-    html += generateNav();
+    html += generateNav("🔬 Analysis");
     
     html += R"rawliteral(
     <h2>🎯 Network Analysis Tools</h2>
@@ -1584,7 +1766,7 @@ void handleChannelAnalysis() {
     </div>
     )rawliteral";
     
-    html += generateNav();
+    html += generateNav("📡 Channel");
     
     // Display success message if just scanned
     if (webServer->hasArg("scanned")) {
@@ -1707,7 +1889,7 @@ void handleChannelGraph() {
     </div>
     )rawliteral";
     
-    html += generateNav();
+    html += generateNav("📡 Channel Graph");
     
     // Scan button
     html += R"rawliteral(
@@ -1998,24 +2180,11 @@ void handleIperf() {
         <h1>⚡ iPerf Performance Testing</h1>
         <p>Network Bandwidth & Throughput Analysis</p>
     </div>
-
-    <div class="nav">
-        <div><a href="/">🏠 Home</a></div>
-        <div><a href="/status">📊 Status</a></div>
-        <div><a href="/scan">🔍 Scan Networks</a></div>
-        <div class="dropdown">
-            <a href="/analysis">🔬 Analysis</a>
-            <div class="dropdown-content">
-                <a href="/analysis">📊 Dashboard</a>
-                <a href="/signal">📶 Signal</a>
-                <a href="/portscan">🔒 Port Scanner</a>
-                <a href="/iperf">⚡ iPerf</a>
-                <a href="/latency">📉 Latency</a>
-                <a href="/channel">📡 Channel</a>
-            </div>
-        </div>
-    </div>
     )rawliteral";
+    
+    html += generateNav("⚡ iPerf");
+    
+    html += F("<div class=\"content-wrapper\">");
     
     // Display success/error messages
     if (webServer->hasArg("started")) {
@@ -2370,7 +2539,7 @@ void handleLatency() {
     </div>
     )rawliteral";
 
-    html += generateNav();
+    html += generateNav("📉 Latency");
 
     // Display success/error messages
     if (webServer->hasArg("started")) {
@@ -2761,7 +2930,7 @@ void handleConfig() {
     </div>
     )rawliteral";
     
-    html += FPSTR(NAV_MENU);
+    html += generateNav("⚙️ Config");
     
 
     
@@ -3278,7 +3447,7 @@ void handleConfigAP() {
             <h1 style="color: #4CAF50;">✓ AP Configuration Saved</h1>
         </div>
         )rawliteral";
-        html += FPSTR(NAV_MENU);
+        html += generateNav("⚙️ Config");
         html += R"rawliteral(
 
         
@@ -3450,7 +3619,7 @@ void handleConfigStation() {
             <h1 style="color: #4CAF50;">✓ Station Configuration Saved</h1>
         </div>
         )rawliteral";
-        html += FPSTR(NAV_MENU);
+        html += generateNav("⚙️ Config");
         html += R"rawliteral(
 
         
@@ -3640,7 +3809,7 @@ void handleSignalMonitor() {
     </div>
     )rawliteral";
     
-    html += generateNav();
+    html += generateNav("📶 Signal");
     
     // Current Connection Signal
     html += R"rawliteral(
@@ -3939,7 +4108,7 @@ void handlePortScanner() {
     </div>
     )rawliteral";
     
-    html += generateNav();
+    html += generateNav("🔒 Port Scanner");
     
     // Scan Configuration
     html += R"rawliteral(
