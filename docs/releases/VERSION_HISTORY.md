@@ -2,6 +2,66 @@
 
 Complete changelog and release notes for all versions of ESP32 WiFi Utility.
 
+## 🎉 What's New in v7.0.0
+
+Version 7.0.0 is a **major release** focusing on **mobile web interface enhancements** and **TFT display optimizations**. This release introduces an animated hamburger menu with smooth X toggle effect, current page indicator in mobile navigation, TFT rendering performance improvements, and RTC time persistence.
+
+### 📱 **Mobile Navigation Enhancements**
+
+**Animated Hamburger Menu:**
+- ☰ → ✕ Professional CSS animation with 0.3s transitions
+- First bar: rotates 45° and translates (5px, 5px)
+- Middle bar: fades out with opacity: 0
+- Third bar: rotates -45° and translates (7px, -6px)
+- Clean, modern toggle effect for mobile menu
+
+**Current Page Indicator:**
+- 📱 Page title displayed in mobile navigation bar
+- Shows current page (e.g., "🏠 Home", "📊 Status", "⚙️ Config")
+- Hidden on desktop (> 768px), visible on mobile (≤ 768px)
+- Improves user orientation and navigation clarity
+
+**Full-Width Navigation:**
+- Navigation bar spans full screen width
+- Content centered with max-width: 1200px
+- Proper z-index stacking (nav: 1000, dropdown: 1100)
+- Fixed content overlay issues
+
+### 🖥️ **TFT Display Optimizations**
+
+**Performance Improvements:**
+- ⚡ Optimized GFX library calls for faster rendering
+- Reduced unnecessary screen updates
+- Improved battery monitor efficiency
+- Enhanced overall display responsiveness
+
+**RTC Time Persistence:**
+- 🕐 Time maintains across device reboots
+- Prevents time reset on restart
+- Better reliability for time-dependent features
+
+**WiFi Encryption Display:**
+- 🔒 Enhanced TFT shows encryption types
+- Differentiated display for security protocols
+- Improved network information visibility
+
+### 📚 **Complete Documentation**
+
+- Updated README.md with v7.0.0 features
+- Comprehensive WEB_INTERFACE.md updates
+- Enhanced FEATURES.md web section
+- Detailed RESPONSIVE_MENU.md specifications
+- CSS implementation examples
+- Mobile layout diagrams
+
+### 🔗 **Quick Links**
+
+- **Release Notes**: [v7.0.0 Details](RELEASE_NOTES_V7.0.0.md)
+- **Pull Request**: [#47](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/pull/47)
+- **Documentation**: [Web Interface Guide](../guides/WEB_INTERFACE.md)
+
+---
+
 ## 🎉 What's New in v6.0.0
 
 Version 6.0.0 is a **major release** focusing on **comprehensive documentation reorganization** and **enhanced web interface usability**. This release restructures the entire documentation system into logical categories and adds password visibility toggles to web forms.

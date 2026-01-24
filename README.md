@@ -1,7 +1,7 @@
 # ESP32 WiFi Utility Suite
 
 ![Build Status](https://github.com/arunkumar-mourougappane/esp32-wifi-utility/actions/workflows/build.yml/badge.svg)
-![Version](https://img.shields.io/badge/version-6.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-7.0.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-ESP32-blue.svg)
 ![Framework](https://img.shields.io/badge/framework-Arduino-green.svg)
 ![PlatformIO](https://img.shields.io/badge/build-PlatformIO-orange.svg)
@@ -24,16 +24,17 @@ A professional-grade ESP32 WiFi analysis and management suite featuring comprehe
 
 ## 🎉 Latest Updates
 
-**Version 6.0.0** - Major release with comprehensive documentation reorganization and enhanced web interface usability featuring:
-- Mobile-responsive navigation with animated hamburger menu
-- Current page indicator in mobile navigation bar
-- Password visibility toggles for improved security management
-- Full-width navigation bar with centered content layout
-- Professional CSS animations for menu transitions
+**Version 7.0.0** - Major release with mobile web interface enhancements and TFT display optimizations:
+- **Animated Hamburger Menu**: Smooth toggle animation transforming into X when opened (CSS transforms)
+- **Current Page Indicator**: Mobile navigation displays current page name for better orientation
+- **TFT Display Optimizations**: Improved rendering performance and reduced screen updates
+- **RTC Time Persistence**: Time maintains across reboots for better reliability
+- **WiFi Encryption Display**: Enhanced TFT display shows encryption types
+- **Full Documentation**: Complete guides for all mobile navigation features
+
+**Version 6.0.0** - Major release with comprehensive documentation reorganization and enhanced web interface usability.
 
 **Version 5.2.1** - Documentation patch release with corrected TFT UI screenshot paths.
-
-**Version 5.2.0** - Complete TFT display UI redesign with modular architecture, color-coded status screens, and branded welcome experience.
 
 See [Version History](docs/releases/VERSION_HISTORY.md) for complete release notes and [CHANGELOG.md](CHANGELOG.md) for detailed changes.
 

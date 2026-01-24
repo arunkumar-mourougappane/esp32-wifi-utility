@@ -5,6 +5,106 @@ All notable changes to the ESP32 WiFi Utility project are documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.0.0] - 2026-01-24
+
+### 🎉 Major Release - Mobile Web Interface & TFT Display Enhancements
+
+#### Added
+
+##### Mobile Navigation Enhancements
+- **Animated Hamburger Menu**: Professional CSS toggle animation
+  - First bar rotates 45° and translates down (5px, 5px)
+  - Middle bar fades out with opacity: 0
+  - Third bar rotates -45° and translates up (7px, -6px)
+  - Smooth 0.3s transitions for all transformations
+  - Clean X shape when menu is open
+- **Current Page Indicator**: Mobile navigation bar displays current page title
+  - Shows page name (e.g., "🏠 Home", "📊 Status", "⚙️ Config")
+  - Hidden on desktop (> 768px), visible on mobile (≤ 768px)
+  - Flexbox layout with centered text alignment
+  - Improves mobile user orientation and navigation clarity
+- **Full-Width Navigation Bar**: Professional responsive layout
+  - Navigation spans full screen width on mobile
+  - Content centered with max-width of 1200px
+  - Proper z-index stacking (nav: 1000, dropdown: 1100, hamburger: 1030)
+
+##### TFT Display Optimizations
+- **Performance Improvements**: Optimized GFX library calls
+  - Reduced unnecessary screen updates
+  - Faster rendering performance
+  - Improved battery monitor efficiency
+- **RTC Time Persistence**: Time maintains across device reboots
+  - Prevents time reset on restart
+  - Better reliability for time-dependent features
+- **WiFi Encryption Display**: Enhanced TFT shows encryption types
+  - Differentiated display for various security protocols
+  - Improved network information visibility
+
+#### Changed
+
+##### Web Interface Updates
+- **Navigation System**: Updated all page handlers to pass page titles
+  - Home, Status, Config, Network Scan, Analysis pages
+  - Channel, Signal Monitor, iPerf, Latency, Port Scanner pages
+  - Consistent page title display across all routes
+- **generateNav() Function**: Enhanced to accept page title parameter
+  - Dynamic page title injection via JavaScript
+  - Backward compatible with empty title parameter
+- **Z-Index Hierarchy**: Established proper CSS stacking contexts
+  - Fixed content overlay issues on navigation menu
+  - Header, stat-cards, and content properly layered
+  - Dropdown menus appear above all page content
+
+##### Code Improvements
+- **NAV_MENU Consolidation**: Replaced hardcoded navigation with generateNav() calls
+  - Removed duplicate navigation code in handleIperf()
+  - Consistent navigation generation across all pages
+  - Reduced code duplication (230 insertions, 61 deletions)
+
+#### Fixed
+- **Content Overlay Bug**: Resolved z-index stacking issues
+  - Page sections no longer overlay navigation menu
+  - Proper positioning contexts established
+  - All components respect z-index hierarchy
+- **Mobile Menu Display**: Improved mobile navigation behavior
+  - Hamburger icon properly positioned (absolute right: 1rem)
+  - Menu items display correctly when toggled
+  - Touch interactions work smoothly
+
+##### Documentation Updates
+- **README.md**: Updated with v7.0.0 features and mobile navigation highlights
+- **WEB_INTERFACE.md**: Comprehensive mobile navigation documentation
+  - Detailed hamburger animation CSS specifications
+  - Current page title display behavior
+  - Touch-friendly interaction patterns
+  - Z-index stacking documentation
+- **FEATURES.md**: Enhanced web interface section
+  - Mobile navigation enhancements
+  - Professional CSS animations details
+  - Current page indicator feature
+- **RESPONSIVE_MENU.md**: Complete mobile UI documentation
+  - Page title display specifications
+  - Hamburger animation CSS implementation
+  - Mobile navigation layout diagrams
+  - Updated CSS classes reference with z-index values
+
+### Benefits
+- ✅ **Better Mobile UX**: Users can see which page they're on at all times
+- ✅ **Professional Animations**: Smooth hamburger menu transitions improve perceived quality
+- ✅ **Improved Performance**: TFT display optimizations reduce lag and improve responsiveness
+- ✅ **Enhanced Reliability**: RTC time persists across reboots for consistent operation
+- ✅ **Complete Documentation**: All features properly documented with diagrams and examples
+- ✅ **Zero Warnings**: Clean compilation on all platforms
+- ✅ **Memory Efficient**: Flash: 44.0%, RAM: 16.4%
+
+### Technical Details
+- **Build Verification**: All platforms tested successfully
+  - ESP32dev: Compilation successful
+  - Feather ESP32-S3 TFT: Compilation successful
+  - Zero compilation warnings
+- **Files Modified**: 6 source files, 4 documentation files
+- **Lines Changed**: 388 insertions, 83 deletions
+
 ## [6.0.0] - 2026-01-17
 
 ### 🎉 Major Release - Documentation & UX Improvements
