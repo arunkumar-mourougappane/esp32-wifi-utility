@@ -197,7 +197,7 @@ bool sendTFTAPUpdate(const char* ssid, const char* password, const char* ip, uin
     return xQueueSend(tftQueue, &msg, 0) == pdTRUE;
 }
 
-bool sendTFTStationUpdate(const char* ssid, const char* password, const char* ip, int8_t rssi) {
+bool sendTFTStationUpdate(const char* ssid, const char* password, const char* ip, int8_t rssi, uint8_t encryptionType) {
     if (tftQueue == nullptr) return false;
     
     TFTMessage msg;
@@ -214,6 +214,7 @@ bool sendTFTStationUpdate(const char* ssid, const char* password, const char* ip
     msg.data.station.ip[sizeof(msg.data.station.ip) - 1] = '\0';
     
     msg.data.station.rssi = rssi;
+    msg.data.station.encryptionType = encryptionType;
     
     // Send to queue (don't block if full)
     return xQueueSend(tftQueue, &msg, 0) == pdTRUE;
@@ -926,9 +927,30 @@ static void displayStationDetailsInternal(const TFTStationInfo& stationInfo) {
     tft->setCursor(171, 17);
     tft->print("Security:");
     
-    // Determine lock color based on security (green if password protected, red if open)
-    bool isSecure = (stationInfo.password[0] != '\0' && strlen(stationInfo.password) > 0);
-    uint16_t lockColor = isSecure ? 0x07E0 : 0xF800;  // Green or Red
+    // Determine lock color based on encryption type
+    // Color scheme:
+    //   Red (0xF800)   - Open network or WEP (insecure)
+    //   Yellow (0xFFE0) - WPA (moderate security)
+    //   Green (0x07E0)  - WPA2/WPA3 (good/best security)
+    // 
+    // ESP32 wifi_auth_mode_t values:
+    //   WIFI_AUTH_OPEN = 0, WIFI_AUTH_WEP = 1, WIFI_AUTH_WPA_PSK = 2,
+    //   WIFI_AUTH_WPA2_PSK = 3, WIFI_AUTH_WPA_WPA2_PSK = 4,
+    //   WIFI_AUTH_WPA3_PSK = 7, WIFI_AUTH_WPA2_WPA3_PSK = 8
+    uint16_t lockColor;
+    if (stationInfo.encryptionType == 0) {  // WIFI_AUTH_OPEN
+        lockColor = 0xF800;  // Red - No encryption
+    } else if (stationInfo.encryptionType == 1) {  // WIFI_AUTH_WEP
+        lockColor = 0xF800;  // Red - WEP is insecure
+    } else if (stationInfo.encryptionType == 7 || stationInfo.encryptionType == 8) {  // WPA3
+        lockColor = 0x07E0;  // Bright green - WPA3 (best security)
+    } else if (stationInfo.encryptionType == 3 || stationInfo.encryptionType == 4) {  // WPA2
+        lockColor = 0x07E0;  // Green - WPA2 (good security)
+    } else if (stationInfo.encryptionType == 2) {  // WPA
+        lockColor = 0xFFE0;  // Yellow - WPA (moderate security)
+    } else {
+        lockColor = 0xFFE0;  // Yellow - Unknown
+    }
     tft->drawBitmap(227, 16, image_Lock_bits, 7, 8, lockColor);
         
     // Display battery percentage
