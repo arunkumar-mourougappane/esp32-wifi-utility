@@ -1160,8 +1160,8 @@ void handleWiFiConnection() {
     LOG_WARN(TAG_WIFI, "Check SSID, password, and signal strength");
     
 #if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_TFT) || defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S3_REVERSETFT)
-    // Show connection failed status on TFT
-    sendTFTStatus("Connection\nFailed");
+    // Show connection failed status on TFT with red icon
+    sendTFTConnectionFailed();
 #endif
     
 #ifdef USE_NEOPIXEL

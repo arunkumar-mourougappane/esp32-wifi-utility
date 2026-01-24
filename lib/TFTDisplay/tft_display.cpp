@@ -36,6 +36,8 @@
 #include "esp_wifi.h"
 #include <time.h>
 #include "esp_sntp.h"
+#include "esp_netif.h"
+#include "lwip/dhcp.h"
 
 // ==========================================
 // BITMAP IMAGES
@@ -80,14 +82,39 @@ struct QRCodeCache {
 static QRCodeCache qrCacheAP = {.qrData = {0}, .buffer = nullptr, .valid = false};
 static QRCodeCache qrCacheStation = {.qrData = {0}, .buffer = nullptr, .valid = false};
 
+// Helper function to get DHCP lease time remaining (in seconds)
+static uint32_t getDHCPLeaseTimeRemaining() {
+    esp_netif_t* netif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+    if (netif == nullptr) {
+        return 0;
+    }
+    
+    esp_netif_dhcp_status_t status;
+    if (esp_netif_dhcpc_get_status(netif, &status) == ESP_OK) {
+        if (status == ESP_NETIF_DHCP_STARTED) {
+            // Get DHCP info
+            esp_netif_ip_info_t ip_info;
+            if (esp_netif_get_ip_info(netif, &ip_info) == ESP_OK) {
+                // DHCP is active - return a placeholder value
+                // Note: Actual lease time requires accessing internal lwIP structures
+                // which are not exposed in the public API
+                // Typical DHCP lease is 24 hours (86400 seconds)
+                return 86400; // Return default 24h lease time
+            }
+        }
+    }
+    return 0; // Static IP or DHCP not active
+}
+
 // Forward declarations for internal functions
-static void drawQRCode(const String& qrData, int offsetX, int offsetY, bool isAP);
+static void drawQRCode(const char* qrData, int offsetX, int offsetY, bool isAP);
 static void displayAPInfoInternal(const TFTAPInfo& apInfo);
 static void displayStationDetailsInternal(const TFTStationInfo& stationInfo);
 static void updateStationInfoPartial(const TFTStationInfo& stationInfo);
 static void displayAPInitializingScreen();
 static void displayWiFiStatusScreen(uint16_t iconColor, uint16_t textColor, const char* line1, const char* line2 = nullptr);
 static void displayStationConnectingScreen();
+static void displayConnectionFailedScreen();
 static void displayWiFiDisabledScreen();
 static void updateTimeDisplay();
 static void updateDateDisplay();
@@ -125,6 +152,10 @@ void initializeTFT() {
     // Initialize battery monitor with callback
     if (!initializeBatteryMonitor(onBatteryUpdate)) {
         Serial.println("⚠️  Battery monitor initialization failed");
+    } else {
+        // Immediately get and display battery percentage
+        uint8_t initialBatteryPercent = getLastBatteryPercent();
+        Serial.printf("🔋 Initial battery level: %d%%\n", initialBatteryPercent);
     }
     
     // Create message queue (5 messages max)
@@ -149,6 +180,16 @@ void initializeTFT() {
     if (result != pdPASS) {
         Serial.println("❌ Failed to create TFT display task");
         return;
+    }
+    
+    // Pre-allocate QR code buffers (optimization: avoid allocation spikes during rendering)
+    qrCacheAP.buffer = (uint16_t*)malloc(100 * 100 * sizeof(uint16_t));
+    qrCacheStation.buffer = (uint16_t*)malloc(100 * 100 * sizeof(uint16_t));
+    
+    if (qrCacheAP.buffer == nullptr || qrCacheStation.buffer == nullptr) {
+        Serial.println("⚠️  Failed to pre-allocate QR code buffers");
+    } else {
+        Serial.println("✅ QR code buffers pre-allocated (80KB total)");
     }
     
     // Check if RTC has valid time from previous session
@@ -255,6 +296,16 @@ bool sendTFTDisabled() {
     
     TFTMessage msg;
     msg.mode = TFT_MODE_DISABLED;
+    
+    // Send to queue (don't block if full)
+    return xQueueSend(tftQueue, &msg, 0) == pdTRUE;
+}
+
+bool sendTFTConnectionFailed() {
+    if (tftQueue == nullptr) return false;
+    
+    TFTMessage msg;
+    msg.mode = TFT_MODE_CONNECTION_FAILED;
     
     // Send to queue (don't block if full)
     return xQueueSend(tftQueue, &msg, 0) == pdTRUE;
@@ -394,14 +445,14 @@ static void updateBatteryDisplay(uint8_t percent) {
 // ==========================================
 // QR CODE UTILITIES (PHASE 3 OPTIMIZED)
 // ==========================================
-static void drawQRCode(const String& qrData, int offsetX, int offsetY, bool isAP = true) {
+static void drawQRCode(const char* qrData, int offsetX, int offsetY, bool isAP = true) {
     if (!tft) return;
     
     // Select appropriate cache
     QRCodeCache* cache = isAP ? &qrCacheAP : &qrCacheStation;
     
     // Check if we can use cached version
-    if (cache->valid && strcmp(cache->qrData, qrData.c_str()) == 0 && cache->buffer != nullptr) {
+    if (cache->valid && strncmp(cache->qrData, qrData, sizeof(cache->qrData)) == 0 && cache->buffer != nullptr) {
         // Draw from cached buffer (single fast operation)
         tft->drawRGBBitmap(offsetX, offsetY, cache->buffer, 100, 100);
         return;
@@ -410,20 +461,17 @@ static void drawQRCode(const String& qrData, int offsetX, int offsetY, bool isAP
     // Cache miss - generate and cache the QR code
     Serial.println("🔄 Generating QR code (cache miss)");
     
-    // Allocate buffer if needed
+    // Verify buffer is available (should be pre-allocated during initialization)
     if (cache->buffer == nullptr) {
-        cache->buffer = (uint16_t*)malloc(100 * 100 * sizeof(uint16_t));
-        if (cache->buffer == nullptr) {
-            Serial.println("⚠️  Failed to allocate QR cache buffer, using non-cached render");
-            cache->valid = false;
-            // Fall through to non-cached rendering
-        }
+        Serial.println("⚠️  QR cache buffer not available (not pre-allocated)");
+        cache->valid = false;
+        // Fall through to non-cached rendering
     }
     
     // Create QR code (version 3 for WiFi credentials)
     QRCode qrcode;
     uint8_t qrcodeData[qrcode_getBufferSize(3)];
-    qrcode_initText(&qrcode, qrcodeData, 3, ECC_LOW, qrData.c_str());
+    qrcode_initText(&qrcode, qrcodeData, 3, ECC_LOW, qrData);
     
     // Calculate module size to fit 100x100 pixel area
     int moduleSize = 3;
@@ -461,7 +509,7 @@ static void drawQRCode(const String& qrData, int offsetX, int offsetY, bool isAP
         tft->drawRGBBitmap(offsetX, offsetY, cache->buffer, 100, 100);
         
         // Update cache metadata
-        strncpy(cache->qrData, qrData.c_str(), sizeof(cache->qrData) - 1);
+        strncpy(cache->qrData, qrData, sizeof(cache->qrData) - 1);
         cache->qrData[sizeof(cache->qrData) - 1] = '\0';
         cache->valid = true;
         
@@ -574,10 +622,44 @@ static void displayWiFiStatusScreen(uint16_t iconColor, uint16_t textColor, cons
 }
 
 // ==========================================
-// STATION CONNECTING SCREEN
+// STATION CONNECTING SCREEN WITH COLOR ANIMATION
 // ==========================================
+static uint16_t getConnectingAnimationColor() {
+    // Animation cycles through: Red -> Yellow -> Green -> Yellow -> Red
+    // Total cycle: 80 steps (20 per transition)
+    static uint8_t animationStep = 0;
+    const uint8_t stepsPerTransition = 20;
+    uint16_t color;
+    
+    animationStep = (animationStep + 1) % 80;  // Cycle from 0-79
+    
+    if (animationStep < stepsPerTransition) {
+        // Red to Yellow: R=31 (constant), G=0->31, B=0
+        uint8_t g = (animationStep * 63) / stepsPerTransition;
+        color = (31 << 11) | (g << 5) | 0;  // RGB565: RRRRR GGGGGG BBBBB
+    } else if (animationStep < stepsPerTransition * 2) {
+        // Yellow to Green: R=31->0, G=63 (constant), B=0
+        uint8_t step = animationStep - stepsPerTransition;
+        uint8_t r = 31 - ((step * 31) / stepsPerTransition);
+        color = (r << 11) | (63 << 5) | 0;
+    } else if (animationStep < stepsPerTransition * 3) {
+        // Green to Yellow: R=0->31, G=63 (constant), B=0
+        uint8_t step = animationStep - (stepsPerTransition * 2);
+        uint8_t r = (step * 31) / stepsPerTransition;
+        color = (r << 11) | (63 << 5) | 0;
+    } else {
+        // Yellow to Red: R=31 (constant), G=63->0, B=0
+        uint8_t step = animationStep - (stepsPerTransition * 3);
+        uint8_t g = 63 - ((step * 63) / stepsPerTransition);
+        color = (31 << 11) | (g << 5) | 0;
+    }
+    
+    return color;
+}
+
 static void displayStationConnectingScreen() {
-    displayWiFiStatusScreen(0x55E, 0x73AE, "Station Mode", "Connecting...");
+    uint16_t iconColor = getConnectingAnimationColor();
+    displayWiFiStatusScreen(iconColor, 0x73AE, "Station Mode", "Connecting...");
 }
 
 void displayStationIdleScreen() {
@@ -593,34 +675,71 @@ static void displayWiFiDisabledScreen() {
 }
 
 // ==========================================
+// WIFI CONNECTION FAILED SCREEN
+// ==========================================
+static void displayConnectionFailedScreen() {
+    if (!tft) return;
+    
+    // Clear screen
+    tft->fillScreen(ST77XX_BLACK);
+    
+    // Center coordinates
+    int16_t centerX = 120;  // 240 / 2
+    int16_t centerY = 67;   // 135 / 2
+    
+    // Draw WiFi icon using the 50x50 connecting icon in red
+    tft->drawBitmap(centerX - 25, centerY - 25, image_wifi_1_bits, 50, 50, ST77XX_RED);
+    
+    // Draw prohibited symbol overlay (circle with diagonal line)
+    // Outer circle - draw 3 concentric circles for thickness
+    for (int16_t i = 0; i < 4; i++) {
+        tft->drawCircle(centerX, centerY, 29 - i, ST77XX_RED);
+    }
+    
+    // Diagonal line from top-left to bottom-right (thick line using multiple offsets)
+    int16_t offset = 20;  // Offset from center for diagonal line endpoints
+    int16_t lineOffsets[][2] = {{0, 0}, {1, 0}, {0, 1}, {2, 0}, {0, 2}, {1, 1}};
+    for (int i = 0; i < 6; i++) {
+        tft->drawLine(centerX - offset + lineOffsets[i][0], centerY - offset + lineOffsets[i][1], 
+                      centerX + offset + lineOffsets[i][0], centerY + offset + lineOffsets[i][1], ST77XX_RED);
+    }
+    // Display "Connection Failed" text below
+    tft->setTextColor(ST77XX_RED);
+    tft->setTextWrap(false);
+    tft->setTextSize(1);
+    tft->setCursor(70, 100);
+    tft->print("Connection Failed");    
+}
+
+// ==========================================
 // AP INFORMATION DISPLAY
 // ==========================================
 static void displayAPInfoInternal(const TFTAPInfo& apInfo) {
     if (!tft) return;
     
     // Clear entire screen
-    tft->fillScreen(0x0);
+    tft->fillScreen(ST77XX_BLACK);
     
-    // Define colors (RGB565)
-    uint16_t COLOR_GREEN = 0x4B1;    // Green for labels
-    uint16_t COLOR_CYAN = 0x5FA;     // Cyan for labels
-    uint16_t COLOR_WHITE = 0xFFFF;   // White for values
-    uint16_t COLOR_LOCK = 0x5FE0;    // Green for lock icon
+    // Define custom colors for better readability (RGB565)
+    const uint16_t COLOR_LABEL_GREEN = 0x4B1;  // Darker green for labels
+    const uint16_t COLOR_LABEL_CYAN = 0x5FA;   // Darker cyan for labels
+    // Use ST77XX library macros for standard colors:
+    // ST77XX_WHITE (0xFFFF), ST77XX_GREEN (0x07E0), ST77XX_RED (0xF800)
     
     tft->setTextWrap(false);
     tft->setTextSize(1);
     
     // MODE: label and value (top left)
-    tft->setTextColor(COLOR_GREEN);
+    tft->setTextColor(COLOR_LABEL_GREEN);
     tft->setCursor(4, 4);
     tft->print("MODE:");
     
-    tft->setTextColor(COLOR_WHITE);
+    tft->setTextColor(ST77XX_WHITE);
     tft->setCursor(40, 4);
     tft->print("AP");
     
     // Date and time (top right)
-    tft->setTextColor(COLOR_WHITE);
+    tft->setTextColor(ST77XX_WHITE);
     
     // Display current date from RTC
     struct tm timeinfo;
@@ -649,58 +768,67 @@ static void displayAPInfoInternal(const TFTAPInfo& apInfo) {
     }
     
     // SSID: label and value (second line)
-    tft->setTextColor(COLOR_GREEN);
+    tft->setTextColor(COLOR_LABEL_GREEN);
     tft->setCursor(4, 17);
     tft->print("SSID:");
     
-    tft->setTextColor(COLOR_WHITE);
+    tft->setTextColor(ST77XX_WHITE);
     tft->setCursor(38, 17);
-    String displaySSID = String(apInfo.ssid);
-    if (displaySSID.length() > 14) {
-        displaySSID = displaySSID.substring(0, 11) + "...";
+    const char* ssid = apInfo.ssid;
+    size_t ssidLen = strlen(ssid);
+    if (ssidLen > 14) {
+        // Print first 11 chars then ellipsis
+        char truncated[15];
+        strncpy(truncated, ssid, 11);
+        strcpy(truncated + 11, "...");
+        tft->print(truncated);
+    } else {
+        tft->print(ssid);
     }
-    tft->print(displaySSID);
     
     // Security label and lock icon (right side of SSID line)
-    tft->setTextColor(COLOR_CYAN);
+    tft->setTextColor(COLOR_LABEL_CYAN);
     tft->setCursor(171, 17);
     tft->print("Security:");
     
     // Determine lock color based on security (green if password protected, red if open)
     bool isSecure = (apInfo.password[0] != '\0' && strlen(apInfo.password) > 0);
-    uint16_t lockColor = isSecure ? 0x07E0 : 0xF800;  // Green or Red
+    uint16_t lockColor = isSecure ? ST77XX_GREEN : ST77XX_RED;  // Green or Red
     tft->drawBitmap(227, 16, image_Lock_bits, 7, 8, lockColor);
     
-    // Display battery percentage
+    // Draw empty battery outline immediately, then update with actual percentage
+    updateBatteryDisplay(0);  // Draw empty battery first
     uint8_t batteryPercent = getLastBatteryPercent();
-    updateBatteryDisplay(batteryPercent);
+    if (batteryPercent > 0) {
+        updateBatteryDisplay(batteryPercent);  // Update with actual value if available
+    }
 
     // Right side information panel (starting at x=111)
     // IP: label and value
-    tft->setTextColor(COLOR_CYAN);
+    tft->setTextColor(COLOR_LABEL_CYAN);
     tft->setCursor(111, 33);
     tft->print("IP: ");
     
-    tft->setTextColor(COLOR_WHITE);
+    tft->setTextColor(ST77XX_WHITE);
     tft->setCursor(141, 33);
     tft->print(apInfo.ip);
     
     // NM: (Netmask) label and value
-    tft->setTextColor(COLOR_CYAN);
+    tft->setTextColor(COLOR_LABEL_CYAN);
     tft->setCursor(111, 49);
     tft->print("NM: ");
     
-    tft->setTextColor(COLOR_WHITE);
+    tft->setTextColor(ST77XX_WHITE);
     tft->setCursor(141, 49);
-    tft->print("255.255.255.255");
+    tft->print(WiFi.softAPSubnetMask().toString());
     
     // BSSID: label
-    tft->setTextColor(COLOR_CYAN);
+    tft->setTextColor(COLOR_LABEL_CYAN);
     tft->setCursor(111, 63);
     tft->print("BSSID:");
     
     // BSSID: value (on next line for space)
-    tft->setTextColor(COLOR_WHITE);
+    tft->setTextColor(ST77XX_WHITE);
     tft->setCursor(111, 76);
     uint8_t mac[6];
     esp_wifi_get_mac(WIFI_IF_AP, mac);
@@ -710,13 +838,13 @@ static void displayAPInfoInternal(const TFTAPInfo& apInfo) {
     tft->print(bssidStr);
     
     // Clients: label and value
-    tft->setTextColor(COLOR_CYAN);
+    tft->setTextColor(COLOR_LABEL_CYAN);
     tft->setCursor(111, 91);
     tft->print("Clients: ");
     
-    tft->setTextColor(COLOR_WHITE);
+    tft->setTextColor(ST77XX_WHITE);
     tft->setCursor(168, 91);
-    tft->print(String(apInfo.clients));
+    tft->print(apInfo.clients);
 }
 
 // Initialize NTP time synchronization and save to RTC
@@ -781,7 +909,7 @@ static void updateDateDisplay() {
     tft->fillRect(111, 4, 36, 8, ST77XX_BLACK);
     
     // Redraw date
-    tft->setTextColor(0xFFFF);
+    tft->setTextColor(ST77XX_WHITE);
     tft->setTextSize(1);
     tft->setCursor(111, 4);
     
@@ -850,40 +978,38 @@ static void updateClientsDisplay(uint8_t clients) {
     tft->fillRect(168, 91, 24, 8, ST77XX_BLACK);
     
     // Redraw clients count
-    tft->setTextColor(0xFFFF);
+    tft->setTextColor(ST77XX_WHITE);
     tft->setTextSize(1);
     tft->setCursor(168, 91);
-    tft->print(String(clients));
+    tft->print(clients);
 }
 
 static void displayStationDetailsInternal(const TFTStationInfo& stationInfo) {
     if (!tft) return;
     
     // Clear entire screen
-    tft->fillScreen(0x0);
+    tft->fillScreen(ST77XX_BLACK);
     
-    // Define colors (RGB565)
-    uint16_t COLOR_GREEN = 0x4B1;    // Green for labels
-    uint16_t COLOR_CYAN = 0x5FA;     // Cyan for labels
-    uint16_t COLOR_WHITE = 0xFFFF;   // White for values
-    uint16_t COLOR_LOCK = 0x5FE0;    // Green for lock icon
-    uint16_t COLOR_YELLOW = 0xFFE0;  // Yellow for signal strength
-    uint16_t COLOR_RED = 0xF800;     // Red for poor signal
+    // Define custom colors for better readability (RGB565)
+    const uint16_t COLOR_LABEL_GREEN = 0x4B1;  // Darker green for labels
+    const uint16_t COLOR_LABEL_CYAN = 0x5FA;   // Darker cyan for labels
+    // Use ST77XX library macros for standard colors:
+    // ST77XX_WHITE (0xFFFF), ST77XX_YELLOW (0xFFE0), ST77XX_RED (0xF800)
     
     tft->setTextWrap(false);
     tft->setTextSize(1);
     
     // MODE: label and value (top left)
-    tft->setTextColor(COLOR_GREEN);
+    tft->setTextColor(COLOR_LABEL_GREEN);
     tft->setCursor(4, 4);
     tft->print("MODE:");
     
-    tft->setTextColor(COLOR_WHITE);
+    tft->setTextColor(ST77XX_WHITE);
     tft->setCursor(40, 4);
     tft->print("STA");
     
     // Date and time (top right)
-    tft->setTextColor(COLOR_WHITE);
+    tft->setTextColor(ST77XX_WHITE);
     
     // Display current date from RTC
     struct tm timeinfo;
@@ -910,28 +1036,34 @@ static void displayStationDetailsInternal(const TFTStationInfo& stationInfo) {
     }
     
     // SSID: label and value (second line)
-    tft->setTextColor(COLOR_GREEN);
+    tft->setTextColor(COLOR_LABEL_GREEN);
     tft->setCursor(4, 17);
     tft->print("SSID:");
     
-    tft->setTextColor(COLOR_WHITE);
+    tft->setTextColor(ST77XX_WHITE);
     tft->setCursor(38, 17);
-    String displaySSID = String(stationInfo.ssid);
-    if (displaySSID.length() > 14) {
-        displaySSID = displaySSID.substring(0, 11) + "...";
+    const char* ssid = stationInfo.ssid;
+    size_t ssidLen = strlen(ssid);
+    if (ssidLen > 14) {
+        // Print first 11 chars then ellipsis
+        char truncated[15];
+        strncpy(truncated, ssid, 11);
+        strcpy(truncated + 11, "...");
+        tft->print(truncated);
+    } else {
+        tft->print(ssid);
     }
-    tft->print(displaySSID);
     
     // Security label and lock icon (right side of SSID line)
-    tft->setTextColor(COLOR_CYAN);
+    tft->setTextColor(COLOR_LABEL_CYAN);
     tft->setCursor(171, 17);
     tft->print("Security:");
     
     // Determine lock color based on encryption type
     // Color scheme:
-    //   Red (0xF800)   - Open network or WEP (insecure)
-    //   Yellow (0xFFE0) - WPA (moderate security)
-    //   Green (0x07E0)  - WPA2/WPA3 (good/best security)
+    //   Red (ST77XX_RED)    - Open network or WEP (insecure)
+    //   Yellow (ST77XX_YELLOW) - WPA (moderate security)
+    //   Green (ST77XX_GREEN)   - WPA2/WPA3 (good/best security)
     // 
     // ESP32 wifi_auth_mode_t values:
     //   WIFI_AUTH_OPEN = 0, WIFI_AUTH_WEP = 1, WIFI_AUTH_WPA_PSK = 2,
@@ -939,73 +1071,100 @@ static void displayStationDetailsInternal(const TFTStationInfo& stationInfo) {
     //   WIFI_AUTH_WPA3_PSK = 7, WIFI_AUTH_WPA2_WPA3_PSK = 8
     uint16_t lockColor;
     if (stationInfo.encryptionType == 0) {  // WIFI_AUTH_OPEN
-        lockColor = 0xF800;  // Red - No encryption
+        lockColor = ST77XX_RED;  // Red - No encryption
     } else if (stationInfo.encryptionType == 1) {  // WIFI_AUTH_WEP
-        lockColor = 0xF800;  // Red - WEP is insecure
+        lockColor = ST77XX_RED;  // Red - WEP is insecure
     } else if (stationInfo.encryptionType == 7 || stationInfo.encryptionType == 8) {  // WPA3
-        lockColor = 0x07E0;  // Bright green - WPA3 (best security)
+        lockColor = ST77XX_GREEN;  // Bright green - WPA3 (best security)
     } else if (stationInfo.encryptionType == 3 || stationInfo.encryptionType == 4) {  // WPA2
-        lockColor = 0x07E0;  // Green - WPA2 (good security)
+        lockColor = ST77XX_GREEN;  // Green - WPA2 (good security)
     } else if (stationInfo.encryptionType == 2) {  // WPA
-        lockColor = 0xFFE0;  // Yellow - WPA (moderate security)
+        lockColor = ST77XX_YELLOW;  // Yellow - WPA (moderate security)
     } else {
-        lockColor = 0xFFE0;  // Yellow - Unknown
+        lockColor = ST77XX_YELLOW;  // Yellow - Unknown
     }
     tft->drawBitmap(227, 16, image_Lock_bits, 7, 8, lockColor);
         
-    // Display battery percentage
+    // Draw empty battery outline immediately, then update with actual percentage
+    updateBatteryDisplay(0);  // Draw empty battery first
     uint8_t batteryPercent = getLastBatteryPercent();
-    updateBatteryDisplay(batteryPercent);
+    if (batteryPercent > 0) {
+        updateBatteryDisplay(batteryPercent);  // Update with actual value if available
+    }
     
     // QR Code for WiFi credentials (left side, starting at y=29)
     // Generate QR data for WiFi connection
-    String qrData = "WIFI:T:WPA;S:" + String(stationInfo.ssid) + ";P:" + String(stationInfo.password) + ";;";
+    char qrData[256];
+    snprintf(qrData, sizeof(qrData), "WIFI:T:WPA;S:%s;P:%s;;", stationInfo.ssid, stationInfo.password);
     drawQRCode(qrData, 4, 29, false);  // false = Station mode cache
     
     // Right side information panel (starting at x=111)
     // IP: label and value
-    tft->setTextColor(COLOR_CYAN);
+    tft->setTextColor(COLOR_LABEL_CYAN);
     tft->setCursor(111, 33);
     tft->print("IP: ");
     
-    tft->setTextColor(COLOR_WHITE);
+    tft->setTextColor(ST77XX_WHITE);
     tft->setCursor(141, 33);
-    tft->print(String(stationInfo.ip));
+    tft->print(stationInfo.ip);
     
     // Signal strength with label
-    tft->setTextColor(COLOR_CYAN);
+    tft->setTextColor(COLOR_LABEL_CYAN);
     tft->setCursor(111, 49);
     tft->print("RSSI: ");
     
     // Color based on signal strength
     int8_t rssi = stationInfo.rssi;
     if (rssi >= -60) {
-        tft->setTextColor(0x07E0);  // Bright green for excellent signal
+        tft->setTextColor(ST77XX_GREEN);  // Bright green for excellent signal
     } else if (rssi >= -70) {
-        tft->setTextColor(COLOR_YELLOW);  // Yellow for good signal
+        tft->setTextColor(ST77XX_YELLOW);  // Yellow for good signal
     } else {
-        tft->setTextColor(COLOR_RED);  // Red for poor signal
+        tft->setTextColor(ST77XX_RED);  // Red for poor signal
     }
     tft->setCursor(153, 49);
-    tft->print(String(rssi));
-    tft->setTextColor(COLOR_WHITE);
+    tft->print(rssi);
+    tft->setTextColor(ST77XX_WHITE);
     tft->print(" dBm");
     
-    // Gateway (can be derived or shown as placeholder)
-    tft->setTextColor(COLOR_CYAN);
+    // Netmask: label and value
+    tft->setTextColor(COLOR_LABEL_CYAN);
     tft->setCursor(111, 63);
+    tft->print("NM: ");
+    
+    tft->setTextColor(ST77XX_WHITE);
+    tft->setCursor(141, 63);
+    tft->print(WiFi.subnetMask().toString());
+    
+    // Gateway: label and value
+    tft->setTextColor(COLOR_LABEL_CYAN);
+    tft->setCursor(111, 76);
     tft->print("GW: ");
     
-    tft->setTextColor(COLOR_WHITE);
-    tft->setCursor(141, 63);
-    // Extract gateway from IP (assume same subnet, .1 as gateway)
-    String ipStr = String(stationInfo.ip);
-    int lastDot = ipStr.lastIndexOf('.');
-    if (lastDot > 0) {
-        String gateway = ipStr.substring(0, lastDot) + ".1";
-        tft->print(gateway);
+    tft->setTextColor(ST77XX_WHITE);
+    tft->setCursor(141, 76);
+    tft->print(WiFi.gatewayIP().toString());
+    
+    // DHCP Lease: label and value
+    tft->setTextColor(COLOR_LABEL_CYAN);
+    tft->setCursor(111, 89);
+    tft->print("Lease: ");
+    
+    tft->setTextColor(ST77XX_WHITE);
+    tft->setCursor(153, 89);
+    uint32_t leaseSeconds = getDHCPLeaseTimeRemaining();
+    if (leaseSeconds > 0) {
+        uint32_t leaseHours = leaseSeconds / 3600;
+        if (leaseHours > 0) {
+            tft->print(leaseHours);
+            tft->print("h");
+        } else {
+            uint32_t leaseMinutes = leaseSeconds / 60;
+            tft->print(leaseMinutes);
+            tft->print("m");
+        }
     } else {
-        tft->print("---");
+        tft->print("Static");
     }
 }
 
@@ -1031,7 +1190,7 @@ static void updateStationInfoPartial(const TFTStationInfo& stationInfo) {
     updateTimeDisplay();
     
     // Update IP only if changed
-    if (strcmp(lastIP, stationInfo.ip) != 0) {
+    if (strncmp(lastIP, stationInfo.ip, sizeof(lastIP)) != 0) {
         // Clear IP value area (15 chars max = ~90 pixels)
         tft->fillRect(141, 33, 90, 8, ST77XX_BLACK);
         
@@ -1114,8 +1273,9 @@ static void tftDisplayTask(void* parameter) {
                     
                     // Now draw QR code over the placeholder bitmap
                     {
-                        String qrData = "WIFI:T:WPA;S:" + String(msg.data.ap.ssid) + 
-                                       ";P:" + String(msg.data.ap.password) + ";;";
+                        char qrData[256];
+                        snprintf(qrData, sizeof(qrData), "WIFI:T:WPA;S:%s;P:%s;;", 
+                                msg.data.ap.ssid, msg.data.ap.password);
                         
                         // QR code position matches the placeholder area
                         int offsetX = 4;      // Left edge
@@ -1162,6 +1322,13 @@ static void tftDisplayTask(void* parameter) {
                     Serial.println("🔴 WiFi Disabled screen displayed via task");
                     break;
                     
+                case TFT_MODE_CONNECTION_FAILED:
+                    // Show WiFi connection failed screen with red icon
+                    displayConnectionFailedScreen();
+                    currentDisplayMode = TFT_MODE_CONNECTION_FAILED;
+                    Serial.println("❌ Connection Failed screen displayed via task");
+                    break;
+                    
                 case TFT_MODE_STATION:
                     // Show connected screen with green icon first
                     tft->fillScreen(ST77XX_BLACK);
@@ -1200,6 +1367,15 @@ static void tftDisplayTask(void* parameter) {
         
         // Handle periodic updates for current mode
         TickType_t currentTick = xTaskGetTickCount();
+        
+        // Update connecting animation (17ms = ~60 fps)
+        if (currentDisplayMode == TFT_MODE_CONNECTING) {
+            static TickType_t lastAnimationUpdate = 0;
+            if ((currentTick - lastAnimationUpdate) >= pdMS_TO_TICKS(17)) {
+                displayStationConnectingScreen();
+                lastAnimationUpdate = currentTick;
+            }
+        }
         
         if (currentDisplayMode == TFT_MODE_AP) {
             // Update time every second

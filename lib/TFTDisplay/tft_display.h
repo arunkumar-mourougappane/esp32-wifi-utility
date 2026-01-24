@@ -74,6 +74,7 @@ enum TFTDisplayMode {
     TFT_MODE_IDLE,       // Station mode idle screen (blue with text)
     TFT_MODE_IDLE_YELLOW,// Idle mode screen (yellow WiFi symbol, no text)
     TFT_MODE_DISABLED,   // WiFi disabled screen
+    TFT_MODE_CONNECTION_FAILED, // Connection failed screen with red icon
     TFT_MODE_STATUS      // Generic status message
 };
 
@@ -167,6 +168,12 @@ bool sendTFTIdleYellow();
  * @return true if message was sent successfully, false if queue is full
  */
 bool sendTFTDisabled();
+
+/**
+ * @brief Show WiFi connection failed screen with red icon
+ * @return true if message was sent successfully, false if queue is full
+ */
+bool sendTFTConnectionFailed();
 
 /**
  * @brief Show Station mode idle screen on TFT
