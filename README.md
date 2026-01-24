@@ -24,7 +24,12 @@ A professional-grade ESP32 WiFi analysis and management suite featuring comprehe
 
 ## 🎉 Latest Updates
 
-**Version 6.0.0** - Major release with comprehensive documentation reorganization and enhanced web interface usability featuring password visibility toggles.
+**Version 6.0.0** - Major release with comprehensive documentation reorganization and enhanced web interface usability featuring:
+- Mobile-responsive navigation with animated hamburger menu
+- Current page indicator in mobile navigation bar
+- Password visibility toggles for improved security management
+- Full-width navigation bar with centered content layout
+- Professional CSS animations for menu transitions
 
 **Version 5.2.1** - Documentation patch release with corrected TFT UI screenshot paths.
 
@@ -46,10 +51,13 @@ See [Version History](docs/releases/VERSION_HISTORY.md) for complete release not
 ### 🌐 User Interfaces
 
 - **Web Interface**: Professional browser-based control on all boards
-  - Mobile-responsive design with hamburger menu
+  - Mobile-responsive design with animated hamburger menu (smooth X toggle effect)
+  - Current page indicator in mobile navigation bar for better orientation
+  - Full-width navigation bar with centered content (max-width: 1200px)
   - Interactive WiFi scanning with clickable network details
   - Real-time monitoring and status dashboard
   - Configuration management with instant mode switching
+  - Professional CSS animations and transitions
 - **TFT Display**: Built-in screen support for Feather ESP32-S3 boards
   - Color-coded status screens (blue/green/red/yellow)
   - Branded welcome screen
