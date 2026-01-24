@@ -81,7 +81,7 @@ static QRCodeCache qrCacheAP = {.qrData = {0}, .buffer = nullptr, .valid = false
 static QRCodeCache qrCacheStation = {.qrData = {0}, .buffer = nullptr, .valid = false};
 
 // Forward declarations for internal functions
-static void drawQRCode(const String& qrData, int offsetX, int offsetY, bool isAP = true);
+static void drawQRCode(const String& qrData, int offsetX, int offsetY, bool isAP);
 static void displayAPInfoInternal(const TFTAPInfo& apInfo);
 static void displayStationDetailsInternal(const TFTStationInfo& stationInfo);
 static void updateStationInfoPartial(const TFTStationInfo& stationInfo);
