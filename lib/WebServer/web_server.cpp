@@ -789,17 +789,62 @@ void handleStatus() {
         html += currentAPSSID;
         html += F("</span></li><li class=\"network-item\"><span class=\"network-name\">AP IP</span><span>");
         html += WiFi.softAPIP().toString();
-        html += F("</span></li><li class=\"network-item\"><span class=\"network-name\">Clients</span><span>");
+        html += F("</span></li>");
+        
+        html += F("<li class=\"network-item\"><span class=\"network-name\">Gateway</span><span>");
+        html += WiFi.softAPIP().toString();
+        html += F("</span></li>");
+        
+        html += F("<li class=\"network-item\"><span class=\"network-name\">MAC Address</span><span>");
+        html += WiFi.softAPmacAddress();
+        html += F("</span></li>");
+        
+        html += F("<li class=\"network-item\"><span class=\"network-name\">Channel</span><span>");
+        uint8_t primaryChan, secondChan;
+        wifi_second_chan_t secondType;
+        esp_wifi_get_channel(&primaryChan, &secondType);
+        html += String(primaryChan);
+        html += F("</span></li>");
+        
+        html += F("<li class=\"network-item\"><span class=\"network-name\">Clients</span><span>");
         html += WiFi.softAPgetStationNum();
         html += F("</span></li>");
     } else if (WiFi.status() == WL_CONNECTED) {
         html += F("<li class=\"network-item\"><span class=\"network-name\">Connected to</span><span>");
         html += WiFi.SSID();
-        html += F("</span></li><li class=\"network-item\"><span class=\"network-name\">IP Address</span><span>");
+        html += F("</span></li>");
+        
+        html += F("<li class=\"network-item\"><span class=\"network-name\">IP Address</span><span>");
         html += WiFi.localIP().toString();
-        html += F("</span></li><li class=\"network-item\"><span class=\"network-name\">Signal</span><span>");
+        html += F("</span></li>");
+        
+        html += F("<li class=\"network-item\"><span class=\"network-name\">Subnet Mask</span><span>");
+        html += WiFi.subnetMask().toString();
+        html += F("</span></li>");
+        
+        html += F("<li class=\"network-item\"><span class=\"network-name\">Gateway</span><span>");
+        html += WiFi.gatewayIP().toString();
+        html += F("</span></li>");
+        
+        html += F("<li class=\"network-item\"><span class=\"network-name\">DNS Server</span><span>");
+        html += WiFi.dnsIP().toString();
+        html += F("</span></li>");
+        
+        html += F("<li class=\"network-item\"><span class=\"network-name\">MAC Address</span><span>");
+        html += WiFi.macAddress();
+        html += F("</span></li>");
+        
+        html += F("<li class=\"network-item\"><span class=\"network-name\">Signal</span><span>");
         html += WiFi.RSSI();
         html += F(" dBm</span></li>");
+        
+        html += F("<li class=\"network-item\"><span class=\"network-name\">Channel</span><span>");
+        html += String(WiFi.channel());
+        html += F("</span></li>");
+        
+        html += F("<li class=\"network-item\"><span class=\"network-name\">BSSID</span><span>");
+        html += WiFi.BSSIDstr();
+        html += F("</span></li>");
     }
     html += F("</ul></div>");
     
@@ -810,16 +855,63 @@ void handleStatus() {
     html += String(ESP.getFreeHeap() / 1024) + " KB";
     html += F("</span></li>");
     
+    html += F("<li class=\"network-item\"><span class=\"network-name\">📦 Total Heap</span><span>");
+    html += String(ESP.getHeapSize() / 1024) + " KB";
+    html += F("</span></li>");
+    
+    html += F("<li class=\"network-item\"><span class=\"network-name\">📊 Heap Usage</span><span>");
+    uint32_t heapUsed = ESP.getHeapSize() - ESP.getFreeHeap();
+    uint8_t heapPercent = (heapUsed * 100) / ESP.getHeapSize();
+    html += String(heapPercent) + "%";
+    html += F("</span></li>");
+    
+    html += F("<li class=\"network-item\"><span class=\"network-name\">🔄 Min Free Heap</span><span>");
+    html += String(ESP.getMinFreeHeap() / 1024) + " KB";
+    html += F("</span></li>");
+    
     html += F("<li class=\"network-item\"><span class=\"network-name\">🏷️ Chip Model</span><span>");
     html += ESP.getChipModel();
+    html += F("</span></li>");
+    
+    html += F("<li class=\"network-item\"><span class=\"network-name\">📌 Chip Revision</span><span>");
+    html += String(ESP.getChipRevision());
     html += F("</span></li>");
     
     html += F("<li class=\"network-item\"><span class=\"network-name\">⚡ CPU Freq</span><span>");
     html += String(ESP.getCpuFreqMHz()) + " MHz";
     html += F("</span></li>");
     
+    html += F("<li class=\"network-item\"><span class=\"network-name\">🔢 CPU Cores</span><span>");
+    html += String(ESP.getChipCores());
+    html += F("</span></li>");
+    
     html += F("<li class=\"network-item\"><span class=\"network-name\">💾 Flash Size</span><span>");
     html += String(ESP.getFlashChipSize() / (1024 * 1024)) + " MB";
+    html += F("</span></li>");
+    
+    html += F("<li class=\"network-item\"><span class=\"network-name\">⏱️ Uptime</span><span>");
+    uint32_t uptimeSeconds = millis() / 1000;
+    uint32_t days = uptimeSeconds / 86400;
+    uint32_t hours = (uptimeSeconds % 86400) / 3600;
+    uint32_t minutes = (uptimeSeconds % 3600) / 60;
+    uint32_t seconds = uptimeSeconds % 60;
+    if (days > 0) {
+        html += String(days) + "d " + String(hours) + "h";
+    } else if (hours > 0) {
+        html += String(hours) + "h " + String(minutes) + "m";
+    } else if (minutes > 0) {
+        html += String(minutes) + "m " + String(seconds) + "s";
+    } else {
+        html += String(seconds) + "s";
+    }
+    html += F("</span></li>");
+    
+    html += F("<li class=\"network-item\"><span class=\"network-name\">🔋 PSRAM</span><span>");
+    if (ESP.getPsramSize() > 0) {
+        html += String(ESP.getFreePsram() / 1024) + " / " + String(ESP.getPsramSize() / 1024) + " KB";
+    } else {
+        html += "Not available";
+    }
     html += F("</span></li>");
     
     html += F("</ul></div></div></div>");
